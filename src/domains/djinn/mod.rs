@@ -63,6 +63,13 @@ pub struct SummonTier {
     pub required_good: u8,
 }
 
+/// Immediate effect payload emitted when a djinn is activated.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DjinnActivationEvent {
+    pub element: Element,
+    pub base_damage: u16,
+}
+
 // ── Functions ────────────────────────────────────────────────────────
 
 /// Determine compatibility between a djinn's element and a unit's element.
@@ -119,9 +126,13 @@ pub fn activate_djinn(
     index: usize,
     unit_ref: TargetRef,
     recovery_turns: u8,
-) -> Option<DjinnStateChanged> {
+    djinn_def: &DjinnDef,
+) -> Option<(DjinnStateChanged, DjinnActivationEvent)> {
     let djinn = slots.slots.get_mut(index)?;
     if djinn.state != DjinnState::Good {
+        return None;
+    }
+    if djinn.djinn_id != djinn_def.id {
         return None;
     }
 
@@ -131,13 +142,22 @@ pub fn activate_djinn(
     djinn.activation_order = slots.next_activation_order;
     slots.next_activation_order += 1;
 
-    Some(DjinnStateChanged {
-        djinn_id: djinn.djinn_id.clone(),
-        unit: unit_ref,
-        old_state,
-        new_state: DjinnState::Recovery,
-        recovery_turns: Some(recovery_turns),
-    })
+    Some((
+        DjinnStateChanged {
+            djinn_id: djinn.djinn_id.clone(),
+            unit: unit_ref,
+            old_state,
+            new_state: DjinnState::Recovery,
+            recovery_turns: Some(recovery_turns),
+        },
+        DjinnActivationEvent {
+            element: djinn_def.element,
+            base_damage: djinn_def
+                .summon_effect
+                .as_ref()
+                .map_or(0, |summon_effect| summon_effect.damage),
+        },
+    ))
 }
 
 /// Compute the total stat bonus from all Good-state djinn in the slots.
@@ -429,12 +449,15 @@ mod tests {
     #[test]
     fn activate_good_djinn_succeeds() {
         let mut slots = make_slots_with(&["flint"], Element::Venus);
-        let event = activate_djinn(&mut slots, 0, unit_ref(), 2);
+        let def = make_djinn_def("flint", Element::Venus);
+        let event = activate_djinn(&mut slots, 0, unit_ref(), 2, &def);
         assert!(event.is_some());
-        let ev = event.unwrap();
+        let (ev, activation) = event.unwrap();
         assert_eq!(ev.old_state, DjinnState::Good);
         assert_eq!(ev.new_state, DjinnState::Recovery);
         assert_eq!(ev.recovery_turns, Some(2));
+        assert_eq!(activation.element, Element::Venus);
+        assert_eq!(activation.base_damage, 0);
         assert_eq!(slots.slots[0].state, DjinnState::Recovery);
     }
 
@@ -442,14 +465,16 @@ mod tests {
     fn activate_recovery_djinn_fails() {
         let mut slots = make_slots_with(&["flint"], Element::Venus);
         slots.slots[0].state = DjinnState::Recovery;
-        let event = activate_djinn(&mut slots, 0, unit_ref(), 2);
+        let def = make_djinn_def("flint", Element::Venus);
+        let event = activate_djinn(&mut slots, 0, unit_ref(), 2, &def);
         assert!(event.is_none());
     }
 
     #[test]
     fn activate_out_of_range_fails() {
         let mut slots = make_slots_with(&["flint"], Element::Venus);
-        let event = activate_djinn(&mut slots, 5, unit_ref(), 2);
+        let def = make_djinn_def("flint", Element::Venus);
+        let event = activate_djinn(&mut slots, 5, unit_ref(), 2, &def);
         assert!(event.is_none());
     }
 
@@ -549,7 +574,8 @@ mod tests {
         let mut slots = make_slots_with(&["flint"], Element::Venus);
         // Activate with recovery_turns=2 (matches DESIGN_LOCK: "starting the turn after next")
         // Activated Turn N -> no recovery Turn N+1 -> no recovery Turn N+2's start -> recovers Turn N+2
-        activate_djinn(&mut slots, 0, unit_ref(), 2);
+        let def = make_djinn_def("flint", Element::Venus);
+        activate_djinn(&mut slots, 0, unit_ref(), 2, &def);
         assert_eq!(slots.slots[0].state, DjinnState::Recovery);
         assert_eq!(slots.slots[0].recovery_turns_remaining, 2);
 
@@ -576,8 +602,10 @@ mod tests {
         let mut slots = make_slots_with(&["flint", "granite"], Element::Venus);
 
         // Activate flint first (order 0), then granite (order 1), both with 1 recovery turn
-        activate_djinn(&mut slots, 0, unit_ref(), 1);
-        activate_djinn(&mut slots, 1, unit_ref(), 1);
+        let def_a = make_djinn_def("flint", Element::Venus);
+        let def_b = make_djinn_def("granite", Element::Venus);
+        activate_djinn(&mut slots, 0, unit_ref(), 1, &def_a);
+        activate_djinn(&mut slots, 1, unit_ref(), 1, &def_b);
 
         // Tick 1: neither is at 0 yet, decrement both 1->0, no recovery
         let events = tick_recovery(&mut slots, unit_ref());

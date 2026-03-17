@@ -1,0 +1,37 @@
+Audit: docs/spec.md §4 vs src/domains/battle_engine/mod.rs
+
+1. Does planning order = execution order? Or is execution SPD-sorted?
+Answer: Execution is not SPD-sorted. For non-summon actions, execution follows the order actions were pushed into `planned_actions`, which matches planning/insertion order, with summons pulled ahead as an exception.
+Spec: docs/spec.md:39-54 says planning order equals execution order, not SPD-sorted, and summons are the exception.
+Code: src/domains/battle_engine/mod.rs:457-475 drains `planned_actions`, separates summons, then rebuilds `execution_sequence` as `summon_actions` followed by `other_actions` in original order. src/domains/battle_engine/mod.rs:477-505 executes that sequence directly.
+Test: src/domains/battle_engine/mod.rs:2224-2276 explicitly verifies that a slower unit planned first executes before a faster unit.
+
+2. Is get_planning_order sorting by SPD? If so, does execution follow THAT order?
+Answer: Yes, `get_planning_order` is SPD-sorted, but `execute_round` does not use it.
+Code: src/domains/battle_engine/mod.rs:212-236 documents and implements `get_planning_order` as effective-SPD descending, with base-SPD and index tiebreakers.
+Code: src/domains/battle_engine/mod.rs:452-505 contains the actual execution path and never calls `get_planning_order`; it uses drained `planned_actions` order instead.
+Tests: src/domains/battle_engine/mod.rs:3102-3170 verifies `get_planning_order` returns SPD order, while src/domains/battle_engine/mod.rs:2224-2276 verifies actual round execution preserves plan order instead.
+
+3. When a unit set to ATTACK dies before their turn, does the projected mana correctly NOT generate?
+Answer: Actual mana generation does not happen if the attacker dies before acting, because dead actors are skipped before `execute_attack`. But projected ATTACK mana is not really implemented in `battle_engine`; `projected_mana` is reduced for planned abilities only and is never incremented for planned ATTACKs.
+Spec: docs/spec.md:48-54 says projected mana should come from planned auto-attacks and should fail to materialize if the attacker dies first.
+Code: src/domains/battle_engine/mod.rs:479-488 skips dead/cannot-act actors before action execution. src/domains/battle_engine/mod.rs:654-655 generates mana only inside `execute_attack`, so a dead attacker generates no actual mana.
+Code: src/domains/battle_engine/mod.rs:259-266 validates ATTACK planning but does not change `projected_mana`. src/domains/battle_engine/mod.rs:267-286 only adjusts `projected_mana` for abilities, by subtracting reserved cost.
+Code: src/domains/combat/mod.rs:38-57 defines `projected_mana` and resets it, but `generate_mana` only affects `current_mana`, not `projected_mana`.
+Conclusion: The "do not generate if dead before turn" part is true for actual execution mana, but spec-accurate projected ATTACK mana does not appear to be implemented.
+
+4. Does the mana pool reset each round?
+Answer: Yes, conditionally. `execute_round` resets mana at round end when `battle.config.mana_resets_each_round` is true.
+Spec: docs/spec.md:66-68 says mana resets to max each round.
+Code: src/domains/battle_engine/mod.rs:511-521 performs the round-end reset behind `battle.config.mana_resets_each_round`.
+Code: src/domains/combat/mod.rs:53-57 resets both `current_mana` and `projected_mana` to `max_mana`.
+
+5. Do summons execute before all other actions?
+Answer: Yes.
+Spec: docs/spec.md:54 and docs/spec.md:181-184 state summons execute before all other actions.
+Code: src/domains/battle_engine/mod.rs:457-475 partitions summons out of `planned_actions` and prepends them to `execution_sequence`.
+Code: src/domains/battle_engine/mod.rs:501-502 dispatches summon actions through `execute_summon_action`.
+
+6. How many total tests exist in battle_engine?
+Answer: 45 tests in `src/domains/battle_engine/mod.rs`.
+Evidence: The test module begins at src/domains/battle_engine/mod.rs:1368-1369, and a direct count of `#[test]` annotations in that file is 45. The first visible `#[test]` is at src/domains/battle_engine/mod.rs:1455 and the final visible one is at src/domains/battle_engine/mod.rs:3145.

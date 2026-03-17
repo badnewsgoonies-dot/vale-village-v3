@@ -1,0 +1,20 @@
+1. All 6 status types present (Stun,Null,Incapacitate,Burn,Poison,Freeze)?
+Yes. `StatusEffectType` defines exactly those 6 in `src/shared/mod.rs`, and `src/domains/status/mod.rs` references all 6 (Burn/Poison/Freeze in ticking logic; Stun/Null/Incapacitate in action-block checks and tests).
+
+2. Any randomness/chance in the code?
+No in `src/domains/status/mod.rs`. The status logic shown is deterministic: no RNG, probability rolls, or chance-based branches.
+
+3. Burn = % max HP?
+Yes. `tick_statuses` does `result.damage += (max_hp as f32 * pct) as u16;` for Burn.
+
+4. Poison = % MISSING HP?
+Yes. `tick_statuses` computes `missing = max_hp.saturating_sub(current_hp)` and applies the poison percent to that value.
+
+5. Freeze breaks after N cumulative damage?
+Yes. In `src/domains/status/mod.rs`, Freeze breaks when `freeze_damage_taken >= freeze_threshold`. In `src/domains/battle_engine/mod.rs`, incoming hit damage is accumulated into `freeze_damage_taken`, so this is cumulative damage, not single-hit damage.
+
+6. Barriers block per-instance?
+Yes. `consume_barrier` removes exactly 1 charge from the oldest active barrier and returns immediately. In `battle_engine`, a barrier check/consume happens per damage application instance, so one blocked hit consumes one charge.
+
+7. Any damageReductionPercent still in src/?
+No. `rg -n "damageReductionPercent" src` returned no matches.

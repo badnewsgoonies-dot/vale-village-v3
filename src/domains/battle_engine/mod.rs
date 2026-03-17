@@ -279,11 +279,6 @@ pub fn plan_action(
             for t in targets {
                 get_unit(battle, *t).ok_or(PlanError::InvalidTarget)?;
             }
-            // Reserve mana in projected
-            battle.mana_pool.projected_mana = battle
-                .mana_pool
-                .projected_mana
-                .saturating_sub(ability.mana_cost);
         }
         BattleAction::ActivateDjinn { djinn_index } => {
             let idx = *djinn_index as usize;
@@ -309,8 +304,62 @@ pub fn plan_action(
         }
     }
 
+    if let Some(existing_idx) = battle
+        .planned_actions
+        .iter()
+        .position(|(planned_unit_ref, _)| *planned_unit_ref == unit_ref)
+    {
+        let (_, existing_action) = battle.planned_actions.remove(existing_idx);
+        reverse_projected_mana_change(battle, unit_ref, &existing_action);
+    }
+
+    apply_projected_mana_change(battle, unit_ref, &action);
     battle.planned_actions.push((unit_ref, action));
     Ok(())
+}
+
+fn projected_mana_delta(battle: &Battle, unit_ref: TargetRef, action: &BattleAction) -> i16 {
+    if unit_ref.side != Side::Player {
+        return 0;
+    }
+
+    match action {
+        BattleAction::Attack { .. } => get_unit(battle, unit_ref)
+            .map(|unit| 1 + unit.hit_count_bonus as i16)
+            .unwrap_or(0),
+        BattleAction::UseAbility { ability_id, .. } => battle
+            .ability_defs
+            .get(ability_id)
+            .map(|ability| -(ability.mana_cost as i16))
+            .unwrap_or(0),
+        BattleAction::ActivateDjinn { .. } | BattleAction::Summon { .. } => 0,
+    }
+}
+
+fn apply_projected_mana_change(battle: &mut Battle, unit_ref: TargetRef, action: &BattleAction) {
+    apply_projected_mana_delta(battle, projected_mana_delta(battle, unit_ref, action));
+}
+
+fn reverse_projected_mana_change(
+    battle: &mut Battle,
+    unit_ref: TargetRef,
+    action: &BattleAction,
+) {
+    apply_projected_mana_delta(battle, -projected_mana_delta(battle, unit_ref, action));
+}
+
+fn apply_projected_mana_delta(battle: &mut Battle, delta: i16) {
+    if delta >= 0 {
+        battle.mana_pool.projected_mana = battle
+            .mana_pool
+            .projected_mana
+            .saturating_add(delta as u8);
+    } else {
+        battle.mana_pool.projected_mana = battle
+            .mana_pool
+            .projected_mana
+            .saturating_sub((-delta) as u8);
+    }
 }
 
 // ── plan_enemy_actions ──────────────────────────────────────────────
@@ -1025,9 +1074,122 @@ fn execute_djinn_activate(
 ) {
     let recovery_turns = battle.config.djinn_recovery_start_delay
         + battle.config.djinn_recovery_per_turn;
-    let actor = get_unit_mut(battle, actor_ref).unwrap();
-    if let Some(ev) = djinn::activate_djinn(&mut actor.djinn_slots, djinn_index, actor_ref, recovery_turns) {
-        events.push(BattleEvent::DjinnChanged(ev));
+    let djinn_def = {
+        let actor = get_unit(battle, actor_ref).unwrap();
+        let djinn_id = match actor.djinn_slots.slots.get(djinn_index) {
+            Some(djinn) => &djinn.djinn_id,
+            None => return,
+        };
+        match battle.djinn_defs.get(djinn_id) {
+            Some(def) => def.clone(),
+            None => return,
+        }
+    };
+
+    let activation = {
+        let actor = get_unit_mut(battle, actor_ref).unwrap();
+        djinn::activate_djinn(
+            &mut actor.djinn_slots,
+            djinn_index,
+            actor_ref,
+            recovery_turns,
+            &djinn_def,
+        )
+    };
+
+    if let Some((state_change, activation_event)) = activation {
+        events.push(BattleEvent::DjinnChanged(state_change));
+        resolve_djinn_activation_damage(battle, actor_ref, activation_event, events);
+    }
+}
+
+fn resolve_djinn_activation_damage(
+    battle: &mut Battle,
+    actor_ref: TargetRef,
+    activation_event: djinn::DjinnActivationEvent,
+    events: &mut Vec<BattleEvent>,
+) {
+    let target_index = match battle.enemies.iter().position(|enemy| enemy.unit.is_alive) {
+        Some(index) => index,
+        None => return,
+    };
+    let target_ref = TargetRef {
+        side: Side::Enemy,
+        index: target_index as u8,
+    };
+
+    let (attacker_stats, attacker_buff_mods) = {
+        let actor = get_unit(battle, actor_ref).unwrap();
+        let buff_mods = status::compute_stat_modifiers(
+            &actor.status_state.buffs,
+            &actor.status_state.debuffs,
+        );
+        (actor.unit.stats, buff_mods)
+    };
+    let effective_attacker = Stats {
+        hp: attacker_stats.hp,
+        atk: (attacker_stats.atk as i32 + attacker_buff_mods.atk as i32).max(0) as u16,
+        def: (attacker_stats.def as i32 + attacker_buff_mods.def as i32).max(0) as u16,
+        mag: (attacker_stats.mag as i32 + attacker_buff_mods.mag as i32).max(0) as u16,
+        spd: (attacker_stats.spd as i32 + attacker_buff_mods.spd as i32).max(0) as u16,
+    };
+
+    let (target_stats, target_buff_mods) = {
+        let target = get_unit(battle, target_ref).unwrap();
+        let buff_mods = status::compute_stat_modifiers(
+            &target.status_state.buffs,
+            &target.status_state.debuffs,
+        );
+        (target.unit.stats, buff_mods)
+    };
+    let effective_target = Stats {
+        hp: target_stats.hp,
+        atk: (target_stats.atk as i32 + target_buff_mods.atk as i32).max(0) as u16,
+        def: (target_stats.def as i32 + target_buff_mods.def as i32).max(0) as u16,
+        mag: (target_stats.mag as i32 + target_buff_mods.mag as i32).max(0) as u16,
+        spd: (target_stats.spd as i32 + target_buff_mods.spd as i32).max(0) as u16,
+    };
+
+    let damage = combat::calculate_damage(
+        activation_event.base_damage,
+        DamageType::Psynergy,
+        &effective_attacker,
+        &effective_target,
+        &battle.config,
+    );
+
+    let barrier_blocked = {
+        let target = get_unit_mut(battle, target_ref).unwrap();
+        status::consume_barrier(&mut target.status_state.barriers)
+    };
+    if barrier_blocked {
+        events.push(BattleEvent::BarrierBlocked(target_ref));
+        return;
+    }
+
+    {
+        let target = get_unit_mut(battle, target_ref).unwrap();
+        target.unit.current_hp = target.unit.current_hp.saturating_sub(damage);
+        if target.unit.current_hp == 0 {
+            target.unit.is_alive = false;
+        }
+        for status in target.status_state.statuses.iter_mut() {
+            if status.effect_type == StatusEffectType::Freeze {
+                status.freeze_damage_taken += damage;
+            }
+        }
+    }
+
+    events.push(BattleEvent::DamageDealt(DamageDealt {
+        source: actor_ref,
+        target: target_ref,
+        amount: damage,
+        damage_type: DamageType::Psynergy,
+        is_crit: false,
+    }));
+
+    if !battle.enemies[target_index].unit.is_alive {
+        events.push(BattleEvent::UnitDefeated(UnitDefeated { unit: target_ref }));
     }
 }
 
@@ -1436,6 +1598,33 @@ mod tests {
         (aid, def)
     }
 
+    fn make_djinn_def(id: &str, element: Element, summon_damage: u16) -> (DjinnId, DjinnDef) {
+        let djinn_id = DjinnId(id.to_string());
+        let empty_ability_set = crate::shared::DjinnAbilitySet {
+            good_abilities: vec![],
+            recovery_abilities: vec![],
+        };
+        let djinn_def = DjinnDef {
+            id: djinn_id.clone(),
+            name: id.to_string(),
+            element,
+            tier: 1,
+            stat_bonus: crate::shared::StatBonus::default(),
+            summon_effect: Some(crate::shared::SummonEffect {
+                damage: summon_damage,
+                buff: None,
+                status: None,
+                heal: None,
+            }),
+            ability_pairs: crate::shared::DjinnAbilityPairs {
+                same: empty_ability_set.clone(),
+                counter: empty_ability_set.clone(),
+                neutral: empty_ability_set,
+            },
+        };
+        (djinn_id, djinn_def)
+    }
+
     fn setup_basic_battle() -> Battle {
         let player_stats = Stats { hp: 100, atk: 30, def: 20, mag: 25, spd: 15 };
         let enemy_stats = Stats { hp: 80, atk: 20, def: 15, mag: 10, spd: 10 };
@@ -1493,6 +1682,58 @@ mod tests {
         );
         assert!(result.is_ok());
         assert_eq!(battle.planned_actions.len(), 1);
+    }
+
+    #[test]
+    fn test_planned_attack_adds_projected_mana() {
+        let player_stats = Stats { hp: 100, atk: 30, def: 20, mag: 25, spd: 15 };
+        let enemy_stats = Stats { hp: 80, atk: 20, def: 15, mag: 10, spd: 10 };
+
+        let mut player = make_player("hero", player_stats, 5);
+        player.equipment_effects.total_hit_count_bonus = 2;
+        let enemy = make_enemy("goblin", enemy_stats);
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![enemy],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
+
+        let actor = TargetRef { side: Side::Player, index: 0 };
+        let target = TargetRef { side: Side::Enemy, index: 0 };
+
+        plan_action(&mut battle, actor, BattleAction::Attack { target }).unwrap();
+
+        assert_eq!(battle.mana_pool.projected_mana, 8);
+    }
+
+    #[test]
+    fn test_planned_attack_undo_reverses_mana() {
+        let mut battle = setup_basic_battle();
+        let actor = TargetRef { side: Side::Player, index: 0 };
+        let target = TargetRef { side: Side::Enemy, index: 0 };
+
+        plan_action(&mut battle, actor, BattleAction::Attack { target }).unwrap();
+        assert_eq!(battle.mana_pool.projected_mana, 6);
+
+        plan_action(
+            &mut battle,
+            actor,
+            BattleAction::UseAbility {
+                ability_id: AbilityId("quake".into()),
+                targets: vec![target],
+            },
+        )
+        .unwrap();
+
+        assert_eq!(battle.mana_pool.projected_mana, 2);
+        assert_eq!(battle.planned_actions.len(), 1);
+        assert!(matches!(
+            &battle.planned_actions[0].1,
+            BattleAction::UseAbility { .. }
+        ));
     }
 
     // ── Test: plan_action ability with enough mana succeeds ─────────
@@ -1875,9 +2116,69 @@ mod tests {
     // ── Test: execute_round with djinn activation ───────────────────
 
     #[test]
-    fn test_execute_round_djinn_activation() {
+    fn test_djinn_activation_deals_damage() {
+        let player_stats = Stats { hp: 100, atk: 30, def: 20, mag: 25, spd: 15 };
+        let enemy_stats = Stats { hp: 80, atk: 20, def: 15, mag: 10, spd: 10 };
+
+        let player = make_player("hero", player_stats, 5);
+        let first_enemy = make_enemy("fallen-goblin", enemy_stats);
+        let second_enemy = make_enemy("target-goblin", enemy_stats);
+        let (djinn_id, djinn_def) = make_djinn_def("flint", Element::Venus, 50);
+        let mut djinn_defs = HashMap::new();
+        djinn_defs.insert(djinn_id.clone(), djinn_def);
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![first_enemy, second_enemy],
+            test_config(),
+            HashMap::new(),
+            djinn_defs,
+        );
+        battle.player_units[0].djinn_slots.add(djinn_id);
+        battle.enemies[0].unit.is_alive = false;
+        battle.enemies[0].unit.current_hp = 0;
+
+        let actor = TargetRef { side: Side::Player, index: 0 };
+        plan_action(
+            &mut battle,
+            actor,
+            BattleAction::ActivateDjinn { djinn_index: 0 },
+        )
+        .unwrap();
+
+        let expected_damage = combat::calculate_damage(
+            50,
+            DamageType::Psynergy,
+            &battle.player_units[0].unit.stats,
+            &battle.enemies[1].unit.stats,
+            &battle.config,
+        );
+        let events = execute_round(&mut battle);
+
+        assert_eq!(battle.enemies[1].unit.current_hp, 80 - expected_damage);
+        let damage_events: Vec<&DamageDealt> = events
+            .iter()
+            .filter_map(|event| match event {
+                BattleEvent::DamageDealt(damage) => Some(damage),
+                _ => None,
+            })
+            .collect();
+        assert!(
+            damage_events.iter().any(|damage| {
+                damage.target == TargetRef { side: Side::Enemy, index: 1 }
+                    && damage.amount == expected_damage
+                    && damage.damage_type == DamageType::Psynergy
+            }),
+            "Activation should deal psynergy damage to the first alive enemy"
+        );
+    }
+
+    #[test]
+    fn test_djinn_activation_still_changes_state() {
         let mut battle = setup_basic_battle();
-        battle.player_units[0].djinn_slots.add(DjinnId("flint".into()));
+        let (djinn_id, djinn_def) = make_djinn_def("flint", Element::Venus, 50);
+        battle.djinn_defs.insert(djinn_id.clone(), djinn_def);
+        battle.player_units[0].djinn_slots.add(djinn_id);
 
         let actor = TargetRef { side: Side::Player, index: 0 };
         plan_action(
