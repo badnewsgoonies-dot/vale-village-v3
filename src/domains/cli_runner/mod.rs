@@ -760,16 +760,16 @@ fn plan_interactive_action_for_player(
     }
 }
 
-/// Run a demo battle using loaded game data.
+/// Run a demo battle using loaded game data for the specified encounter.
 ///
 /// - 2 player units: Adept + Blaze
-/// - Enemies loaded from encounter "house-02" (Earth Scout + Earthbound Wolf)
+/// - Enemies loaded from the given encounter_id (falls back to house-02, then manual enemies)
 /// - Auto-play loop: each player unit attacks first alive enemy
 /// - Every 3rd round, first player uses an ability if mana allows
 /// - Enemies attack back: each alive enemy attacks first alive player
 /// - Both sides can win or lose
 /// - Stalemate guard at round 20
-pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
+pub fn run_demo_battle(game_data: &GameData, encounter_id: &str) -> BattleResult {
     // Look up player units
     let adept = game_data
         .units
@@ -814,10 +814,11 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
 
     let player_data: Vec<PlayerUnitData> = vec![adept_data, blaze_data];
 
-    // Load encounter "house-02", fall back to manual enemy list
+    // Load encounter by ID, fall back to house-02, then manual enemy list
     let encounter = game_data
         .encounters
-        .get(&EncounterId("house-02".to_string()));
+        .get(&EncounterId(encounter_id.to_string()))
+        .or_else(|| game_data.encounters.get(&EncounterId("house-02".to_string())));
 
     let enemy_data: Vec<EnemyUnitData> = if let Some(enc) = encounter {
         enc.enemies
@@ -1133,7 +1134,7 @@ mod tests {
     #[test]
     fn test_demo_battle_completes_without_panic() {
         let game_data = load_sample_data();
-        let result = run_demo_battle(&game_data);
+        let result = run_demo_battle(&game_data, "training-dummy");
         // Battle must finish as Victory or Defeat — no panic
         match result {
             BattleResult::Victory { xp, gold } => {
