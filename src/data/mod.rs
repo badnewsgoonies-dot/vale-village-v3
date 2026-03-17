@@ -1,0 +1,19 @@
+//! Tuning values — mutable coefficients, NOT frozen.
+use crate::shared::CombatConfig;
+
+pub fn default_combat_config() -> CombatConfig {
+    CombatConfig {
+        physical_def_multiplier: 0.5,
+        psynergy_def_multiplier: 0.3,
+        crit_threshold: 10,
+        crit_multiplier: 2.0,
+        mana_gain_per_hit: 1,
+        mana_resets_each_round: true,
+        max_party_size: 4,
+        max_equipped_djinn: 3,
+        max_level: 20,
+        max_buff_stacks: 3,
+        djinn_recovery_start_delay: 1,
+        djinn_recovery_per_turn: 1,
+    }
+}

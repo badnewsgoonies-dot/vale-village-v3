@@ -1,6 +1,7 @@
 //! Vale Village v3 — Shared Type Contract
 //! FROZEN after checksum. No worker edits this file.
 //! Shapes only — tuning values live in data/tuning.
+#![allow(dead_code)]
 
 use serde::{Deserialize, Serialize};
 
