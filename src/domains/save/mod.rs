@@ -70,7 +70,7 @@ pub struct SavedUnit {
     pub djinn: Vec<SavedDjinn>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct SavedEquipment {
     pub weapon: Option<EquipmentId>,
     pub helm: Option<EquipmentId>,
@@ -79,17 +79,6 @@ pub struct SavedEquipment {
     pub accessory: Option<EquipmentId>,
 }
 
-impl Default for SavedEquipment {
-    fn default() -> Self {
-        Self {
-            weapon: None,
-            helm: None,
-            armor: None,
-            boots: None,
-            accessory: None,
-        }
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SavedDjinn {

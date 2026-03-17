@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![allow(dead_code, clippy::unnecessary_map_or)]
 //! Battle Engine — Integration layer wiring combat, status, djinn, equipment,
 //! and damage_mods into a playable turn-by-turn battle loop.
 
@@ -10,6 +10,7 @@ use crate::shared::{
     Side, Stats, StatusApplied, TargetRef, UnitDefeated,
 };
 
+use crate::domains::ai::{self, AiSelfView, AiStrategy, AiUnitView};
 use crate::domains::combat::{self, BattleUnit, ManaPool};
 use crate::domains::damage_mods;
 use crate::domains::djinn::{self, DjinnSlots};
@@ -26,6 +27,8 @@ pub struct BattleUnitFull {
     pub djinn_slots: DjinnSlots,
     pub equipment: EquipmentLoadout,
     pub mana_contribution: u8,
+    /// Ability IDs this unit can use (populated from EnemyDef for enemies).
+    pub ability_ids: Vec<AbilityId>,
 }
 
 /// Top-level battle state.
@@ -56,6 +59,12 @@ pub enum BattleEvent {
     UnitDefeated(UnitDefeated),
     RoundStarted(u32),
     RoundEnded(u32),
+    /// An enemy uses a named ability on a target (for display purposes).
+    EnemyAbilityUsed {
+        actor: TargetRef,
+        ability_name: String,
+        targets: Vec<TargetRef>,
+    },
 }
 
 /// Outcome of a completed battle.
@@ -142,6 +151,7 @@ pub fn new_battle(
                 djinn_slots: pd.djinn_slots,
                 equipment: pd.equipment,
                 mana_contribution: mana,
+                ability_ids: Vec::new(),
             }
         })
         .collect();
@@ -150,6 +160,7 @@ pub fn new_battle(
         .into_iter()
         .map(|ed| {
             let stats = ed.enemy_def.stats;
+            let ability_ids = ed.enemy_def.abilities.clone();
             BattleUnitFull {
                 unit: BattleUnit {
                     id: ed.enemy_def.id.0.clone(),
@@ -163,6 +174,7 @@ pub fn new_battle(
                 djinn_slots: DjinnSlots::new(),
                 equipment: EquipmentLoadout::default(),
                 mana_contribution: 0,
+                ability_ids,
             }
         })
         .collect();
@@ -291,6 +303,98 @@ pub fn plan_enemy_actions(battle: &mut Battle) {
         };
         // plan_action validates and stores; ignore errors (e.g. stunned enemies)
         let _ = plan_action(battle, unit_ref, action);
+    }
+}
+
+// ── plan_enemy_actions_with_ai ──────────────────────────────────────
+
+/// Default mana budget for enemies per round (they don't share the player pool).
+const ENEMY_MANA_BUDGET: u8 = 5;
+
+/// Smart enemy AI: uses the AI domain to decide each enemy's action.
+///
+/// For each alive enemy:
+/// 1. Build AiSelfView from the enemy's BattleUnitFull.
+/// 2. Build Vec<AiUnitView> from alive player units.
+/// 3. Collect enemy's available abilities from battle.ability_defs.
+/// 4. Call ai::choose_enemy_action(self_view, player_views, abilities, strategy).
+/// 5. Push the returned BattleAction directly (bypassing mana pool validation,
+///    since enemies have their own mana budget independent of the player pool).
+pub fn plan_enemy_actions_with_ai(battle: &mut Battle, strategy: AiStrategy) {
+    // Build player views once (shared across all enemy decisions)
+    let player_views: Vec<AiUnitView> = battle
+        .player_units
+        .iter()
+        .enumerate()
+        .map(|(i, pu)| AiUnitView {
+            index: i as u8,
+            stats: pu.unit.stats,
+            current_hp: pu.unit.current_hp,
+            max_hp: pu.unit.stats.hp,
+            is_alive: pu.unit.is_alive,
+        })
+        .collect();
+
+    let enemy_count = battle.enemies.len();
+    for ei in 0..enemy_count {
+        if !battle.enemies[ei].unit.is_alive {
+            continue;
+        }
+
+        // Check if enemy can act (status effects like stun)
+        if !status::can_act(&battle.enemies[ei].status_state.statuses) {
+            continue;
+        }
+
+        let enemy = &battle.enemies[ei];
+
+        // Build AiSelfView
+        let self_view = AiSelfView {
+            index: ei as u8,
+            current_hp: enemy.unit.current_hp,
+            max_hp: enemy.unit.stats.hp,
+            mana_available: ENEMY_MANA_BUDGET,
+        };
+
+        // Collect this enemy's usable abilities from its ability_ids list,
+        // looking up each AbilityId in battle.ability_defs.
+        let enemy_ability_refs: Vec<&AbilityDef> = enemy
+            .ability_ids
+            .iter()
+            .filter_map(|aid| battle.ability_defs.get(aid))
+            .collect();
+
+        let action =
+            ai::choose_enemy_action(&self_view, &player_views, &enemy_ability_refs, strategy);
+
+        let unit_ref = TargetRef {
+            side: Side::Enemy,
+            index: ei as u8,
+        };
+
+        // Push directly — enemies don't share the player mana pool.
+        // Validation: ensure targets are alive (lightweight check).
+        match &action {
+            BattleAction::Attack { target } => {
+                if get_unit(battle, *target).map_or(false, |u| u.unit.is_alive) {
+                    battle.planned_actions.push((unit_ref, action));
+                }
+            }
+            BattleAction::UseAbility { ability_id, targets } => {
+                // Verify ability exists and at least one target is alive
+                if battle.ability_defs.contains_key(ability_id)
+                    && targets
+                        .iter()
+                        .any(|t| get_unit(battle, *t).map_or(false, |u| u.unit.is_alive))
+                {
+                    battle.planned_actions.push((unit_ref, action));
+                }
+            }
+            _ => {
+                // Other actions (djinn, summon) not used by enemy AI currently
+                battle.planned_actions.push((unit_ref, action));
+            }
+        }
     }
 }
 
@@ -516,15 +620,26 @@ fn execute_ability(
         None => return,
     };
 
-    // Spend mana
-    let old_mana = battle.mana_pool.current_mana;
-    if !battle.mana_pool.spend_mana(ability.mana_cost) {
-        return;
+    // Spend mana — enemies have their own budget, only deduct from pool for players
+    if actor_ref.side == Side::Player {
+        let old_mana = battle.mana_pool.current_mana;
+        if !battle.mana_pool.spend_mana(ability.mana_cost) {
+            return;
+        }
+        events.push(BattleEvent::ManaChanged(ManaPoolChanged {
+            old_value: old_mana,
+            new_value: battle.mana_pool.current_mana,
+        }));
     }
-    events.push(BattleEvent::ManaChanged(ManaPoolChanged {
-        old_value: old_mana,
-        new_value: battle.mana_pool.current_mana,
-    }));
+
+    // Emit ability usage event for enemies so the CLI can display it
+    if actor_ref.side == Side::Enemy {
+        events.push(BattleEvent::EnemyAbilityUsed {
+            actor: actor_ref,
+            ability_name: ability.name.clone(),
+            targets: targets.to_vec(),
+        });
+    }
 
     let attacker_stats = get_unit(battle, actor_ref).unwrap().unit.stats;
 
