@@ -1,0 +1,578 @@
+[
+    (
+        id: DjinnId("flint"),
+        name: "Flint",
+        element: Venus,
+        tier: 1,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 80,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("flint-stone-fist"), AbilityId("flint-granite-guard")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("flint-lava-stone"), AbilityId("flint-magma-shield")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("flint-earth-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("granite"),
+        name: "Granite",
+        element: Venus,
+        tier: 2,
+        stat_bonus: (atk: 0, def: 10, mag: 0, spd: 0, hp: 0),
+        summon_effect: None,
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("granite-earth-wall"), AbilityId("granite-terra-break")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("granite-magma-barrier"), AbilityId("granite-volcanic-spike")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("granite-ground-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("bane"),
+        name: "Bane",
+        element: Venus,
+        tier: 3,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 300,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("bane-earthquake"), AbilityId("bane-terra-guard")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("bane-lava-fist"), AbilityId("bane-molten-armor")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("bane-rock-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("forge"),
+        name: "Forge",
+        element: Mars,
+        tier: 1,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 120,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("forge-flame-strike"), AbilityId("forge-inferno-blaze")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("forge-stone-slam"), AbilityId("forge-granite-shield")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("forge-ember-wave")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("corona"),
+        name: "Corona",
+        element: Mars,
+        tier: 2,
+        stat_bonus: (atk: 0, def: 0, mag: 8, spd: 0, hp: 0),
+        summon_effect: None,
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("corona-scorch"), AbilityId("corona-ember-veil")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("corona-earthbreaker"), AbilityId("corona-mountain-wall")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("corona-solar-spin")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("fury"),
+        name: "Fury",
+        element: Mars,
+        tier: 3,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 220,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("fury-heat-rush"), AbilityId("fury-flare-guard")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("fury-stone-barrage"), AbilityId("fury-terra-gate")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("fury-wind-flare")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("fizz"),
+        name: "Fizz",
+        element: Mercury,
+        tier: 1,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 100,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("fizz-healing-wave"), AbilityId("fizz-wave-shield")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("fizz-gale-freeze"), AbilityId("fizz-storm-chill")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("fizz-aqua-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("tonic"),
+        name: "Tonic",
+        element: Mercury,
+        tier: 2,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: None,
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("tonic-frost-bite"), AbilityId("tonic-aqua-veil")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("tonic-wind-freeze"), AbilityId("tonic-gale-barrier")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("tonic-soothing-wave")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("crystal"),
+        name: "Crystal",
+        element: Mercury,
+        tier: 3,
+        stat_bonus: (atk: 0, def: 0, mag: 12, spd: 0, hp: 0),
+        summon_effect: None,
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("crystal-crystal-ray"), AbilityId("crystal-aqua-armor")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("crystal-storm-crystal"), AbilityId("crystal-gale-glaze")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("crystal-mist-veil")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("breeze"),
+        name: "Breeze",
+        element: Jupiter,
+        tier: 1,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 110,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("breeze-gale-force"), AbilityId("breeze-wind-veil")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("breeze-ice-burst"), AbilityId("breeze-aero-shield")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("breeze-eddy-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("squall"),
+        name: "Squall",
+        element: Jupiter,
+        tier: 2,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 160,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("squall-storm-burst"), AbilityId("squall-hurricane-guard")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("squall-wave-blast"), AbilityId("squall-frost-surge")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("squall-cloud-strike")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("storm"),
+        name: "Storm",
+        element: Jupiter,
+        tier: 3,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: None,
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("storm-chain-gale"), AbilityId("storm-tempest-shield")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("storm-cold-hail"), AbilityId("storm-icy-barrier")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("storm-breeze-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("surge"),
+        name: "Surge",
+        element: Mercury,
+        tier: 2,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 180,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("surge-healing-tide"), AbilityId("surge-aqua-barrier")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("surge-steam-blast"), AbilityId("surge-boiling-wave")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("surge-aqua-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("chill"),
+        name: "Chill",
+        element: Mercury,
+        tier: 3,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: None,
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("chill-absolute-heal"), AbilityId("chill-frost-revival")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("chill-frozen-flame"), AbilityId("chill-glacial-fire")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("chill-frost-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("gust"),
+        name: "Gust",
+        element: Jupiter,
+        tier: 1,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 8, hp: 0),
+        summon_effect: None,
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("gust-swift-strike"), AbilityId("gust-wind-slash")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("gust-flame-wind"), AbilityId("gust-ember-gale")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("gust-breeze-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("bolt"),
+        name: "Bolt",
+        element: Jupiter,
+        tier: 2,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 200,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("bolt-thunder-slash"), AbilityId("bolt-lightning-strike")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("bolt-plasma-strike"), AbilityId("bolt-fire-lightning")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("bolt-spark-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("tempest"),
+        name: "Tempest",
+        element: Jupiter,
+        tier: 3,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 350,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("tempest-hurricane-blade"), AbilityId("tempest-cyclone-slash")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("tempest-fire-tornado"), AbilityId("tempest-inferno-cyclone")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("tempest-gale-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("rockling"),
+        name: "Rockling",
+        element: Venus,
+        tier: 1,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 46,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("earth-spike")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("earth-spike")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("ember"),
+        name: "Ember",
+        element: Mars,
+        tier: 1,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 46,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("fire-burst")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [],
+            ),
+            neutral: (
+                good_abilities: [],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("nova"),
+        name: "Nova",
+        element: Mars,
+        tier: 3,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 320,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("flame-wall"), AbilityId("inferno-slash")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("granite-magma-barrier"), AbilityId("granite-volcanic-spike")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("flint-ground-shield")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("scorch"),
+        name: "Scorch",
+        element: Mars,
+        tier: 3,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 280,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("scorch-inferno"), AbilityId("scorch-lava-burst")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("scorch-heat-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("serac"),
+        name: "Serac",
+        element: Venus,
+        tier: 3,
+        stat_bonus: (atk: 0, def: 15, mag: 0, spd: 0, hp: 0),
+        summon_effect: None,
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("serac-stone-wall"), AbilityId("serac-terra-guard")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("serac-earth-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("eclipse"),
+        name: "Eclipse",
+        element: Jupiter,
+        tier: 3,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: None,
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("eclipse-wind-slash"), AbilityId("eclipse-storm-strike")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("eclipse-shadow-pulse")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+]

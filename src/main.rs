@@ -7,7 +7,7 @@ use domains::cli_runner;
 use domains::data_loader;
 
 fn main() {
-    let data_dir = std::path::Path::new("data/sample");
+    let data_dir = std::path::Path::new("data/full");
     let game_data = match data_loader::load_game_data(data_dir) {
         Ok(data) => data,
         Err(errors) => {
