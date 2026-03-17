@@ -12,10 +12,10 @@ Use this as a procedural manual. Follow it in order. Do not skip steps.
 
 ## 0-WARNING: The two failure classes that pass all gates
 
-|Class        |Example                                          |Caught by                |Enforcement          |
-|-------------|-------------------------------------------------|-------------------------|---------------------|
-|Structural   |Type mismatch, scope violation, missing import   |Compiler, tests, lints   |Mechanical (20/20)   |
-|Experiential |Dead feature, unreachable content, broken path   |Nothing automated        |Judgment + graduation|
+|Class       |Example                                       |Caught by             |Enforcement          |
+|------------|----------------------------------------------|----------------------|---------------------|
+|Structural  |Type mismatch, scope violation, missing import|Compiler, tests, lints|Mechanical (20/20)   |
+|Experiential|Dead feature, unreachable content, broken path|Nothing automated     |Judgment + graduation|
 
 Your mechanical gates will pass. They always pass by Wave 3. **That feeling of "on track" is a false signal.** The countermeasure is the Harden phase (Section 5) and the stop conditions (Section 8).
 
@@ -28,7 +28,7 @@ Your mechanical gates will pass. They always pass by Wave 3. **That feeling of "
 ### 0.1 Your role
 
 1. You are the orchestrator, not the implementer. Agents write all code.
-2. Treat every instruction below as a constraint, not a suggestion. If a constraint is not mechanically enforced, assume it will be violated.
+1. Treat every instruction below as a constraint, not a suggestion. If a constraint is not mechanically enforced, assume it will be violated.
 
 ### 0.2 Install the dispatch stack
 
@@ -59,18 +59,18 @@ Copilot CLI: npm install -g @github/copilot
 When premium models hit 402:
 
 1. GPT-5.4 via Codex CLI (different quota pool)
-2. gpt-5-mini via Copilot (non-premium, capable for scoped tasks)
-3. gpt-4.1 via Copilot (last resort — **fabricates verification**, see 0.4)
+1. gpt-5-mini via Copilot (non-premium, capable for scoped tasks)
+1. gpt-4.1 via Copilot (last resort — **fabricates verification**, see 0.4)
 
 ### 0.4 Model selection
 
-| Model | Role | Critical note |
-|-------|------|--------------|
-| Opus 4.6 | Orchestrator | 1M context sustains 20+ wave campaigns |
-| Sonnet 4.6 | Coding worker | Finds tool paths, resourceful |
-| GPT-5.4 | Codex worker | Reliable, good scoped output |
-| gpt-5-mini | Cheap tasks | Evidence tags work on simple claims |
-| **gpt-4.1** | **Avoid** | **Fabricates verification — claims files exist that don't** |
+|Model      |Role         |Critical note                                              |
+|-----------|-------------|-----------------------------------------------------------|
+|Opus 4.6   |Orchestrator |1M context sustains 20+ wave campaigns                     |
+|Sonnet 4.6 |Coding worker|Finds tool paths, resourceful                              |
+|GPT-5.4    |Codex worker |Reliable, good scoped output                               |
+|gpt-5-mini |Cheap tasks  |Evidence tags work on simple claims                        |
+|**gpt-4.1**|**Avoid**    |**Fabricates verification — claims files exist that don't**|
 
 **Rule:** The model is the first-order throughput variable. Same architecture, 9.8× output gap between best and worst worker models (measured). Always pick the strongest available.
 
@@ -102,8 +102,8 @@ No workers launch until this exists and is frozen.
 (Evidence: 10 workers without contract → 6 incompatible type systems. 50+ domain builds with contract → zero integration type errors.)
 
 1. Create `src/shared/mod.rs` containing every cross-domain type, enum, event shape, and function signature.
-2. Freeze shapes, not values. Types, enums, and interfaces are frozen. Thresholds, timings, and balance numbers live in config.
-3. Checksum and commit:
+1. Freeze shapes, not values. Types, enums, and interfaces are frozen. Thresholds, timings, and balance numbers live in config.
+1. Checksum and commit:
 
 ```bash
 shasum -a 256 src/shared/mod.rs > .contract.sha256
@@ -118,23 +118,23 @@ git commit -m "chore: freeze shared type contract"
 
 ### 1.1 Briefing format
 
-| Format | Output | Ship? |
-|--------|--------|-------|
-| Freeform ("make X better") | 446 lines | ✓ but inconsistent |
-| Formal spec | 9 lines | Barely |
-| **Decision Fields (do/don't/drift-cue)** | **1514 lines** | **✓** |
-| Examples of good output | 513 lines | Scope drift |
-| Minimal one-liner | 2 lines | ✗ |
+|Format                                  |Output        |Ship?             |
+|----------------------------------------|--------------|------------------|
+|Freeform ("make X better")              |446 lines     |✓ but inconsistent|
+|Formal spec                             |9 lines       |Barely            |
+|**Decision Fields (do/don't/drift-cue)**|**1514 lines**|**✓**             |
+|Examples of good output                 |513 lines     |Scope drift       |
+|Minimal one-liner                       |2 lines       |✗                 |
 
 **Rule:** Telling the agent what NOT to do and what drift looks like produces more output than telling it what TO do.
 
 ### 1.2 Specificity
 
-| Specificity | Ship rate |
-|------------|-----------|
-| Exact values ("set alpha to 0.6, file X line 40") | **100%** |
-| Named actions ("add particle effect to tool swing") | **67%** |
-| Vague goals ("make mining feel better") | **0%** |
+|Specificity                                        |Ship rate|
+|---------------------------------------------------|---------|
+|Exact values ("set alpha to 0.6, file X line 40")  |**100%** |
+|Named actions ("add particle effect to tool swing")|**67%**  |
+|Vague goals ("make mining feel better")            |**0%**   |
 
 **Rule:** If you cannot name the file and the value, the prompt is not ready. Do not dispatch.
 
@@ -287,12 +287,12 @@ Run mechanical checks: compile, test, lint, scope clamp.
 Emit artifacts ONLY when triggered:
 
 1. Non-obvious decision made
-2. Direct verification happened
-3. Reusable principle emerged
-4. Open debt appeared
-5. Contradiction surfaced
-6. Correction invalidated prior belief
-7. Graduation test created
+1. Direct verification happened
+1. Reusable principle emerged
+1. Open debt appeared
+1. Contradiction surfaced
+1. Correction invalidated prior belief
+1. Graduation test created
 
 If nothing triggers, write nothing.
 
@@ -313,8 +313,8 @@ If reachable but wrong or confusing, it is not finished.
 For each `[Observed]` truth:
 
 1. Name the invariant
-2. Encode it as a test or gate
-3. Track remaining ungraduated work as P0/P1/P2
+1. Encode it as a test or gate
+1. Track remaining ungraduated work as P0/P1/P2
 
 **Rule:** Do not start the next wave until Document, Harden, and Graduate are complete.
 
@@ -327,11 +327,11 @@ For each `[Observed]` truth:
 When the agent encounters conflicting information:
 
 1. **Fresh code, tests, runtime output** — what the files actually say right now
-2. **[Observed] artifacts** with concrete source_refs
-3. **Current STATE.md**
-4. **Project docs, contracts, specs**
-5. **Research findings** with certainty labels
-6. **Conversation history** — the LOWEST trust tier
+1. **[Observed] artifacts** with concrete source_refs
+1. **Current STATE.md**
+1. **Project docs, contracts, specs**
+1. **Research findings** with certainty labels
+1. **Conversation history** — the LOWEST trust tier
 
 **Rule:** Conversation is scaffolding, not substrate. An agent that trusts its own prior conversation over the current code will propagate stale claims as truth.
 
@@ -365,11 +365,11 @@ supersedes: []
 
 ### 6.4 Evidence interaction with model capability
 
-|  | Simple claims | Complex ambiguity |
-|---|---|---|
-| Frontier models (Sonnet, GPT-5.4) | works | **✓ 13%→54%** |
-| Cheap models (gpt-5-mini) | **✓ 33%→100%** | no effect |
-| gpt-4.1 | no effect | no effect |
+|                                 |Simple claims |Complex ambiguity|
+|---------------------------------|--------------|-----------------|
+|Frontier models (Sonnet, GPT-5.4)|works         |**✓ 13%→54%**    |
+|Cheap models (gpt-5-mini)        |**✓ 33%→100%**|no effect        |
+|gpt-4.1                          |no effect     |no effect        |
 
 Validated across game and non-game codebases (Rust async API: 33%→100% on gpt-5-mini).
 
@@ -380,9 +380,9 @@ Validated across game and non-game codebases (Rust async API: 33%→100% on gpt-
 ### 7.1 Start (every session)
 
 1. Read this playbook + STATE.md
-2. Mount the current objective
-3. Pre-touch retrieval: `git log --oneline -15 -- <path>`, read active debt
-4. State BEFORE acting: tier (S/M/C), surface being touched, current phase, any [Assumed] claims on the critical path
+1. Mount the current objective
+1. Pre-touch retrieval: `git log --oneline -15 -- <path>`, read active debt
+1. State BEFORE acting: tier (S/M/C), surface being touched, current phase, any [Assumed] claims on the critical path
 
 ### 7.2 Tiering
 
@@ -395,9 +395,9 @@ Start at S if ambiguous. Escalate when touching shared contracts, persistence, t
 ### 7.3 End (every session)
 
 1. Update STATE.md — phase, debts, decisions, gate status, uncertainties
-2. Write triggered artifacts only
-3. Commit memory changes
-4. Do NOT rely on conversation to preserve what was learned
+1. Write triggered artifacts only
+1. Commit memory changes
+1. Do NOT rely on conversation to preserve what was learned
 
 -----
 
@@ -448,15 +448,15 @@ State tier (S/M/C) and [Assumed] claims on critical path before acting.
 Cease work and reassess when any of these appear:
 
 1. **Contract drift** — checksum fails → restore contract, re-validate
-2. **Clamp breaks the fix** — boundary is wrong or task is integration work → re-scope
-3. **False green** — tests pass but contract is unused, bypassed, or visually broken
-4. **Abstraction reflex** — redesigning architecture to avoid debugging the real issue
-5. **Delegation compression** — asked for 80 items, got 8 (worker read summary, not spec)
-6. **Self-model error** — agent claims it cannot do things it can
-7. **Identity paradox** — one agent playing both architect and worker loses role separation
-8. **Beautiful dead product** — gates green but surface is unreachable or unhelpful
-9. **Ghost progress** — nothing newly reachable exists after the wave
-10. **Cadence break** — documenting while still coding, or coding while still diagnosing
+1. **Clamp breaks the fix** — boundary is wrong or task is integration work → re-scope
+1. **False green** — tests pass but contract is unused, bypassed, or visually broken
+1. **Abstraction reflex** — redesigning architecture to avoid debugging the real issue
+1. **Delegation compression** — asked for 80 items, got 8 (worker read summary, not spec)
+1. **Self-model error** — agent claims it cannot do things it can
+1. **Identity paradox** — one agent playing both architect and worker loses role separation
+1. **Beautiful dead product** — gates green but surface is unreachable or unhelpful
+1. **Ghost progress** — nothing newly reachable exists after the wave
+1. **Cadence break** — documenting while still coding, or coding while still diagnosing
 
 **Rule:** When a stop condition fires: stop. Don't push through. Diagnose. Restart the wave.
 
@@ -466,12 +466,12 @@ Cease work and reassess when any of these appear:
 
 When a worker finds something unexpected during a fix:
 
-| Discovery | Action |
-|-----------|--------|
-| Reproducible bug (in scope) | Fix it |
-| Fragile seam (missing coverage) | Write regression test FIRST, then fix |
-| Fidelity gap (cross-domain) | Escalate to orchestrator — don't widen scope |
-| Out of scope | Record as debt, don't touch |
+|Discovery                      |Action                                      |
+|-------------------------------|--------------------------------------------|
+|Reproducible bug (in scope)    |Fix it                                      |
+|Fragile seam (missing coverage)|Write regression test FIRST, then fix       |
+|Fidelity gap (cross-domain)    |Escalate to orchestrator — don't widen scope|
+|Out of scope                   |Record as debt, don't touch                 |
 
 -----
 
@@ -516,22 +516,22 @@ You are done ONLY when:
 
 ## Measurements
 
-| Metric | Value |
-|--------|-------|
-| Manual dispatch ship rate | 67% (10/15) |
-| Foreman dispatch ship rate | 100% (5/5) |
-| Scope: prompt-only | 0/20 |
-| Scope: mechanical clamp | 20/20 |
-| Evidence tags on ambiguous decisions | 13%→54% |
-| Poisoning defense (multi-repo) | 33%→100% |
-| Blackout fault recovery | 5/5, contamination 0 |
-| Briefing winner | Decision Fields (1514 vs 9) |
-| Exact-value ship rate | 100% |
-| Vague-goal ship rate | 0% |
-| New file success | ~50% (edits ~90%) |
-| Parallel workers | 2-3 stable, 5+ crashes |
-| Model output gap | 9.8× same task |
-| Opus 1M campaign | 18 commits, 1 session |
+|Metric                              |Value                      |
+|------------------------------------|---------------------------|
+|Manual dispatch ship rate           |67% (10/15)                |
+|Foreman dispatch ship rate          |100% (5/5)                 |
+|Scope: prompt-only                  |0/20                       |
+|Scope: mechanical clamp             |20/20                      |
+|Evidence tags on ambiguous decisions|13%→54%                    |
+|Poisoning defense (multi-repo)      |33%→100%                   |
+|Blackout fault recovery             |5/5, contamination 0       |
+|Briefing winner                     |Decision Fields (1514 vs 9)|
+|Exact-value ship rate               |100%                       |
+|Vague-goal ship rate                |0%                         |
+|New file success                    |~50% (edits ~90%)          |
+|Parallel workers                    |2-3 stable, 5+ crashes     |
+|Model output gap                    |9.8× same task             |
+|Opus 1M campaign                    |18 commits, 1 session      |
 
 -----
 
