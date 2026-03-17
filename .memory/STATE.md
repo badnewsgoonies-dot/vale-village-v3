@@ -1,30 +1,36 @@
 # Vale Village v3 — Current State
 
-**Phase:** 0 — Setup (orchestration infrastructure installed, type contract not yet frozen)
-**HEAD:** 112d6c7
+**Phase:** 1 — Domain builds (Wave 1 complete, Wave 2 in progress)
+**HEAD:** 969a641
 **Date:** 2026-03-17
 
-## Current Status
+## Completed
 
-- Orchestration kit extracted and hooks installed
-- Workflow filesystem created (status/, scripts/, src/shared/, .memory/)
-- run-gates.sh configured for Rust/Bevy (cargo check/test/clippy)
-- No Cargo.toml yet — Bevy project not initialized
-- No type contract yet — must freeze before any workers launch
+### Wave 1 (Phase 2 — Implementation Phases 1-2)
+- **data_loader** — RON loading, cross-reference validation, 7 sample files, 9 tests
+- **combat** — S01-S06 (damage calc, targeting, multi-hit, battle state, mana pool, crit), 23 tests
+- All gates green, pushed to master
 
-## Next Actions
+## In Progress
 
-1. Initialize Rust/Bevy project (Cargo.toml + main.rs)
-2. Write type contract (src/shared/mod.rs) with all cross-domain types from DESIGN_LOCK.md + SYSTEMS_FOUNDATION.md
-3. Freeze contract (checksum + commit)
-4. Write domain specs to docs/domains/
-5. Begin Phase 1 dispatch
+### Wave 2
+- **status** — S07-S13 (status effects, buffs, barriers, HoT, immunity, cleanse) — worker dispatched
+
+## Gate Status
+- Contract checksum: PASS
+- cargo check: PASS
+- cargo test: 32 tests passing
+- cargo clippy: PASS (zero warnings)
+- Connectivity: PASS (all domains import shared)
+
+## Next Waves
+- Wave 3: Advanced damage (S14-S16) + Equipment (S19) + Djinn
+- Wave 4: Integration — wire domains together into playable battle loop
 
 ## Open Debts
+- STATE.md freshness warning (non-blocking)
+- No verify-state-claims.sh yet (non-blocking)
 
-None yet.
-
-## Uncertainties
-
-- [Assumed] Bevy version — need to decide exact version and plugin strategy
-- [Assumed] RON vs JSON for data files — design docs say RON, confirm
+## Decisions
+- [Observed] dead_code allow needed on all domain modules (no consumers yet)
+- [Observed] Worker commits land before orchestrator commits — orchestrator adds fixes only
