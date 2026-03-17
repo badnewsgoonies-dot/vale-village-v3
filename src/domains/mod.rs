@@ -3,6 +3,7 @@
 #[allow(unused_imports)]
 use crate::shared;
 
+pub mod battle_engine;
 pub mod combat;
 pub mod damage_mods;
 pub mod data_loader;
