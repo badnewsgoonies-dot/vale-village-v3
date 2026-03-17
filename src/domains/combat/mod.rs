@@ -74,6 +74,10 @@ impl ManaPool {
 
 // ── S04 — Battle State Machine ──────────────────────────────────────
 
+/// Standalone combat-domain battle state used by unit tests in this module.
+/// The integration layer (battle_engine) uses its own `Battle` struct which
+/// wraps BattleUnit alongside status, djinn, and equipment state.
+/// This struct remains as the canonical reference for S04 execution-order logic.
 #[derive(Debug, Clone)]
 pub struct BattleState {
     pub phase: BattlePhase,

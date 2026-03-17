@@ -401,12 +401,20 @@ pub struct StatusApplied {
     pub effect: StatusEffect,
 }
 
+/// Reserved for future use: battle_engine currently emits
+/// BattleEvent::BarrierBlocked(TargetRef) with a simpler shape.
+/// This richer struct will replace it once barrier-charge tracking
+/// is surfaced through the integration layer.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BarrierConsumed {
     pub unit: TargetRef,
     pub charges_remaining: u8,
 }
 
+/// Reserved for future use: battle_engine currently emits
+/// BattleEvent::CritTriggered(TargetRef, u8) with a flat tuple.
+/// This richer struct will replace it once crit events carry
+/// semantic field names through the integration layer.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CritTriggered {
     pub unit: TargetRef,
