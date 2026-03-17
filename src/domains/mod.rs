@@ -5,3 +5,4 @@ use crate::shared;
 
 pub mod combat;
 pub mod data_loader;
+pub mod status;
