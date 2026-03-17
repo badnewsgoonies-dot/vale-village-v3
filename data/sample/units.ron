@@ -1,0 +1,27 @@
+[
+    (
+        id: UnitId("adept"),
+        name: "Adept",
+        element: Venus,
+        mana_contribution: 2,
+        base_stats: (hp: 120, atk: 14, def: 12, mag: 10, spd: 10),
+        growth_rates: (hp: 18, atk: 3, def: 3, mag: 2, spd: 2),
+        abilities: [
+            (level: 1, ability_id: AbilityId("earth-spike")),
+            (level: 1, ability_id: AbilityId("strike")),
+            (level: 2, ability_id: AbilityId("heavy-strike")),
+        ],
+    ),
+    (
+        id: UnitId("blaze"),
+        name: "Blaze",
+        element: Mars,
+        mana_contribution: 2,
+        base_stats: (hp: 100, atk: 16, def: 10, mag: 14, spd: 12),
+        growth_rates: (hp: 16, atk: 4, def: 2, mag: 3, spd: 2),
+        abilities: [
+            (level: 1, ability_id: AbilityId("heavy-strike")),
+            (level: 1, ability_id: AbilityId("strike")),
+        ],
+    ),
+]

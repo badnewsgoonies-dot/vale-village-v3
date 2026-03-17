@@ -1,38 +1,87 @@
-# Vale Village v3
+# AI Orchestration Kit — Quick Start
 
-Golden Sun-inspired deterministic tactical RPG. Fresh Rust/Bevy build.
+## What's in here
 
-> "Vale Village is a deterministic planning RPG where ATTACK prints mana and crit, ABILITY spends them, enemy intent is hidden, and djinn activation temporarily rewires each unit's available kit."
+```
+docs/
+  AI_ORCHESTRATION_PLAYBOOK.md  — THE methodology (load into project knowledge)
+  SUB_AGENT_PLAYBOOK.md         — Phase 0-6 procedure for multi-domain builds
 
-## Status: Pre-Build (Design Locked)
+orchestration/
+  GAME_DIRECTOR_AGENT.md        — Role doc for Layer 0 (creative direction agent)
+  ORCHESTRATOR_AGENT.md         — Role doc for Layer 1 (technical orchestrator)
+  FOREMAN_PLAYBOOK.md           — Instructions for foreman agent (Layer 2)
+  run-stack.sh                  — 4-layer automated launcher
 
-All combat mechanics locked. Data extracted and validated. Ready for vertical slice.
+scripts/
+  clamp-scope.sh                — Scope enforcement (run after EVERY worker)
+  run-gates.sh                  — Validation pipeline (compile + test + lint + contract)
+  checkpoint-state.sh           — Save orchestration state (conversation + files + ledger)
+  restore-checkpoint.sh         — Restore from checkpoint when a wave goes wrong
+  launch-lane.sh                — Create isolated work lane (worktree + branch)
+  hook-contract-integrity.sh    — Pre-commit: reject contract modifications
+  hook-agent-guard.sh           — Pre-commit: prevent orchestrator editing source
+  hook-session-freshness.sh     — Warn if STATE.md not read recently
+  install-hooks.sh              — Wire all hooks into .git/hooks/
+```
 
-## Docs
+## New project setup (Day 1)
 
-| Document | Purpose |
-|----------|---------|
-| `docs/design/DESIGN_LOCK.md` | Every confirmed game rule. The contract. |
-| `docs/design/SYSTEMS_FOUNDATION.md` | 19 mechanical systems mapped to v2 data |
-| `docs/design/DATA_MANIFEST.md` | Complete v2 content inventory |
-| `docs/data/COMPLETE_DATA.md` | All data tables (human-readable) |
-| `docs/data/*.json` | Worker-validated JSON (machine-readable) |
+1. Create your repo and add engine dependencies
+2. Copy this entire kit into the repo root
+3. Load `docs/AI_ORCHESTRATION_PLAYBOOK.md` into Claude project knowledge
+4. Run `bash scripts/install-hooks.sh`
+5. Create and freeze the type contract:
+   ```bash
+   # Write src/shared/mod.rs (or equivalent) with all cross-domain types
+   shasum -a 256 src/shared/mod.rs > .contract.sha256
+   git commit -m "chore: freeze shared type contract"
+   ```
+6. Write MANIFEST.md (phase, domains, decisions)
+7. Write docs/spec.md (with QUANTITIES — "80 weapons" not "lots")
+8. Edit `scripts/run-gates.sh` to set your build/test/lint commands:
+   ```bash
+   BUILD_CHECK_CMD="cargo check"   # or: npm run build, tsc --noEmit, etc.
+   TEST_CMD="cargo test"           # or: npm test, pytest, etc.
+   LINT_CMD="cargo clippy"         # or: eslint, ruff, etc.
+   CONTRACT_FILE="src/shared/mod.rs"  # or: src/shared/types.ts, etc.
+   ```
+9. First dispatch:
+   ```bash
+   claude -p "Create the game window, camera, and player sprite with WASD movement" \
+     --dangerously-skip-permissions
+   ```
 
-## Data Files (Codex worker-extracted, validated)
+## Daily workflow
 
-| File | Entries | Description |
-|------|---------|-------------|
-| `data_enemies.json` | 137 | All enemies with stats |
-| `data_equipment.json` | 109 | All items with stat bonuses |
-| `data_abilities.json` | 241 | All abilities with full properties |
-| `data_djinn.json` | 23 | Djinn stats and summon data |
-| `data_djinn_abilities.json` | 23 | Ability pairs per compatibility |
-| `data_encounters.json` | 55 | Encounters with rewards |
-| `data_unit_abilities.json` | 11 | Unit ability progressions |
+```bash
+# Option A: Direct dispatch (Tier S — single fix)
+claude -p "TASK: [exact spec]. SCOPE: [files]. COMMIT: [message]" --dangerously-skip-permissions
 
-## Architecture (planned)
+# Option B: Foreman dispatch (Tier M — multiple improvements)
+claude -p "Read orchestration/FOREMAN_PLAYBOOK.md. Execute it." --dangerously-skip-permissions
 
-- Engine: Bevy (Rust)
-- Data: RON files (converted from JSON)
-- Sprites: GIF → PNG atlas pipeline from vale-village (original repo)
-- Build method: AI-orchestrated (Codex workers + Claude orchestrator)
+# Option C: Full stack (Tier C — campaign)
+bash orchestration/run-stack.sh "your creative direction here"
+```
+
+After every worker: `bash scripts/clamp-scope.sh src/domain/`
+After every wave: `bash scripts/run-gates.sh`
+
+## Campaign dispatch (walk-away autonomous)
+
+Write a manifest (see AI_ORCHESTRATION_PLAYBOOK.md Section 13 — Audit template).
+Then dispatch:
+
+```bash
+claude -p "Read docs/MANIFEST.md. Execute all waves. DO NOT stop between waves." \
+  --dangerously-skip-permissions
+```
+
+## Session recovery
+
+```
+Continuing [project]. Read before acting:
+- STATE.md, MANIFEST.md, docs/spec.md, src/shared/mod.rs
+Recent: [1 sentence]. Task: [what to do now].
+```

@@ -1,0 +1,32 @@
+[
+    (
+        id: EnemyId("mercury-slime"),
+        name: "Mercury Slime",
+        element: Mercury,
+        level: 1,
+        stats: (hp: 40, atk: 4, def: 5, mag: 6, spd: 5),
+        xp: 12,
+        gold: 6,
+        abilities: [AbilityId("strike")],
+    ),
+    (
+        id: EnemyId("earth-scout"),
+        name: "Earth Scout",
+        element: Venus,
+        level: 1,
+        stats: (hp: 50, atk: 9, def: 8, mag: 5, spd: 8),
+        xp: 15,
+        gold: 10,
+        abilities: [AbilityId("strike"), AbilityId("earth-spike")],
+    ),
+    (
+        id: EnemyId("flame-scout"),
+        name: "Flame Scout",
+        element: Mars,
+        level: 1,
+        stats: (hp: 45, atk: 10, def: 6, mag: 8, spd: 10),
+        xp: 15,
+        gold: 10,
+        abilities: [AbilityId("strike")],
+    ),
+]

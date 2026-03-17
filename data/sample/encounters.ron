@@ -1,0 +1,29 @@
+[
+    (
+        id: EncounterId("training-dummy"),
+        name: "Training Arena",
+        difficulty: Easy,
+        enemies: [
+            (enemy_id: EnemyId("mercury-slime"), count: 1),
+        ],
+        xp_reward: 10,
+        gold_reward: 0,
+        recruit: None,
+        djinn_reward: Some(DjinnId("flint")),
+        equipment_rewards: [],
+    ),
+    (
+        id: EncounterId("roadside-bandits"),
+        name: "Roadside Bandits",
+        difficulty: Easy,
+        enemies: [
+            (enemy_id: EnemyId("earth-scout"), count: 1),
+            (enemy_id: EnemyId("flame-scout"), count: 1),
+        ],
+        xp_reward: 25,
+        gold_reward: 12,
+        recruit: None,
+        djinn_reward: None,
+        equipment_rewards: [EquipmentId("bronze-sword")],
+    ),
+]

@@ -1,0 +1,56 @@
+[
+    (
+        id: DjinnId("flint"),
+        name: "Flint",
+        element: Venus,
+        tier: 1,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 80,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("strike")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("strike")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("earth-spike")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+    (
+        id: DjinnId("forge"),
+        name: "Forge",
+        element: Mars,
+        tier: 1,
+        stat_bonus: (atk: 0, def: 0, mag: 0, spd: 0, hp: 0),
+        summon_effect: Some((
+            damage: 120,
+            buff: None,
+            status: None,
+            heal: None,
+        )),
+        ability_pairs: (
+            same: (
+                good_abilities: [AbilityId("strike")],
+                recovery_abilities: [],
+            ),
+            counter: (
+                good_abilities: [],
+                recovery_abilities: [AbilityId("strike")],
+            ),
+            neutral: (
+                good_abilities: [AbilityId("strike")],
+                recovery_abilities: [],
+            ),
+        ),
+    ),
+]

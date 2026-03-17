@@ -2,3 +2,5 @@
 //! Workers import from crate::shared, never redefine types locally.
 #[allow(unused_imports)]
 use crate::shared;
+
+pub mod data_loader;
