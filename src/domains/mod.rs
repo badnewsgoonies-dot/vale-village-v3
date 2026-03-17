@@ -4,6 +4,7 @@
 use crate::shared;
 
 pub mod battle_engine;
+pub mod cli_runner;
 pub mod combat;
 pub mod damage_mods;
 pub mod data_loader;
