@@ -122,17 +122,17 @@ pub fn create_new_game() -> SaveData {
             level: 1,
             current_hp: 100,
             equipment: SavedEquipment {
-                weapon: Some(EquipmentId("basic_sword".into())),
+                weapon: Some(EquipmentId("wooden-sword".into())),
                 ..SavedEquipment::default()
             },
             djinn: vec![],
         },
         SavedUnit {
-            unit_id: UnitId("war_mage".into()),
+            unit_id: UnitId("war-mage".into()),
             level: 1,
             current_hp: 100,
             equipment: SavedEquipment {
-                weapon: Some(EquipmentId("basic_staff".into())),
+                weapon: Some(EquipmentId("wooden-axe".into())),
                 ..SavedEquipment::default()
             },
             djinn: vec![],
@@ -142,7 +142,7 @@ pub fn create_new_game() -> SaveData {
             level: 1,
             current_hp: 100,
             equipment: SavedEquipment {
-                weapon: Some(EquipmentId("basic_rod".into())),
+                weapon: Some(EquipmentId("wooden-staff".into())),
                 ..SavedEquipment::default()
             },
             djinn: vec![],
@@ -152,7 +152,7 @@ pub fn create_new_game() -> SaveData {
             level: 1,
             current_hp: 100,
             equipment: SavedEquipment {
-                weapon: Some(EquipmentId("basic_bow".into())),
+                weapon: Some(EquipmentId("wooden-sword".into())),
                 ..SavedEquipment::default()
             },
             djinn: vec![],
@@ -214,7 +214,7 @@ mod tests {
             .map(|u| u.unit_id.0.as_str())
             .collect();
         assert!(ids.contains(&"adept"));
-        assert!(ids.contains(&"war_mage"));
+        assert!(ids.contains(&"war-mage"));
         assert!(ids.contains(&"mystic"));
         assert!(ids.contains(&"ranger"));
     }

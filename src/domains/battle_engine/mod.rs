@@ -29,6 +29,12 @@ pub struct BattleUnitFull {
     pub mana_contribution: u8,
     /// Ability IDs this unit can use (populated from EnemyDef for enemies).
     pub ability_ids: Vec<AbilityId>,
+    /// Extra hit count from equipment (auto-attacks hit 1 + this).
+    pub hit_count_bonus: u8,
+    /// XP reward for defeating this unit (enemies only).
+    pub reward_xp: u32,
+    /// Gold reward for defeating this unit (enemies only).
+    pub reward_gold: u32,
 }
 
 /// Top-level battle state.
@@ -152,6 +158,9 @@ pub fn new_battle(
                 equipment: pd.equipment,
                 mana_contribution: mana,
                 ability_ids: Vec::new(),
+                hit_count_bonus: eq_effects.total_hit_count_bonus,
+                reward_xp: 0,
+                reward_gold: 0,
             }
         })
         .collect();
@@ -161,6 +170,8 @@ pub fn new_battle(
         .map(|ed| {
             let stats = ed.enemy_def.stats;
             let ability_ids = ed.enemy_def.abilities.clone();
+            let xp = ed.enemy_def.xp;
+            let gold = ed.enemy_def.gold;
             BattleUnitFull {
                 unit: BattleUnit {
                     id: ed.enemy_def.id.0.clone(),
@@ -175,6 +186,9 @@ pub fn new_battle(
                 equipment: EquipmentLoadout::default(),
                 mana_contribution: 0,
                 ability_ids,
+                hit_count_bonus: 0,
+                reward_xp: xp,
+                reward_gold: gold,
             }
         })
         .collect();
@@ -493,9 +507,13 @@ fn execute_attack(
     events: &mut Vec<BattleEvent>,
 ) {
     // Get attacker data
-    let (attacker_stats, crit_counter, hit_count_bonus) = {
+    let (attacker_stats, crit_counter, hit_count_bonus, attacker_buff_mods) = {
         let actor = get_unit(battle, actor_ref).unwrap();
-        (actor.unit.stats, actor.unit.crit_counter, 0u8)
+        let buff_mods = status::compute_stat_modifiers(
+            &actor.status_state.buffs,
+            &actor.status_state.debuffs,
+        );
+        (actor.unit.stats, actor.unit.crit_counter, actor.hit_count_bonus, buff_mods)
     };
 
     // Check if target is alive
@@ -506,8 +524,31 @@ fn execute_attack(
         };
     }
 
-    let target_stats = get_unit(battle, target_ref).unwrap().unit.stats;
+    let (target_stats, target_buff_mods) = {
+        let t = get_unit(battle, target_ref).unwrap();
+        let buff_mods = status::compute_stat_modifiers(
+            &t.status_state.buffs,
+            &t.status_state.debuffs,
+        );
+        (t.unit.stats, buff_mods)
+    };
     let target_hp = get_unit(battle, target_ref).unwrap().unit.current_hp;
+
+    // Effective stats with buff/debuff modifiers
+    let effective_attacker = Stats {
+        hp: attacker_stats.hp,
+        atk: (attacker_stats.atk as i32 + attacker_buff_mods.atk as i32).max(0) as u16,
+        def: (attacker_stats.def as i32 + attacker_buff_mods.def as i32).max(0) as u16,
+        mag: (attacker_stats.mag as i32 + attacker_buff_mods.mag as i32).max(0) as u16,
+        spd: (attacker_stats.spd as i32 + attacker_buff_mods.spd as i32).max(0) as u16,
+    };
+    let effective_target = Stats {
+        hp: target_stats.hp,
+        atk: (target_stats.atk as i32 + target_buff_mods.atk as i32).max(0) as u16,
+        def: (target_stats.def as i32 + target_buff_mods.def as i32).max(0) as u16,
+        mag: (target_stats.mag as i32 + target_buff_mods.mag as i32).max(0) as u16,
+        spd: (target_stats.spd as i32 + target_buff_mods.spd as i32).max(0) as u16,
+    };
 
     // Base hit count is 1 + equipment bonus
     let base_hit_count: u8 = 1 + hit_count_bonus;
@@ -515,8 +556,8 @@ fn execute_attack(
     let base_damage = combat::calculate_damage(
         base_power,
         DamageType::Physical,
-        &attacker_stats,
-        &target_stats,
+        &effective_attacker,
+        &effective_target,
         &battle.config,
     );
 
@@ -631,7 +672,21 @@ fn execute_ability(
         });
     }
 
-    let attacker_stats = get_unit(battle, actor_ref).unwrap().unit.stats;
+    let (attacker_stats, attacker_buff_mods) = {
+        let actor = get_unit(battle, actor_ref).unwrap();
+        let buff_mods = status::compute_stat_modifiers(
+            &actor.status_state.buffs,
+            &actor.status_state.debuffs,
+        );
+        (actor.unit.stats, buff_mods)
+    };
+    let effective_attacker = Stats {
+        hp: attacker_stats.hp,
+        atk: (attacker_stats.atk as i32 + attacker_buff_mods.atk as i32).max(0) as u16,
+        def: (attacker_stats.def as i32 + attacker_buff_mods.def as i32).max(0) as u16,
+        mag: (attacker_stats.mag as i32 + attacker_buff_mods.mag as i32).max(0) as u16,
+        spd: (attacker_stats.spd as i32 + attacker_buff_mods.spd as i32).max(0) as u16,
+    };
 
     // Process each target
     for &target_ref in targets {
@@ -648,7 +703,7 @@ fn execute_ability(
         // Handle healing abilities
         // FIX 6: heal_amount = base_power + attacker MAG, floor 1
         if ability.category == crate::shared::AbilityCategory::Healing {
-            let heal_amount = (ability.base_power + attacker_stats.mag).max(1);
+            let heal_amount = (ability.base_power + effective_attacker.mag).max(1);
             {
                 let target = get_unit_mut(battle, target_ref).unwrap();
                 let max_hp = target.unit.stats.hp;
@@ -667,22 +722,38 @@ fn execute_ability(
             let target_stats = get_unit(battle, target_ref).unwrap().unit.stats;
             let target_hp = get_unit(battle, target_ref).unwrap().unit.current_hp;
 
+            // Apply buff/debuff modifiers to target
+            let target_buff_mods = {
+                let t = get_unit(battle, target_ref).unwrap();
+                status::compute_stat_modifiers(
+                    &t.status_state.buffs,
+                    &t.status_state.debuffs,
+                )
+            };
+            let effective_target_base = Stats {
+                hp: target_stats.hp,
+                atk: (target_stats.atk as i32 + target_buff_mods.atk as i32).max(0) as u16,
+                def: (target_stats.def as i32 + target_buff_mods.def as i32).max(0) as u16,
+                mag: (target_stats.mag as i32 + target_buff_mods.mag as i32).max(0) as u16,
+                spd: (target_stats.spd as i32 + target_buff_mods.spd as i32).max(0) as u16,
+            };
+
             // Apply defense penetration if applicable
             let effective_def = if let Some(pen_pct) = ability.ignore_defense_percent {
-                damage_mods::apply_defense_penetration(target_stats.def, pen_pct)
+                damage_mods::apply_defense_penetration(effective_target_base.def, pen_pct)
             } else {
-                target_stats.def
+                effective_target_base.def
             };
 
             let modified_target_stats = Stats {
                 def: effective_def,
-                ..target_stats
+                ..effective_target_base
             };
 
             let base_damage = combat::calculate_damage(
                 ability.base_power,
                 damage_type,
-                &attacker_stats,
+                &effective_attacker,
                 &modified_target_stats,
                 &battle.config,
             );
@@ -859,10 +930,9 @@ fn execute_ability(
             status::apply_debuff(&mut target.status_state, debuff_effect, max_stacks);
         }
 
-        // Apply barrier
-        if let (Some(charges), Some(duration)) =
-            (ability.shield_charges, ability.shield_duration)
-        {
+        // Apply barrier (default duration 3 if shield_duration is None)
+        if let Some(charges) = ability.shield_charges {
+            let duration = ability.shield_duration.unwrap_or(3);
             let target = get_unit_mut(battle, target_ref).unwrap();
             status::apply_barrier(&mut target.status_state, charges, duration);
         }
@@ -979,7 +1049,7 @@ fn execute_summon_action(
         }
     }
 
-    // Apply summon damage to all alive enemies
+    // Apply summon damage to all alive enemies (respecting barriers/freeze)
     if total_summon_damage > 0 {
         let enemy_count = battle.enemies.len();
         for ei in 0..enemy_count {
@@ -990,6 +1060,15 @@ fn execute_summon_action(
                 side: Side::Enemy,
                 index: ei as u8,
             };
+
+            // Check barrier before applying damage
+            let barrier_blocked =
+                status::consume_barrier(&mut battle.enemies[ei].status_state.barriers);
+            if barrier_blocked {
+                events.push(BattleEvent::BarrierBlocked(target_ref));
+                continue;
+            }
+
             battle.enemies[ei].unit.current_hp = battle.enemies[ei]
                 .unit
                 .current_hp
@@ -997,6 +1076,14 @@ fn execute_summon_action(
             if battle.enemies[ei].unit.current_hp == 0 {
                 battle.enemies[ei].unit.is_alive = false;
             }
+
+            // Accumulate freeze damage
+            for s in battle.enemies[ei].status_state.statuses.iter_mut() {
+                if s.effect_type == StatusEffectType::Freeze {
+                    s.freeze_damage_taken += total_summon_damage;
+                }
+            }
+
             events.push(BattleEvent::DamageDealt(DamageDealt {
                 source: actor_ref,
                 target: target_ref,
@@ -1026,8 +1113,20 @@ fn end_of_round_ticks(battle: &mut Battle, events: &mut Vec<BattleEvent>) {
     // Tick barriers
     tick_all_units_barriers(battle);
 
+    // Tick immunity
+    tick_all_units_immunity(battle);
+
     // Tick djinn recovery
     tick_all_units_djinn(battle, events);
+}
+
+fn tick_all_units_immunity(battle: &mut Battle) {
+    for unit in battle.player_units.iter_mut().chain(battle.enemies.iter_mut()) {
+        if !unit.unit.is_alive {
+            continue;
+        }
+        status::tick_immunity(&mut unit.status_state.immunity);
+    }
 }
 
 fn tick_all_units_statuses(battle: &mut Battle, events: &mut Vec<BattleEvent>) {
@@ -1204,9 +1303,9 @@ pub fn check_battle_end(battle: &Battle) -> Option<BattleResult> {
     let all_players_dead = battle.player_units.iter().all(|p| !p.unit.is_alive);
 
     if all_enemies_dead {
-        // Sum xp and gold from enemy IDs (simple: 10 xp and 5 gold per enemy)
-        let xp = battle.enemies.len() as u32 * 10;
-        let gold = battle.enemies.len() as u32 * 5;
+        // Sum actual xp and gold from enemy definitions
+        let xp: u32 = battle.enemies.iter().map(|e| e.reward_xp).sum();
+        let gold: u32 = battle.enemies.iter().map(|e| e.reward_gold).sum();
         Some(BattleResult::Victory { xp, gold })
     } else if all_players_dead {
         Some(BattleResult::Defeat)
@@ -2645,6 +2744,327 @@ mod tests {
             heal_event,
             Some(50),
             "HealingDone amount should be 50 (base 20 + MAG 30)"
+        );
+    }
+
+    // ── Audit Round 2: test_barrier_ability_without_duration_uses_default ──
+
+    #[test]
+    fn test_barrier_ability_without_duration_uses_default() {
+        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 30, spd: 15 };
+        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+
+        let player = make_player("hero", player_stats, 10);
+        let enemy = make_enemy("goblin", enemy_stats);
+
+        // Create a barrier ability with shield_charges but NO shield_duration
+        let barrier_id = AbilityId("shield-no-dur".to_string());
+        let barrier_ability = AbilityDef {
+            id: barrier_id.clone(),
+            name: "Shield".to_string(),
+            category: AbilityCategory::Buff,
+            damage_type: None,
+            element: None,
+            mana_cost: 2,
+            base_power: 0,
+            targets: TargetMode::SingleAlly,
+            unlock_level: 1,
+            hit_count: 0,
+            status_effect: None,
+            buff_effect: None,
+            debuff_effect: None,
+            shield_charges: Some(2),
+            shield_duration: None, // no duration specified
+            heal_over_time: None,
+            grant_immunity: None,
+            cleanse: None,
+            ignore_defense_percent: None,
+            splash_damage_percent: None,
+            chain_damage: false,
+            revive: false,
+            revive_hp_percent: None,
+        };
+
+        let mut abilities = HashMap::new();
+        abilities.insert(barrier_id.clone(), barrier_ability);
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![enemy],
+            test_config(),
+            abilities,
+            HashMap::new(),
+        );
+
+        let actor = TargetRef { side: Side::Player, index: 0 };
+        plan_action(
+            &mut battle,
+            actor,
+            BattleAction::UseAbility {
+                ability_id: AbilityId("shield-no-dur".into()),
+                targets: vec![actor],
+            },
+        )
+        .unwrap();
+
+        execute_round(&mut battle);
+
+        // Barrier should have been applied with default duration 3
+        // (tick_barriers decremented it once at end-of-round, so remaining_turns = 2)
+        assert_eq!(
+            battle.player_units[0].status_state.barriers.len(),
+            1,
+            "Barrier should exist"
+        );
+        assert_eq!(
+            battle.player_units[0].status_state.barriers[0].charges,
+            2,
+            "Barrier should have 2 charges"
+        );
+        assert_eq!(
+            battle.player_units[0].status_state.barriers[0].remaining_turns,
+            2,
+            "Barrier should have 2 remaining turns (default 3 minus 1 tick)"
+        );
+    }
+
+    // ── Audit Round 2: test_immunity_expires_after_duration ──
+
+    #[test]
+    fn test_immunity_expires_after_duration() {
+        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 30, spd: 15 };
+        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+
+        let player = make_player("hero", player_stats, 10);
+        let enemy = make_enemy("goblin", enemy_stats);
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![enemy],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
+
+        // Grant immunity with duration 2
+        let immunity = Immunity {
+            all: true,
+            types: vec![],
+            duration: 2,
+        };
+        status::apply_immunity(&mut battle.player_units[0].status_state, &immunity);
+        assert!(
+            battle.player_units[0].status_state.immunity.is_some(),
+            "Immunity should be active"
+        );
+
+        // Round 1: immunity ticks from 2 -> 1
+        execute_round(&mut battle);
+        assert!(
+            battle.player_units[0].status_state.immunity.is_some(),
+            "Immunity should still be active after 1 round"
+        );
+
+        // Round 2: immunity ticks from 1 -> 0 and expires
+        execute_round(&mut battle);
+        assert!(
+            battle.player_units[0].status_state.immunity.is_none(),
+            "Immunity should have expired after 2 rounds"
+        );
+    }
+
+    // ── Audit Round 2: test_buffs_affect_damage_calculation ──
+
+    #[test]
+    fn test_buffs_affect_damage_calculation() {
+        let player_stats = Stats { hp: 200, atk: 30, def: 20, mag: 10, spd: 15 };
+        let enemy_stats = Stats { hp: 300, atk: 10, def: 15, mag: 10, spd: 5 };
+
+        let player = make_player("hero", player_stats, 10);
+        let e1 = make_enemy("goblin-a", enemy_stats);
+        let e2 = make_enemy("goblin-b", enemy_stats);
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![e1, e2],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
+
+        // Attack without buffs — measure baseline damage
+        let actor = TargetRef { side: Side::Player, index: 0 };
+        let target1 = TargetRef { side: Side::Enemy, index: 0 };
+        plan_action(&mut battle, actor, BattleAction::Attack { target: target1 }).unwrap();
+        execute_round(&mut battle);
+        let damage_without_buff = 300u16.saturating_sub(battle.enemies[0].unit.current_hp);
+
+        // Now apply a strong ATK buff to the player
+        let atk_buff = crate::shared::BuffEffect {
+            stat_modifiers: crate::shared::StatBonus { atk: 20, def: 0, mag: 0, spd: 0, hp: 0 },
+            duration: 5,
+            shield_charges: None,
+            grant_immunity: false,
+        };
+        status::apply_buff(
+            &mut battle.player_units[0].status_state,
+            &atk_buff,
+            3,
+        );
+
+        // Attack second enemy with buff active
+        let target2 = TargetRef { side: Side::Enemy, index: 1 };
+        plan_action(&mut battle, actor, BattleAction::Attack { target: target2 }).unwrap();
+        execute_round(&mut battle);
+        let damage_with_buff = 300u16.saturating_sub(battle.enemies[1].unit.current_hp);
+
+        assert!(
+            damage_with_buff > damage_without_buff,
+            "Buffed attack ({}) should deal more damage than unbuffed ({})",
+            damage_with_buff,
+            damage_without_buff
+        );
+    }
+
+    // ── Audit Round 2: test_enemy_xp_gold_used_in_rewards ──
+
+    #[test]
+    fn test_enemy_xp_gold_used_in_rewards() {
+        let player_stats = Stats { hp: 200, atk: 200, def: 20, mag: 10, spd: 15 };
+
+        let player = make_player("hero", player_stats, 5);
+
+        // Create enemies with specific xp and gold values
+        let e1 = EnemyUnitData {
+            enemy_def: EnemyDef {
+                id: EnemyId("weak-a".to_string()),
+                name: "Weak A".to_string(),
+                element: Element::Venus,
+                level: 1,
+                stats: Stats { hp: 10, atk: 1, def: 1, mag: 1, spd: 1 },
+                xp: 25,
+                gold: 15,
+                abilities: vec![],
+            },
+        };
+        let e2 = EnemyUnitData {
+            enemy_def: EnemyDef {
+                id: EnemyId("weak-b".to_string()),
+                name: "Weak B".to_string(),
+                element: Element::Mars,
+                level: 1,
+                stats: Stats { hp: 10, atk: 1, def: 1, mag: 1, spd: 1 },
+                xp: 40,
+                gold: 20,
+                abilities: vec![],
+            },
+        };
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![e1, e2],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
+
+        // Kill both enemies
+        battle.enemies[0].unit.is_alive = false;
+        battle.enemies[0].unit.current_hp = 0;
+        battle.enemies[1].unit.is_alive = false;
+        battle.enemies[1].unit.current_hp = 0;
+
+        let result = check_battle_end(&battle);
+        match result {
+            Some(BattleResult::Victory { xp, gold }) => {
+                assert_eq!(xp, 65, "XP should be 25 + 40 = 65");
+                assert_eq!(gold, 35, "Gold should be 15 + 20 = 35");
+            }
+            other => panic!("Expected Victory with specific XP/gold, got {:?}", other),
+        }
+    }
+
+    // ── Audit Round 2: test_summon_damage_respects_barriers ──
+
+    #[test]
+    fn test_summon_damage_respects_barriers() {
+        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 30, spd: 15 };
+        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+
+        let player = make_player("hero", player_stats, 10);
+        let e1 = make_enemy("barrier-goblin", enemy_stats);
+        let e2 = make_enemy("normal-goblin", enemy_stats);
+
+        // Set up djinn def with a summon effect
+        let djinn_id = DjinnId("ramses".into());
+        let empty_ability_set = crate::shared::DjinnAbilitySet {
+            good_abilities: vec![],
+            recovery_abilities: vec![],
+        };
+        let djinn_def = DjinnDef {
+            id: djinn_id.clone(),
+            name: "Ramses".to_string(),
+            element: Element::Venus,
+            tier: 1,
+            stat_bonus: crate::shared::StatBonus::default(),
+            summon_effect: Some(crate::shared::SummonEffect {
+                damage: 50,
+                buff: None,
+                status: None,
+                heal: None,
+            }),
+            ability_pairs: crate::shared::DjinnAbilityPairs {
+                same: empty_ability_set.clone(),
+                counter: empty_ability_set.clone(),
+                neutral: empty_ability_set,
+            },
+        };
+        let mut djinn_defs = HashMap::new();
+        djinn_defs.insert(djinn_id.clone(), djinn_def);
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![e1, e2],
+            test_config(),
+            HashMap::new(),
+            djinn_defs,
+        );
+
+        // Give player a djinn in Good state
+        battle.player_units[0].djinn_slots.add(djinn_id.clone());
+
+        // Give first enemy a barrier
+        status::apply_barrier(&mut battle.enemies[0].status_state, 1, 5);
+
+        let actor = TargetRef { side: Side::Player, index: 0 };
+        plan_action(
+            &mut battle,
+            actor,
+            BattleAction::Summon { djinn_indices: vec![0] },
+        )
+        .unwrap();
+
+        let e1_hp_before = battle.enemies[0].unit.current_hp;
+        let e2_hp_before = battle.enemies[1].unit.current_hp;
+        let events = execute_round(&mut battle);
+
+        // First enemy (with barrier) should not take damage
+        assert_eq!(
+            battle.enemies[0].unit.current_hp, e1_hp_before,
+            "Barrier should block summon damage on first enemy"
+        );
+        // Second enemy (no barrier) should take damage
+        assert!(
+            battle.enemies[1].unit.current_hp < e2_hp_before,
+            "Second enemy without barrier should take summon damage"
+        );
+        // Should have a BarrierBlocked event
+        let has_barrier_event = events
+            .iter()
+            .any(|e| matches!(e, BattleEvent::BarrierBlocked(_)));
+        assert!(
+            has_barrier_event,
+            "Should have BarrierBlocked event for first enemy"
         );
     }
 }
