@@ -1,0 +1,413 @@
+{
+  "mercury-slime": {
+    "sprite": "Slime.gif"
+  },
+  "venus-wolf": {
+    "sprite": null
+  },
+  "venus-wolf-mini-boss": {
+    "sprite": null
+  },
+  "mars-bandit-mini-boss": {
+    "sprite": null
+  },
+  "stone-guardian-mini-boss": {
+    "sprite": null
+  },
+  "venus-beetle": {
+    "sprite": null
+  },
+  "mars-bandit": {
+    "sprite": null
+  },
+  "jupiter-sprite": {
+    "sprite": null
+  },
+  "mars-wolf": {
+    "sprite": null
+  },
+  "mercury-wolf": {
+    "sprite": null
+  },
+  "jupiter-wolf": {
+    "sprite": null
+  },
+  "frost-mystic": {
+    "sprite": null
+  },
+  "gale-priest": {
+    "sprite": null
+  },
+  "stone-guardian": {
+    "sprite": null
+  },
+  "ember-cleric": {
+    "sprite": null
+  },
+  "earth-shaman": {
+    "sprite": null
+  },
+  "tide-enchanter": {
+    "sprite": null
+  },
+  "frost-oracle": {
+    "sprite": null
+  },
+  "terra-warden": {
+    "sprite": null
+  },
+  "flame-herald": {
+    "sprite": null
+  },
+  "venus-bear": {
+    "sprite": null
+  },
+  "mars-bear": {
+    "sprite": null
+  },
+  "mercury-bear": {
+    "sprite": null
+  },
+  "jupiter-bear": {
+    "sprite": null
+  },
+  "earth-scout": {
+    "sprite": null
+  },
+  "flame-scout": {
+    "sprite": null
+  },
+  "frost-scout": {
+    "sprite": null
+  },
+  "gale-scout": {
+    "sprite": null
+  },
+  "terra-soldier": {
+    "sprite": null
+  },
+  "blaze-soldier": {
+    "sprite": null
+  },
+  "tide-soldier": {
+    "sprite": null
+  },
+  "wind-soldier": {
+    "sprite": null
+  },
+  "stone-captain": {
+    "sprite": null
+  },
+  "inferno-captain": {
+    "sprite": null
+  },
+  "glacier-captain": {
+    "sprite": null
+  },
+  "thunder-captain": {
+    "sprite": null
+  },
+  "mountain-commander": {
+    "sprite": null
+  },
+  "fire-commander": {
+    "sprite": null
+  },
+  "storm-commander": {
+    "sprite": null
+  },
+  "lightning-commander": {
+    "sprite": null
+  },
+  "granite-warlord": {
+    "sprite": null
+  },
+  "volcano-warlord": {
+    "sprite": null
+  },
+  "blizzard-warlord": {
+    "sprite": null
+  },
+  "tempest-warlord": {
+    "sprite": null
+  },
+  "rock-elemental": {
+    "sprite": null
+  },
+  "flame-elemental": {
+    "sprite": null
+  },
+  "ice-elemental": {
+    "sprite": null
+  },
+  "storm-elemental": {
+    "sprite": null
+  },
+  "basilisk": {
+    "sprite": null
+  },
+  "phoenix": {
+    "sprite": "Phoenix.gif"
+  },
+  "leviathan": {
+    "sprite": null
+  },
+  "thunderbird": {
+    "sprite": null
+  },
+  "hydra": {
+    "sprite": "Hydra.gif"
+  },
+  "mars-sprite": {
+    "sprite": null
+  },
+  "mercury-sprite": {
+    "sprite": null
+  },
+  "venus-sprite": {
+    "sprite": null
+  },
+  "chimera": {
+    "sprite": "Chimera.gif"
+  },
+  "overseer": {
+    "sprite": null
+  },
+  "skeleton-warrior": {
+    "sprite": null
+  },
+  "ghost-wisp": {
+    "sprite": null
+  },
+  "zombie-hound": {
+    "sprite": null
+  },
+  "bone-mage": {
+    "sprite": null
+  },
+  "clay-golem": {
+    "sprite": null
+  },
+  "iron-golem": {
+    "sprite": null
+  },
+  "crystal-golem": {
+    "sprite": null
+  },
+  "storm-golem": {
+    "sprite": null
+  },
+  "wind-hawk": {
+    "sprite": null
+  },
+  "fire-eagle": {
+    "sprite": null
+  },
+  "ice-owl": {
+    "sprite": null
+  },
+  "stone-roc": {
+    "sprite": "Roc.gif"
+  },
+  "frost-serpent": {
+    "sprite": null
+  },
+  "aqua-drake": {
+    "sprite": null
+  },
+  "tidal-wraith": {
+    "sprite": null
+  },
+  "glacier-wyrm": {
+    "sprite": null
+  },
+  "storm-raven": {
+    "sprite": null
+  },
+  "lightning-lynx": {
+    "sprite": null
+  },
+  "cyclone-djinni": {
+    "sprite": null
+  },
+  "tempest-dragon": {
+    "sprite": null
+  },
+  "alpha-phoenix": {
+    "sprite": "Phoenix.gif"
+  },
+  "elder-basilisk": {
+    "sprite": null
+  },
+  "kraken": {
+    "sprite": null
+  },
+  "storm-titan": {
+    "sprite": null
+  },
+  "void-specter": {
+    "sprite": null
+  },
+  "frost-lich": {
+    "sprite": "Lich.gif"
+  },
+  "magma-colossus": {
+    "sprite": null
+  },
+  "terra-guardian": {
+    "sprite": null
+  },
+  "arctic-sovereign": {
+    "sprite": null
+  },
+  "neptune-warden": {
+    "sprite": null
+  },
+  "abyssal-emperor": {
+    "sprite": null
+  },
+  "stratosphere-lord": {
+    "sprite": null
+  },
+  "zeus-avatar": {
+    "sprite": null
+  },
+  "celestial-fury": {
+    "sprite": null
+  },
+  "permafrost-golem": {
+    "sprite": null
+  },
+  "tundra-serpent": {
+    "sprite": null
+  },
+  "polar-guardian": {
+    "sprite": null
+  },
+  "voltage-chimera": {
+    "sprite": "Chimera.gif"
+  },
+  "monsoon-drake": {
+    "sprite": null
+  },
+  "aurora-elemental": {
+    "sprite": null
+  },
+  "vortex-sentinel": {
+    "sprite": null
+  },
+  "maelstrom-beast": {
+    "sprite": null
+  },
+  "thunderstorm-colossus": {
+    "sprite": null
+  },
+  "bandit-minion": {
+    "sprite": null
+  },
+  "bandit-captain": {
+    "sprite": null
+  },
+  "bandit": {
+    "sprite": null
+  },
+  "scavenger": {
+    "sprite": null
+  },
+  "merchant-guard": {
+    "sprite": null
+  },
+  "wild-boar": {
+    "sprite": null
+  },
+  "carrion-bird": {
+    "sprite": null
+  },
+  "garet-enemy": {
+    "sprite": null
+  },
+  "sentinel-enemy": {
+    "sprite": null
+  },
+  "stormcaller-enemy": {
+    "sprite": null
+  },
+  "mercury-mistling": {
+    "sprite": null
+  },
+  "mercury-glacial-sprite": {
+    "sprite": null
+  },
+  "mercury-frost-hound": {
+    "sprite": null
+  },
+  "mercury-aquifer-imp": {
+    "sprite": null
+  },
+  "mercury-warder": {
+    "sprite": null
+  },
+  "jupiter-zephyr-imp": {
+    "sprite": null
+  },
+  "jupiter-gale-moth": {
+    "sprite": null
+  },
+  "jupiter-stormling": {
+    "sprite": null
+  },
+  "jupiter-lightning-hopper": {
+    "sprite": null
+  },
+  "jupiter-vortex-sentry": {
+    "sprite": null
+  },
+  "mire-toad": {
+    "sprite": null
+  },
+  "lumen-fawn": {
+    "sprite": null
+  },
+  "the-golden-sun": {
+    "sprite": null
+  },
+  "poison-toad": {
+    "sprite": "Poison_Toad.gif"
+  },
+  "storm-knight": {
+    "sprite": null
+  },
+  "lava-salamander": {
+    "sprite": "Salamander.gif"
+  },
+  "crystal-bat": {
+    "sprite": "Bat.gif"
+  },
+  "dark-mage": {
+    "sprite": null
+  },
+  "fire-elemental": {
+    "sprite": null
+  },
+  "ice-golem": {
+    "sprite": null
+  },
+  "thunder-hawk": {
+    "sprite": null
+  },
+  "earth-wyrm": {
+    "sprite": null
+  },
+  "shadow-wisp": {
+    "sprite": null
+  },
+  "tower-elite-mercury-lich": {
+    "sprite": "Lich.gif"
+  },
+  "tower-elite-jupiter-void": {
+    "sprite": null
+  },
+  "tower-elite-hybrid-golem": {
+    "sprite": null
+  }
+}
