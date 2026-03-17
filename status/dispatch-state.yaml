@@ -1,5 +1,6 @@
-# Vale Village v3 — Dispatch State
-# Updated by orchestrator after each wave
+campaign_id: vale-village-v3-visual-hardening
+baseline_branch: master
+baseline_commit: 8fcddbb
+phase: visual-hardening
 
-phase: 0-setup
-lanes: []
+active_lanes: []

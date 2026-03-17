@@ -35,6 +35,17 @@ pub enum HudSide {
     Enemy,
 }
 
+struct UnitCardSpec<'a> {
+    name: &'a str,
+    element: Element,
+    hp_pct: f32,
+    current_hp: u16,
+    max_hp: u16,
+    crit_counter: u8,
+    index: usize,
+    side: HudSide,
+}
+
 /// Element color helper (same as battle_scene).
 fn element_color(element: Element) -> Color {
     match element {
@@ -108,14 +119,16 @@ pub fn setup_hud(
 
                     spawn_unit_card(
                         panel,
-                        &name,
-                        element,
-                        hp_pct,
-                        unit.unit.current_hp,
-                        unit.unit.stats.hp,
-                        unit.unit.crit_counter,
-                        i,
-                        HudSide::Player,
+                        UnitCardSpec {
+                            name: &name,
+                            element,
+                            hp_pct,
+                            current_hp: unit.unit.current_hp,
+                            max_hp: unit.unit.stats.hp,
+                            crit_counter: unit.unit.crit_counter,
+                            index: i,
+                            side: HudSide::Player,
+                        },
                     );
                 }
 
@@ -190,17 +203,7 @@ pub fn setup_hud(
 }
 
 /// Spawn a single unit card in the HUD panel.
-fn spawn_unit_card(
-    parent: &mut ChildBuilder,
-    name: &str,
-    element: Element,
-    hp_pct: f32,
-    current_hp: u16,
-    max_hp: u16,
-    crit_counter: u8,
-    index: usize,
-    side: HudSide,
-) {
+fn spawn_unit_card(parent: &mut ChildBuilder, spec: UnitCardSpec<'_>) {
     parent
         .spawn(Node {
             flex_direction: FlexDirection::Column,
@@ -212,12 +215,12 @@ fn spawn_unit_card(
         .with_children(|card| {
             // Unit name with element color
             card.spawn((
-                Text::new(name.to_string()),
+                Text::new(spec.name.to_string()),
                 TextFont {
                     font_size: 13.0,
                     ..default()
                 },
-                TextColor(element_color(element)),
+                TextColor(element_color(spec.element)),
             ));
 
             // HP bar container (background)
@@ -232,27 +235,30 @@ fn spawn_unit_card(
             ))
             .with_children(|bar_bg| {
                 // HP bar fill
-                let bar_color = if hp_pct > 0.5 {
+                let bar_color = if spec.hp_pct > 0.5 {
                     Color::srgb(0.267, 0.8, 0.267) // green
-                } else if hp_pct > 0.25 {
+                } else if spec.hp_pct > 0.25 {
                     Color::srgb(0.8, 0.8, 0.267) // yellow
                 } else {
                     Color::srgb(0.8, 0.267, 0.267) // red
                 };
                 bar_bg.spawn((
                     Node {
-                        width: Val::Percent(hp_pct * 100.0),
+                        width: Val::Percent(spec.hp_pct * 100.0),
                         height: Val::Percent(100.0),
                         ..default()
                     },
                     BackgroundColor(bar_color),
                     BorderRadius::all(Val::Px(2.0)),
-                    HpBarFill { side, index },
+                    HpBarFill {
+                        side: spec.side,
+                        index: spec.index,
+                    },
                 ));
             });
 
             // HP text
-            let hp_str = format!("{}/{}", current_hp, max_hp);
+            let hp_str = format!("{}/{}", spec.current_hp, spec.max_hp);
             card.spawn((
                 Text::new(hp_str),
                 TextFont {
@@ -263,8 +269,8 @@ fn spawn_unit_card(
             ));
 
             // Crit counter (player units only)
-            if matches!(side, HudSide::Player) {
-                let crit_str = format!("{}/10", crit_counter);
+            if matches!(spec.side, HudSide::Player) {
+                let crit_str = format!("{}/10", spec.crit_counter);
                 card.spawn((
                     Text::new(crit_str),
                     TextFont {
@@ -272,7 +278,7 @@ fn spawn_unit_card(
                         ..default()
                     },
                     TextColor(Color::srgb(0.8, 0.667, 0.267)),
-                    CritCounterText { index },
+                    CritCounterText { index: spec.index },
                 ));
             }
         });

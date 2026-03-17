@@ -7,6 +7,16 @@
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
+resolve_state_file() {
+  if [[ -f STATE.md ]]; then
+    printf '%s\n' "STATE.md"
+  elif [[ -f .memory/STATE.md ]]; then
+    printf '%s\n' ".memory/STATE.md"
+  else
+    return 1
+  fi
+}
+
 # Run once per session — use repo-specific lock
 REPO_HASH=$(echo "$REPO_ROOT" | shasum -a 256 | cut -c1-8)
 LOCK="/tmp/.project-freshness-${REPO_HASH}"
@@ -16,11 +26,12 @@ fi
 touch "$LOCK"
 
 # Skip if no STATE.md
-if [[ ! -f .memory/STATE.md ]]; then
+STATE_FILE="$(resolve_state_file || true)"
+if [[ -z "$STATE_FILE" ]]; then
   exit 0
 fi
 
-state_head=$(grep -oP '\*\*HEAD:\*\*\s*\K\w+' .memory/STATE.md 2>/dev/null || echo "")
+state_head=$(grep -oP '\*\*HEAD:\*\*\s*\K\w+' "$STATE_FILE" 2>/dev/null || echo "")
 actual_head=$(git rev-parse --short HEAD 2>/dev/null || echo "")
 
 if [[ -z "$state_head" || -z "$actual_head" ]]; then
@@ -68,7 +79,7 @@ if [[ -f scripts/verify-state-claims.sh ]]; then
   fi
 else
   # Fallback: check test count specifically (known high-drift numeric)
-  state_tests=$(grep -oP 'Gate 3.*?:\s*\K\d+(?=\s+headless)' .memory/STATE.md 2>/dev/null || echo "")
+  state_tests=$(grep -oP 'Gate 3.*?:\s*\K\d+(?=\s+headless)' "$STATE_FILE" 2>/dev/null || echo "")
   if [[ -n "$state_tests" && -f tests/headless.rs ]]; then
     actual_tests=$(grep -c '#\[test\]' tests/headless.rs 2>/dev/null || echo "?")
     if [[ "$state_tests" != "$actual_tests" ]]; then

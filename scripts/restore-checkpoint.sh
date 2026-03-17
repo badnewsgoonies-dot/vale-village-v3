@@ -40,6 +40,17 @@ join_lines() {
     paste -sd ',' | sed 's/,/, /g'
 }
 
+resolve_state_path() {
+    local root="$1"
+    if [[ -f "$root/STATE.md" ]]; then
+        printf '%s\n' "$root/STATE.md"
+    elif [[ -f "$root/.memory/STATE.md" ]]; then
+        printf '%s\n' "$root/.memory/STATE.md"
+    else
+        return 1
+    fi
+}
+
 MANIFEST_ARG=""
 LABEL=""
 CHECKPOINT_LEDGER_REL="status/foreman/checkpoints.yaml"
@@ -233,18 +244,18 @@ CURRENT_UNTRACKED_HASH="$(sha256_text "$CURRENT_UNTRACKED_LIST")"
 [[ "$CURRENT_UNTRACKED_HASH" == "$untracked_hash" ]] || MISMATCHES+=("untracked hash mismatch")
 
 WORKTREE_AGENTS="$MANIFEST_WORKTREE/AGENTS.md"
-WORKTREE_STATE="$MANIFEST_WORKTREE/.memory/STATE.md"
+WORKTREE_STATE="$(resolve_state_path "$MANIFEST_WORKTREE" || true)"
 WORKTREE_LEDGER="$MANIFEST_WORKTREE/$MANIFEST_LEDGER_REL"
 
 [[ -f "$WORKTREE_AGENTS" ]] || MISMATCHES+=("AGENTS.md missing in worktree")
-[[ -f "$WORKTREE_STATE" ]] || MISMATCHES+=(".memory/STATE.md missing in worktree")
+[[ -n "$WORKTREE_STATE" ]] || MISMATCHES+=("STATE.md missing in worktree")
 [[ -f "$WORKTREE_LEDGER" ]] || MISMATCHES+=("$MANIFEST_LEDGER_REL missing in worktree")
 
 if [[ -f "$WORKTREE_AGENTS" ]]; then
     [[ "$(sha256_file "$WORKTREE_AGENTS")" == "$agents_hash" ]] || MISMATCHES+=("AGENTS.md hash mismatch")
 fi
-if [[ -f "$WORKTREE_STATE" ]]; then
-    [[ "$(sha256_file "$WORKTREE_STATE")" == "$state_hash" ]] || MISMATCHES+=(".memory/STATE.md hash mismatch")
+if [[ -n "$WORKTREE_STATE" && -f "$WORKTREE_STATE" ]]; then
+    [[ "$(sha256_file "$WORKTREE_STATE")" == "$state_hash" ]] || MISMATCHES+=("STATE.md hash mismatch")
 fi
 if [[ -f "$WORKTREE_LEDGER" ]]; then
     [[ "$(sha256_file "$WORKTREE_LEDGER")" == "$dispatch_state_hash" ]] || MISMATCHES+=("$MANIFEST_LEDGER_REL hash mismatch")

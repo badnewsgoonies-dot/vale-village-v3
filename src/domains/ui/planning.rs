@@ -2,15 +2,19 @@
 //! Wave 4: interactive planning with live mana updates.
 #![allow(dead_code)]
 
+use std::collections::HashSet;
+
 use bevy::prelude::*;
 
 use crate::domains::battle_engine::{
     check_battle_end, execute_round, get_planning_order, plan_action,
-    plan_enemy_actions_with_ai, BattleEvent, BattleResult,
+    plan_enemy_actions_with_ai, Battle, BattleEvent, BattleResult,
 };
 use crate::domains::ai::AiStrategy;
+use crate::domains::data_loader::GameData;
+use crate::domains::djinn;
 use crate::shared::{
-    AbilityId, BattleAction, BattlePhase, Side, TargetRef,
+    AbilityId, BattleAction, BattlePhase, DjinnState, Side, TargetRef, UnitId,
 };
 
 use super::plugin::{BattleRes, GameDataRes};
@@ -64,9 +68,11 @@ pub struct ActionButton(pub ActionChoice);
 #[derive(Clone)]
 pub enum ActionChoice {
     Attack,
-    Ability(AbilityId, String), // id + display name
+    OpenAbilityMenu,
+    UseAbility(AbilityId, String), // id + display name
+    ActivateDjinn(u8, String),     // slot index + display name
+    Summon(Vec<u8>, u8),           // chosen slot indices + tier
     SelectTarget(TargetRef),
-    Execute,
     NextRound,
 }
 
@@ -98,7 +104,7 @@ pub fn setup_planning_panel(mut commands: Commands) {
                 bottom: Val::Px(130.0),
                 left: Val::Px(0.0),
                 width: Val::Percent(100.0),
-                height: Val::Px(160.0),
+                height: Val::Px(220.0),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::FlexStart,
@@ -134,6 +140,15 @@ pub fn update_planning_ui(
                 let unit_idx = state.current_unit;
                 let unit = &battle.player_units[unit_idx];
                 let unit_name = &unit.unit.id;
+                let available_abilities = current_player_ability_ids(battle, &game_data.0, unit_idx);
+                let ability_preview = current_player_ability_names(
+                    battle,
+                    &game_data.0,
+                    unit_idx,
+                );
+                let djinn_summary = current_djinn_summary(&game_data.0, battle, unit_idx);
+                let djinn_choices = current_good_djinn_choices(&game_data.0, battle, unit_idx);
+                let summon_choices = current_summon_choices(&game_data.0, battle, unit_idx);
 
                 // Header
                 panel.spawn((
@@ -150,16 +165,88 @@ pub fn update_planning_ui(
                     ..default()
                 }).with_children(|row| {
                     // ATTACK button
-                    spawn_action_button(row, "ATTACK (0 mana)", ActionChoice::Attack,
-                        Color::srgb(0.267, 0.667, 0.267));
+                    spawn_action_button(
+                        row,
+                        "ATTACK (0 mana)",
+                        ActionChoice::Attack,
+                        Color::srgb(0.267, 0.667, 0.267),
+                    );
 
-                    // ABILITY button (if unit has abilities and mana > 0)
-                    if !unit.ability_ids.is_empty() {
-                        spawn_action_button(row, "ABILITY", ActionChoice::Ability(
-                            AbilityId(String::new()), String::new()),
-                            Color::srgb(0.267, 0.533, 0.8));
+                    // ABILITY button (if current kit has abilities)
+                    if !available_abilities.is_empty() {
+                        spawn_action_button(
+                            row,
+                            "ABILITY",
+                            ActionChoice::OpenAbilityMenu,
+                            Color::srgb(0.267, 0.533, 0.8),
+                        );
                     }
                 });
+
+                panel.spawn((
+                    Text::new(format!("Djinn: {}", djinn_summary)),
+                    TextFont { font_size: 12.0, ..default() },
+                    TextColor(Color::srgb(0.8, 0.8, 0.6)),
+                ));
+
+                if !ability_preview.is_empty() {
+                    panel.spawn((
+                        Text::new(format!("Current kit: {}", ability_preview.join(", "))),
+                        TextFont { font_size: 11.0, ..default() },
+                        TextColor(Color::srgb(0.6, 0.6, 0.8)),
+                    ));
+                }
+
+                if !djinn_choices.is_empty() {
+                    panel.spawn((
+                        Text::new("Djinn menu:"),
+                        TextFont { font_size: 12.0, ..default() },
+                        TextColor(Color::srgb(0.8, 0.8, 0.267)),
+                    ));
+
+                    panel
+                        .spawn(Node {
+                            flex_direction: FlexDirection::Row,
+                            column_gap: Val::Px(8.0),
+                            flex_wrap: FlexWrap::Wrap,
+                            ..default()
+                        })
+                        .with_children(|row| {
+                            for (slot_idx, name) in djinn_choices {
+                                spawn_action_button(
+                                    row,
+                                    &format!("ACTIVATE {}", name),
+                                    ActionChoice::ActivateDjinn(slot_idx, name),
+                                    Color::srgb(0.8, 0.533, 0.267),
+                                );
+                            }
+                        });
+                }
+
+                if !summon_choices.is_empty() {
+                    panel.spawn((
+                        Text::new("Summons execute before all other actions:"),
+                        TextFont { font_size: 12.0, ..default() },
+                        TextColor(Color::srgb(0.8, 0.667, 0.267)),
+                    ));
+
+                    panel
+                        .spawn(Node {
+                            flex_direction: FlexDirection::Row,
+                            column_gap: Val::Px(8.0),
+                            ..default()
+                        })
+                        .with_children(|row| {
+                            for (djinn_indices, tier) in summon_choices {
+                                spawn_action_button(
+                                    row,
+                                    &format!("SUMMON T{}", tier),
+                                    ActionChoice::Summon(djinn_indices, tier),
+                                    Color::srgb(0.8, 0.267, 0.533),
+                                );
+                            }
+                        });
+                }
 
                 // Queue status
                 let planned = state.order_pos;
@@ -174,6 +261,7 @@ pub fn update_planning_ui(
             PlanningMode::SelectAbility => {
                 let unit_idx = state.current_unit;
                 let unit = &battle.player_units[unit_idx];
+                let available_abilities = current_player_ability_ids(battle, &game_data.0, unit_idx);
 
                 panel.spawn((
                     Text::new(format!("{} — Choose ability:", unit.unit.id)),
@@ -188,14 +276,14 @@ pub fn update_planning_ui(
                     flex_wrap: FlexWrap::Wrap,
                     ..default()
                 }).with_children(|row| {
-                    for aid in &unit.ability_ids {
+                    for aid in &available_abilities {
                         if let Some(ability) = game_data.0.abilities.get(aid) {
-                            if ability.mana_cost as u8 <= battle.mana_pool.current_mana {
+                            if ability.mana_cost <= battle.mana_pool.current_mana {
                                 let label = format!("{} ({})", ability.name, ability.mana_cost);
                                 spawn_action_button(
                                     row,
                                     &label,
-                                    ActionChoice::Ability(aid.clone(), ability.name.clone()),
+                                    ActionChoice::UseAbility(aid.clone(), ability.name.clone()),
                                     Color::srgb(0.267, 0.533, 0.8),
                                 );
                             }
@@ -305,15 +393,52 @@ pub fn handle_planning_clicks(
                 };
             }
 
-            ActionChoice::Ability(id, _name) => {
-                if id.0.is_empty() {
-                    // "ABILITY" meta-button → show ability list
-                    state.mode = PlanningMode::SelectAbility;
-                } else {
-                    // Specific ability selected → target selection
-                    state.mode = PlanningMode::SelectTarget {
-                        action_type: PendingAction::Ability(id.clone()),
-                    };
+            ActionChoice::OpenAbilityMenu => {
+                state.mode = PlanningMode::SelectAbility;
+            }
+
+            ActionChoice::UseAbility(id, _name) => {
+                // Specific ability selected → target selection
+                state.mode = PlanningMode::SelectTarget {
+                    action_type: PendingAction::Ability(id.clone()),
+                };
+            }
+
+            ActionChoice::ActivateDjinn(djinn_index, _name) => {
+                let unit_ref = TargetRef {
+                    side: Side::Player,
+                    index: state.current_unit as u8,
+                };
+
+                if plan_action(
+                    &mut battle.0,
+                    unit_ref,
+                    BattleAction::ActivateDjinn {
+                        djinn_index: *djinn_index,
+                    },
+                )
+                .is_ok()
+                {
+                    advance_after_success(&mut battle, &mut state);
+                }
+            }
+
+            ActionChoice::Summon(djinn_indices, _tier) => {
+                let unit_ref = TargetRef {
+                    side: Side::Player,
+                    index: state.current_unit as u8,
+                };
+
+                if plan_action(
+                    &mut battle.0,
+                    unit_ref,
+                    BattleAction::Summon {
+                        djinn_indices: djinn_indices.clone(),
+                    },
+                )
+                .is_ok()
+                {
+                    advance_after_success(&mut battle, &mut state);
                 }
             }
 
@@ -336,29 +461,8 @@ pub fn handle_planning_clicks(
                 };
 
                 if plan_action(&mut battle.0, unit_ref, action).is_ok() {
-                    // Advance to next unit
-                    state.order_pos += 1;
-                    if state.order_pos >= state.order.len() {
-                        // All planned → execute
-                        plan_enemy_actions_with_ai(&mut battle.0, AiStrategy::Aggressive);
-                        let events = execute_round(&mut battle.0);
-                        state.last_events = events;
-
-                        if let Some(result) = check_battle_end(&battle.0) {
-                            state.result = Some(result);
-                            state.mode = PlanningMode::BattleOver;
-                        } else {
-                            state.mode = PlanningMode::RoundComplete;
-                        }
-                    } else {
-                        state.current_unit = state.order[state.order_pos];
-                        state.mode = PlanningMode::SelectAction;
-                    }
+                    advance_after_success(&mut battle, &mut state);
                 }
-            }
-
-            ActionChoice::Execute => {
-                // Shouldn't reach here in current flow, but handle gracefully
             }
 
             ActionChoice::NextRound => {
@@ -381,6 +485,172 @@ pub fn handle_planning_clicks(
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
+
+fn advance_after_success(battle: &mut BattleRes, state: &mut PlanningState) {
+    state.order_pos += 1;
+    if state.order_pos >= state.order.len() {
+        plan_enemy_actions_with_ai(&mut battle.0, AiStrategy::Aggressive);
+        let events = execute_round(&mut battle.0);
+        state.last_events = events;
+
+        if let Some(result) = check_battle_end(&battle.0) {
+            state.result = Some(result);
+            state.mode = PlanningMode::BattleOver;
+        } else {
+            state.mode = PlanningMode::RoundComplete;
+        }
+    } else {
+        state.current_unit = state.order[state.order_pos];
+        state.mode = PlanningMode::SelectAction;
+    }
+}
+
+fn current_player_ability_ids(
+    battle: &Battle,
+    game_data: &GameData,
+    unit_idx: usize,
+) -> Vec<AbilityId> {
+    let Some(unit) = battle.player_units.get(unit_idx) else {
+        return Vec::new();
+    };
+    let Some(unit_def) = game_data.units.get(&UnitId(unit.unit.id.clone())) else {
+        return Vec::new();
+    };
+
+    let mut seen: HashSet<String> = HashSet::new();
+    let mut ability_ids = Vec::new();
+    let mut push_unique = |ability_id: &AbilityId| {
+        if battle.ability_defs.contains_key(ability_id) && seen.insert(ability_id.0.clone()) {
+            ability_ids.push(ability_id.clone());
+        }
+    };
+
+    for progression in &unit_def.abilities {
+        push_unique(&progression.ability_id);
+    }
+
+    for equipment_id in [
+        unit.equipment.weapon.as_ref(),
+        unit.equipment.helm.as_ref(),
+        unit.equipment.armor.as_ref(),
+        unit.equipment.boots.as_ref(),
+        unit.equipment.accessory.as_ref(),
+    ]
+    .into_iter()
+    .flatten()
+    {
+        if let Some(equipment_def) = game_data.equipment.get(equipment_id) {
+            if let Some(unlocks_ability) = &equipment_def.unlocks_ability {
+                push_unique(unlocks_ability);
+            }
+        }
+    }
+
+    for inst in &unit.djinn_slots.slots {
+        if let Some(djinn_def) = game_data.djinn.get(&inst.djinn_id) {
+            let compatibility = djinn::determine_compatibility(djinn_def.element, unit_def.element);
+            for ability_id in djinn::get_granted_abilities(djinn_def, compatibility, inst.state) {
+                push_unique(&ability_id);
+            }
+        }
+    }
+
+    ability_ids
+}
+
+fn current_player_ability_names(
+    battle: &Battle,
+    game_data: &GameData,
+    unit_idx: usize,
+) -> Vec<String> {
+    current_player_ability_ids(battle, game_data, unit_idx)
+        .into_iter()
+        .map(|ability_id| {
+            battle
+                .ability_defs
+                .get(&ability_id)
+                .map(|ability| ability.name.clone())
+                .unwrap_or(ability_id.0)
+        })
+        .collect()
+}
+
+fn current_djinn_summary(game_data: &GameData, battle: &Battle, unit_idx: usize) -> String {
+    let Some(unit) = battle.player_units.get(unit_idx) else {
+        return "none".to_string();
+    };
+    if unit.djinn_slots.slots.is_empty() {
+        return "none".to_string();
+    }
+
+    unit.djinn_slots
+        .slots
+        .iter()
+        .map(|inst| {
+            let name = game_data
+                .djinn
+                .get(&inst.djinn_id)
+                .map(|djinn| djinn.name.clone())
+                .unwrap_or_else(|| inst.djinn_id.0.clone());
+            match inst.state {
+                DjinnState::Good => format!("{}[Good]", name),
+                DjinnState::Recovery if inst.recovery_turns_remaining > 0 => {
+                    format!("{}[Recovery:{}]", name, inst.recovery_turns_remaining)
+                }
+                DjinnState::Recovery => format!("{}[Recovery]", name),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+fn current_good_djinn_choices(
+    game_data: &GameData,
+    battle: &Battle,
+    unit_idx: usize,
+) -> Vec<(u8, String)> {
+    let Some(unit) = battle.player_units.get(unit_idx) else {
+        return Vec::new();
+    };
+
+    unit.djinn_slots
+        .slots
+        .iter()
+        .enumerate()
+        .filter(|(_, inst)| inst.state == DjinnState::Good)
+        .map(|(idx, inst)| {
+            let name = game_data
+                .djinn
+                .get(&inst.djinn_id)
+                .map(|djinn| djinn.name.clone())
+                .unwrap_or_else(|| inst.djinn_id.0.clone());
+            (idx as u8, name)
+        })
+        .collect()
+}
+
+fn current_summon_choices(
+    game_data: &GameData,
+    battle: &Battle,
+    unit_idx: usize,
+) -> Vec<(Vec<u8>, u8)> {
+    if battle.player_units.get(unit_idx).is_none() {
+        return Vec::new();
+    }
+
+    let good_slots = current_good_djinn_choices(game_data, battle, unit_idx);
+    djinn::get_available_summons(good_slots.len())
+        .into_iter()
+        .map(|tier| {
+            let indices = good_slots
+                .iter()
+                .take(tier.required_good as usize)
+                .map(|(slot_idx, _)| *slot_idx)
+                .collect::<Vec<_>>();
+            (indices, tier.tier)
+        })
+        .collect()
+}
 
 fn spawn_action_button(
     parent: &mut ChildBuilder,
@@ -411,4 +681,120 @@ fn spawn_action_button(
                 TextColor(Color::WHITE),
             ));
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use super::*;
+    use crate::domains::battle_engine::{new_battle, EnemyUnitData, PlayerUnitData};
+    use crate::domains::data_loader;
+    use crate::domains::djinn::DjinnSlots;
+    use crate::domains::equipment::{self, EquipmentLoadout};
+    use crate::shared::{DjinnId, EncounterId};
+
+    fn load_full_game_data() -> GameData {
+        match data_loader::load_game_data(Path::new("data/full")) {
+            Ok(data) => data,
+            Err(errors) => panic!("expected full game data to load: {errors:?}"),
+        }
+    }
+
+    fn build_player_unit(unit_id: &str, djinn_id: &str, game_data: &GameData) -> PlayerUnitData {
+        let unit_def = game_data
+            .units
+            .get(&UnitId(unit_id.to_string()))
+            .expect("test unit should exist");
+        let mut djinn_slots = DjinnSlots::new();
+        if !djinn_id.is_empty() {
+            djinn_slots.add(DjinnId(djinn_id.to_string()));
+        }
+
+        let equipment = EquipmentLoadout::default();
+        let equipment_effects = equipment::compute_equipment_effects(&equipment, &game_data.equipment);
+
+        PlayerUnitData {
+            id: unit_def.id.0.clone(),
+            base_stats: unit_def.base_stats,
+            equipment,
+            djinn_slots,
+            mana_contribution: unit_def.mana_contribution,
+            equipment_effects,
+        }
+    }
+
+    fn build_test_battle(game_data: &GameData) -> Battle {
+        let player = build_player_unit("adept", "flint", game_data);
+        let encounter = game_data
+            .encounters
+            .get(&EncounterId("house-01".to_string()))
+            .expect("house-01 encounter should exist");
+        let enemy_def = game_data
+            .enemies
+            .get(&encounter.enemies[0].enemy_id)
+            .expect("encounter enemy should exist")
+            .clone();
+
+        new_battle(
+            vec![player],
+            vec![EnemyUnitData { enemy_def }],
+            game_data.config.clone(),
+            game_data.abilities.clone(),
+            game_data.djinn.clone(),
+        )
+    }
+
+    #[test]
+    fn current_player_ability_ids_include_good_state_djinn_abilities() {
+        let game_data = load_full_game_data();
+        let battle = build_test_battle(&game_data);
+
+        let ability_ids = current_player_ability_ids(&battle, &game_data, 0);
+
+        assert!(ability_ids.iter().any(|ability_id| ability_id.0 == "flint-stone-fist"));
+        assert!(ability_ids.iter().any(|ability_id| ability_id.0 == "flint-granite-guard"));
+    }
+
+    #[test]
+    fn current_player_ability_ids_remove_same_element_djinn_abilities_in_recovery() {
+        let game_data = load_full_game_data();
+        let mut battle = build_test_battle(&game_data);
+        battle.player_units[0].djinn_slots.slots[0].state = DjinnState::Recovery;
+        battle.player_units[0].djinn_slots.slots[0].recovery_turns_remaining = 1;
+
+        let ability_ids = current_player_ability_ids(&battle, &game_data, 0);
+
+        assert!(!ability_ids.iter().any(|ability_id| ability_id.0 == "flint-stone-fist"));
+        assert!(!ability_ids.iter().any(|ability_id| ability_id.0 == "flint-granite-guard"));
+    }
+
+    #[test]
+    fn current_player_ability_ids_use_counter_recovery_djinn_abilities() {
+        let game_data = load_full_game_data();
+        let player = build_player_unit("ranger", "flint", &game_data);
+        let encounter = game_data
+            .encounters
+            .get(&EncounterId("house-01".to_string()))
+            .expect("house-01 encounter should exist");
+        let enemy_def = game_data
+            .enemies
+            .get(&encounter.enemies[0].enemy_id)
+            .expect("encounter enemy should exist")
+            .clone();
+        let mut battle = new_battle(
+            vec![player],
+            vec![EnemyUnitData { enemy_def }],
+            game_data.config.clone(),
+            game_data.abilities.clone(),
+            game_data.djinn.clone(),
+        );
+        battle.player_units[0].djinn_slots.slots[0].state = DjinnState::Recovery;
+        battle.player_units[0].djinn_slots.slots[0].recovery_turns_remaining = 1;
+
+        let ability_ids = current_player_ability_ids(&battle, &game_data, 0);
+
+        assert!(ability_ids.iter().any(|ability_id| ability_id.0 == "flint-lava-stone"));
+        assert!(ability_ids.iter().any(|ability_id| ability_id.0 == "flint-magma-shield"));
+    }
 }

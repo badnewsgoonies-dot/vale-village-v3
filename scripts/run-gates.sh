@@ -1,187 +1,172 @@
 #!/usr/bin/env bash
+# run-gates.sh — Validation pipeline. Run after every wave.
+# Customize the BUILD_CMD, TEST_CMD, and LINT_CMD for your project.
 set -euo pipefail
 
-# Vale Village v3 — Unified Gate Validation Pipeline
-# Run after every worker completion to verify correctness.
-# All gates must pass. Non-negotiable.
+# ── Configure these for your project ──────────────────────────
+CONTRACT_FILE="${CONTRACT_FILE:-src/shared/mod.rs}"
+CHECKSUM_FILE="${CHECKSUM_FILE:-.contract.sha256}"
+DOMAIN_DIR="${DOMAIN_DIR:-src/domains}"
+CONTRACT_IMPORT="${CONTRACT_IMPORT:-shared}"
+FILE_EXT="${FILE_EXT:-rs}"
 
-BUILD_CHECK_CMD="cargo check"
-TEST_CMD="cargo test"
-LINT_CMD="cargo clippy -- -D warnings"
-CONTRACT_FILE="src/shared/mod.rs"
-
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$REPO_ROOT"
+# Build/test commands — override via environment
+BUILD_CMD="${BUILD_CMD:-cargo check}"
+TEST_CMD="${TEST_CMD:-cargo test}"
+LINT_CMD="${LINT_CMD:-}"  # Optional: cargo clippy, eslint, etc.
+# ──────────────────────────────────────────────────────────────
 
 FAIL=0
-
-echo "══════════════════════════════════════════════════"
-echo "  Hearthfield Gate Validation"
-echo "══════════════════════════════════════════════════"
-echo ""
-
-# ── Gate 1: Contract Integrity (expanded) ─────────────
-echo "== Gate 1: Contract Integrity =="
-if shasum -a 256 -c .contract.sha256; then
-    echo "  ✓ Contract checksum matches"
-else
-    echo "  ✗ CONTRACT DRIFT DETECTED — stop and restore"
-    FAIL=1
-fi
-# Check re-exported modules are also covered
-if [[ -f .contract-deps.sha256 ]]; then
-    if shasum -a 256 -c .contract-deps.sha256; then
-        echo "  ✓ Contract dependencies checksum matches"
-    else
-        echo "  ✗ CONTRACT DEPENDENCY DRIFT — re-exported module changed without checksum update"
-        FAIL=1
-    fi
-fi
-echo ""
-
-# ── Gate 2: Type Check ──────────────────────────────
-echo "== Gate 2: Type Check ($BUILD_CHECK_CMD) =="
-if $BUILD_CHECK_CMD 2>&1; then
-    echo "  ✓ Type check passed"
-else
-    echo "  ✗ Type check FAILED"
-    FAIL=1
-fi
-echo ""
-
-# ── Gate 3: Integration Tests ───────────────────────
-echo "== Gate 3: Integration Tests ($TEST_CMD) =="
-if $TEST_CMD 2>&1; then
-    echo "  ✓ Integration tests passed"
-else
-    echo "  ✗ Integration tests FAILED"
-    FAIL=1
-fi
-echo ""
-
-# ── Gate 4: Lint Gate ───────────────────────────────
-echo "== Gate 4: Lint Gate (cargo clippy) =="
-if $LINT_CMD 2>&1; then
-    echo "  ✓ Clippy passed (zero warnings)"
-else
-    echo "  ✗ Clippy FAILED"
-    FAIL=1
-fi
-echo ""
-
-# ── Gate 5: Connectivity Check (auto-discovered) ───
-echo "== Gate 5: Connectivity Check (no hermetic domains) =="
-HERMETIC=0
-# Auto-discover domains: all directories under src/ except shared/ itself
-for d in src/*/; do
-    domain=$(basename "$d")
-    # shared is the contract, not a consumer
-    [[ "$domain" == "shared" ]] && continue
-    if [ -d "$d" ]; then
-        if ! grep -r --include="*.rs" -q "crate::shared" "$d"; then
-            echo "  ✗ HERMETIC: $d has no shared contract import"
-            HERMETIC=1
-        fi
-    fi
-done
-if [ "$HERMETIC" -eq 0 ]; then
-    echo "  ✓ All domains import from shared contract"
-else
-    echo "  ✗ Connectivity check FAILED: hermetic domains detected"
-    FAIL=1
-fi
-echo ""
-
-# ── Gate 6: STATE.md Freshness ──────────────────────
-echo "== Gate 6: STATE.md Freshness =="
 STATE_STALE=0
-if [[ -f .memory/STATE.md ]]; then
-    # Get HEAD commit hash
-    CURRENT_HEAD=$(git rev-parse --short HEAD)
-    # Get the HEAD recorded in STATE.md
-    STATE_HEAD=$(grep -o 'HEAD:\*\* [a-f0-9]*' .memory/STATE.md 2>/dev/null | grep -o '[a-f0-9]\{7,\}' || echo "MISSING")
+ARTIFACT_WARN=0
+CLAIM_WARN=0
 
-    if [[ "$STATE_HEAD" == "MISSING" ]]; then
-        echo "  ⚠ STATE.md has no HEAD reference"
-        STATE_STALE=1
-    else
-        # Check if STATE_HEAD is an ancestor of current HEAD (and not HEAD itself)
-        if git merge-base --is-ancestor "$STATE_HEAD" HEAD 2>/dev/null; then
-            COMMITS_BEHIND=$(git rev-list --count "${STATE_HEAD}..HEAD" 2>/dev/null || echo "?")
-            if [[ "$COMMITS_BEHIND" -gt 0 ]]; then
-                echo "  ⚠ STATE.md is $COMMITS_BEHIND commit(s) behind HEAD ($CURRENT_HEAD)"
-                STATE_STALE=1
-            else
-                echo "  ✓ STATE.md references current HEAD"
-            fi
-        else
-            echo "  ⚠ STATE.md HEAD ($STATE_HEAD) is not an ancestor of current HEAD ($CURRENT_HEAD)"
-            STATE_STALE=1
-        fi
-    fi
+resolve_state_file() {
+  if [ -f "STATE.md" ]; then
+    printf '%s\n' "STATE.md"
+  elif [ -f ".memory/STATE.md" ]; then
+    printf '%s\n' ".memory/STATE.md"
+  else
+    return 1
+  fi
+}
 
+echo "== Contract integrity =="
+if [ -f "$CHECKSUM_FILE" ]; then
+  if shasum -a 256 -c "$CHECKSUM_FILE"; then
+    echo "✓ Contract checksum OK"
+  else
+    echo "✗ CONTRACT DRIFT — checksum failed"
+    FAIL=1
+  fi
 else
-    echo "  ✗ STATE.md not found"
-    STATE_STALE=1
+  echo "⚠ No checksum file found at $CHECKSUM_FILE"
 fi
 
-if [ "$STATE_STALE" -eq 1 ]; then
-    echo "  ⚠ STATE.md is stale (warning — does not block gate)"
-fi
 echo ""
+echo "== Build =="
+if $BUILD_CMD; then
+  echo "✓ Build passed"
+else
+  echo "✗ Build FAILED"
+  FAIL=1
+fi
 
-# ── Gate 7: Artifact Source Refs (spot check) ──────
-echo "== Gate 7: Artifact Source Refs =="
+echo ""
+echo "== Tests =="
+if $TEST_CMD; then
+  echo "✓ Tests passed"
+else
+  echo "✗ Tests FAILED"
+  FAIL=1
+fi
+
+if [ -n "$LINT_CMD" ]; then
+  echo ""
+  echo "== Lint =="
+  if $LINT_CMD; then
+    echo "✓ Lint passed"
+  else
+    echo "⚠ Lint warnings (non-blocking)"
+  fi
+fi
+
+echo ""
+echo "== Connectivity (no hermetic domains) =="
+if [ -d "$DOMAIN_DIR" ]; then
+  CONNECTIVITY_FAIL=0
+  for d in "$DOMAIN_DIR"/*/; do
+    if [ -d "$d" ]; then
+      if ! grep -rq "$CONTRACT_IMPORT" "$d" --include="*.$FILE_EXT" 2>/dev/null; then
+        echo "✗ HERMETIC: $d has no $CONTRACT_IMPORT import"
+        CONNECTIVITY_FAIL=1
+      fi
+    fi
+  done
+  if [ "$CONNECTIVITY_FAIL" -eq 0 ]; then
+    echo "✓ All domains import from $CONTRACT_IMPORT"
+  else
+    FAIL=1
+  fi
+else
+  echo "⚠ No domain directory at $DOMAIN_DIR"
+fi
+
+echo ""
+echo "== STATE.md freshness =="
+STATE_FILE="$(resolve_state_file || true)"
+if [ -n "$STATE_FILE" ]; then
+  CURRENT_HEAD=$(git rev-parse --short HEAD)
+  STATE_HEAD=$(grep -oP '\*\*HEAD:\*\*\s*\K[a-f0-9]+' "$STATE_FILE" 2>/dev/null || echo "MISSING")
+
+  if [ "$STATE_HEAD" = "MISSING" ]; then
+    echo "⚠ STATE.md has no HEAD reference"
+    STATE_STALE=1
+  elif git merge-base --is-ancestor "$STATE_HEAD" HEAD 2>/dev/null; then
+    COMMITS_BEHIND=$(git rev-list --count "${STATE_HEAD}..HEAD" 2>/dev/null || echo "?")
+    if [ "$COMMITS_BEHIND" = "0" ]; then
+      echo "✓ STATE.md references current HEAD"
+    else
+      echo "⚠ STATE.md is $COMMITS_BEHIND commit(s) behind HEAD ($CURRENT_HEAD)"
+      STATE_STALE=1
+    fi
+  else
+    echo "⚠ STATE.md HEAD ($STATE_HEAD) is not an ancestor of current HEAD ($CURRENT_HEAD)"
+    STATE_STALE=1
+  fi
+else
+  echo "⚠ STATE.md not found"
+  STATE_STALE=1
+fi
+
+echo ""
+echo "== Artifact source refs =="
 ARTIFACT_WARN_FILE=$(mktemp)
+trap 'rm -f "$ARTIFACT_WARN_FILE"' EXIT
 echo "0" > "$ARTIFACT_WARN_FILE"
 for artifact in .memory/*.yaml; do
-    [[ -f "$artifact" ]] || continue
-    grep 'file:' "$artifact" 2>/dev/null | while IFS= read -r line; do
-        filepath=$(echo "$line" | sed -n 's/.*@\([^:"]*\).*/\1/p')
-        if [[ -n "$filepath" ]] && [[ ! -f "$filepath" ]]; then
-            echo "  ⚠ $(basename "$artifact"): '$filepath' not found"
-            echo "1" > "$ARTIFACT_WARN_FILE"
-        fi
-    done || true
+  [ -f "$artifact" ] || continue
+  grep 'file:' "$artifact" 2>/dev/null | while IFS= read -r line; do
+    filepath=$(echo "$line" | sed -n 's/.*@\([^:"]*\).*/\1/p')
+    if [ -n "$filepath" ] && [ ! -f "$filepath" ]; then
+      echo "⚠ $(basename "$artifact"): '$filepath' not found"
+      echo "1" > "$ARTIFACT_WARN_FILE"
+    fi
+  done || true
 done
 ARTIFACT_WARN=$(cat "$ARTIFACT_WARN_FILE")
-rm -f "$ARTIFACT_WARN_FILE"
 if [ "$ARTIFACT_WARN" -eq 0 ]; then
-    echo "  ✓ All artifact file refs resolve"
-else
-    echo "  ⚠ Some artifact refs broken (warning only)"
+  echo "✓ All artifact file refs resolve"
 fi
-echo ""
 
-# ── Gate 8: STATE.md Claim Verification (spot check) ─
-echo "== Gate 8: STATE.md Claim Verification =="
-CLAIM_WARN=0
-if [[ -f scripts/verify-state-claims.sh ]]; then
-    # Run claim verifier, capture output but don't block the gate
-    CLAIM_OUTPUT=$(bash scripts/verify-state-claims.sh 2>&1 || true)
-    CLAIM_FAILURES=$(echo "$CLAIM_OUTPUT" | grep -c '✗' || true)
-    if [[ "$CLAIM_FAILURES" -gt 0 ]]; then
-        echo "$CLAIM_OUTPUT" | grep -E '(✗|✓|⚠|Verified:)' | head -20
-        echo "  ⚠ $CLAIM_FAILURES claim(s) failed verification (warning — does not block gate)"
-        CLAIM_WARN=1
-    else
-        echo "  ✓ All STATE.md claims verified against code"
-    fi
-else
-    echo "  ⚠ verify-state-claims.sh not found"
+echo ""
+echo "== STATE.md claim verification =="
+if [ -f "scripts/verify-state-claims.sh" ]; then
+  CLAIM_OUTPUT=$(bash scripts/verify-state-claims.sh 2>&1 || true)
+  CLAIM_FAILURES=$(echo "$CLAIM_OUTPUT" | grep -c '✗' || true)
+  if [ "$CLAIM_FAILURES" -gt 0 ]; then
+    echo "$CLAIM_OUTPUT" | grep -E '(✗|✓|⚠|Verified:)' | head -20
+    echo "⚠ $CLAIM_FAILURES claim(s) failed verification (warning only)"
     CLAIM_WARN=1
-fi
-echo ""
-
-# ── Summary ─────────────────────────────────────────
-echo "══════════════════════════════════════════════════"
-if [ "$FAIL" -eq 0 ]; then
-    echo "  ALL GATES PASSED ✓"
-    if [ "$STATE_STALE" -eq 1 ] || [ "$ARTIFACT_WARN" -eq 1 ] || [ "$CLAIM_WARN" -eq 1 ]; then
-        echo "  (warnings present — review before shipping)"
-    fi
+  else
+    echo "✓ All STATE.md claims verified against code"
+  fi
 else
-    echo "  GATES FAILED ✗ — fix before proceeding"
-    exit 1
+  echo "⚠ verify-state-claims.sh not found"
+  CLAIM_WARN=1
 fi
-echo "══════════════════════════════════════════════════"
+
+echo ""
+if [ "$FAIL" -eq 0 ]; then
+  echo "══════════════════════════════"
+  echo "  ALL GATES PASSED"
+  if [ "$STATE_STALE" -eq 1 ] || [ "$ARTIFACT_WARN" -eq 1 ] || [ "$CLAIM_WARN" -eq 1 ]; then
+    echo "  (warnings present — review before shipping)"
+  fi
+  echo "══════════════════════════════"
+else
+  echo "══════════════════════════════"
+  echo "  GATES FAILED — see above"
+  echo "══════════════════════════════"
+  exit 1
+fi

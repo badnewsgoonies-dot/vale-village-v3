@@ -50,6 +50,17 @@ join_lines() {
     paste -sd ',' | sed 's/,/, /g'
 }
 
+resolve_state_rel() {
+    local root="$1"
+    if [[ -f "$root/STATE.md" ]]; then
+        printf '%s\n' "STATE.md"
+    elif [[ -f "$root/.memory/STATE.md" ]]; then
+        printf '%s\n' ".memory/STATE.md"
+    else
+        return 1
+    fi
+}
+
 sanitize_label() {
     printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9._-' '-'
 }
@@ -168,18 +179,24 @@ LEDGER_ABS="$REPO_ROOT/$LEDGER_REL"
 MANIFEST_DIR_ABS="$REPO_ROOT/$MANIFEST_DIR_REL"
 CHECKPOINT_LEDGER_ABS="$REPO_ROOT/$CHECKPOINT_LEDGER_REL"
 AGENTS_ABS="$REPO_ROOT/AGENTS.md"
-STATE_ABS="$REPO_ROOT/.memory/STATE.md"
+STATE_REL="$(resolve_state_rel "$REPO_ROOT" || true)"
+STATE_ABS="${STATE_REL:+$REPO_ROOT/$STATE_REL}"
 LOCKFILE_ABS="${CHECKPOINT_LEDGER_ABS}.lock"
 
 [[ -d "$WORKTREE_ABS" ]] || die "worktree does not exist: $WORKTREE"
 [[ -d "$CODEX_HOME_ABS" ]] || die "CODEX_HOME does not exist: $CODEX_HOME_DIR"
 [[ -f "$LEDGER_ABS" ]] || die "ledger file does not exist: $LEDGER_REL"
 [[ -f "$AGENTS_ABS" ]] || die "AGENTS.md missing at repo root"
-[[ -f "$STATE_ABS" ]] || die ".memory/STATE.md missing at repo root"
+[[ -n "$STATE_ABS" && -f "$STATE_ABS" ]] || die "STATE.md missing at repo root"
 [[ -d "$CODEX_HOME_ABS/sessions" ]] || die "CODEX_HOME has no sessions directory: $CODEX_HOME_ABS"
 
 WORKTREE_AGENTS_ABS="$WORKTREE_ABS/AGENTS.md"
-WORKTREE_STATE_ABS="$WORKTREE_ABS/.memory/STATE.md"
+WORKTREE_STATE_REL="$(resolve_state_rel "$WORKTREE_ABS" || true)"
+if [[ -n "$WORKTREE_STATE_REL" ]]; then
+    WORKTREE_STATE_ABS="$WORKTREE_ABS/$WORKTREE_STATE_REL"
+else
+    WORKTREE_STATE_ABS=""
+fi
 WORKTREE_LEDGER_ABS="$WORKTREE_ABS/$LEDGER_REL"
 
 MAIN_COMMON_DIR="$(git -C "$REPO_ROOT" rev-parse --git-common-dir)"
@@ -399,7 +416,7 @@ REPORTS_LIST="$(printf '%s\n%s\n' "$STATIC_LAUNCH_REPORTS" "$ALLOWLIST_REPORTS" 
     printf 'ledger_files:\n'
     printf '  - path: AGENTS.md\n'
     printf '    sha256: %s\n' "$AGENTS_HASH"
-    printf '  - path: .memory/STATE.md\n'
+    printf '  - path: %s\n' "$STATE_REL"
     printf '    sha256: %s\n' "$STATE_HASH"
     printf '  - path: %s\n' "$LEDGER_REL"
     printf '    sha256: %s\n' "$DISPATCH_HASH"

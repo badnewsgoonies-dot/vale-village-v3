@@ -69,8 +69,15 @@ new_head=$(git rev-parse --short HEAD)
 branch=$(git rev-parse --abbrev-ref HEAD)
 
 # Check STATE.md freshness
-if [[ -f "$REPO_ROOT/.memory/STATE.md" ]]; then
-    state_head=$(grep -oP '\*\*HEAD:\*\*\s*\K\w+' "$REPO_ROOT/.memory/STATE.md" 2>/dev/null || echo "")
+STATE_FILE=""
+if [[ -f "$REPO_ROOT/STATE.md" ]]; then
+    STATE_FILE="$REPO_ROOT/STATE.md"
+elif [[ -f "$REPO_ROOT/.memory/STATE.md" ]]; then
+    STATE_FILE="$REPO_ROOT/.memory/STATE.md"
+fi
+
+if [[ -n "$STATE_FILE" ]]; then
+    state_head=$(grep -oP '\*\*HEAD:\*\*\s*\K\w+' "$STATE_FILE" 2>/dev/null || echo "")
     if [[ -n "$state_head" && "$state_head" != "$new_head"* && "$new_head" != "$state_head"* ]]; then
         drift=$(git rev-list --count "${state_head}..HEAD" 2>/dev/null || echo "?")
         echo "⚠ STATE.md HEAD ($state_head) doesn't match checkout ($new_head), drift: $drift commits" >&2

@@ -5,10 +5,9 @@
 use bevy::prelude::*;
 
 use crate::domains::battle_engine::BattleEvent;
-use crate::shared::{DamageType, Side, StatusEffectType, TargetRef};
+use crate::shared::{Side, StatusEffectType, TargetRef};
 
 use super::battle_scene::{EnemyUnit, PlayerUnit};
-use super::plugin::BattleRes;
 use super::planning::PlanningState;
 
 // ── Components ─────────────────────────────────────────────────────
