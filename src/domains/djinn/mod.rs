@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![allow(dead_code, clippy::new_without_default)]
 //! Djinn state machine: Good/Recovery states, ability oscillation,
 //! summon execution, and staggered recovery.
 
