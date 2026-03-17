@@ -3,4 +3,5 @@
 #[allow(unused_imports)]
 use crate::shared;
 
+pub mod combat;
 pub mod data_loader;
