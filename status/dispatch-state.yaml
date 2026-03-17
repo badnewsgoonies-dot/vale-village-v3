@@ -1,6 +1,17 @@
-campaign_id: vale-village-v3-visual-hardening
+campaign_id: vale-village-v3-rotation-wave-8
 baseline_branch: master
-baseline_commit: 8fcddbb
-phase: visual-hardening
+baseline_commit: daad7f5
+phase: rotation-wave-8
 
-active_lanes: []
+active_lanes:
+- lane_id: ui-djinn-sprites
+  status: in-progress
+  goal: "Promote djinn interaction from the planning panel into the battle scene while keeping the current GUI slice playable."
+  owned_paths:
+  - src/domains/ui/
+  worker_model: gpt-5
+  next_action: "Lane launched via scripts/launch-lane.sh; review run log and clamp/gate each verified wave."
+  validation:
+    compile: pending
+    tests: pending
+  report_path: status/workers/ui-djinn-sprites.md

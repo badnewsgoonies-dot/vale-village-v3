@@ -1,7 +1,7 @@
 # Vale Village v3 — Current State
 
 **Phase:** Visual layer hardening and state migration
-**HEAD:** 8fcddbb
+**HEAD:** daad7f5
 **Date:** 2026-03-17
 
 ## Spine Status: IN PROGRESS
