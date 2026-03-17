@@ -5,14 +5,14 @@
 //! printing each round's events to the terminal.
 
 use crate::domains::battle_engine::{
-    check_battle_end, execute_round, new_battle, plan_action, Battle, BattleEvent, BattleResult,
-    EnemyUnitData, PlayerUnitData,
+    check_battle_end, execute_round, new_battle, plan_action, plan_enemy_actions, Battle,
+    BattleEvent, BattleResult, EnemyUnitData, PlayerUnitData,
 };
 use crate::domains::data_loader::GameData;
 use crate::domains::djinn::DjinnSlots;
 use crate::domains::equipment::{EquipmentEffects, EquipmentLoadout};
 use crate::shared::{
-    BattleAction, EnemyId, Side, TargetRef, UnitId,
+    BattleAction, EncounterId, EnemyId, Side, TargetRef, UnitId,
 };
 
 // ── Public API ──────────────────────────────────────────────────────
@@ -20,8 +20,10 @@ use crate::shared::{
 /// Run a demo battle using loaded game data.
 ///
 /// - 2 player units: Adept + Blaze
-/// - 2 enemies: Mercury Slime + Earth Scout
+/// - Enemies loaded from encounter "house-02" (Earth Scout + Earthbound Wolf)
 /// - Auto-play loop: each player unit attacks first alive enemy
+/// - Enemies attack back: each alive enemy attacks first alive player
+/// - Both sides can win or lose
 /// - Stalemate guard at round 20
 pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
     // Look up player units
@@ -53,24 +55,56 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
         },
     ];
 
-    // Look up enemies
-    let slime = game_data
-        .enemies
-        .get(&EnemyId("mercury-slime".to_string()))
-        .expect("sample data must contain enemy 'mercury-slime'");
-    let scout = game_data
-        .enemies
-        .get(&EnemyId("earth-scout".to_string()))
-        .expect("sample data must contain enemy 'earth-scout'");
+    // Load encounter "house-02", fall back to manual enemy list
+    let encounter = game_data
+        .encounters
+        .get(&EncounterId("house-02".to_string()));
 
-    let enemy_data: Vec<EnemyUnitData> = vec![
-        EnemyUnitData {
-            enemy_def: slime.clone(),
-        },
-        EnemyUnitData {
-            enemy_def: scout.clone(),
-        },
-    ];
+    let enemy_data: Vec<EnemyUnitData> = if let Some(enc) = encounter {
+        enc.enemies
+            .iter()
+            .flat_map(|enc_enemy| {
+                let enemy_def = game_data.enemies.get(&enc_enemy.enemy_id);
+                match enemy_def {
+                    Some(def) => (0..enc_enemy.count)
+                        .map(|_| EnemyUnitData {
+                            enemy_def: def.clone(),
+                        })
+                        .collect::<Vec<_>>(),
+                    None => {
+                        eprintln!(
+                            "Warning: encounter enemy '{}' not found in game_data, skipping",
+                            enc_enemy.enemy_id.0
+                        );
+                        vec![]
+                    }
+                }
+            })
+            .collect()
+    } else {
+        // Fallback: use mercury-slime + earth-scout directly
+        let slime = game_data
+            .enemies
+            .get(&EnemyId("mercury-slime".to_string()))
+            .expect("sample data must contain enemy 'mercury-slime'");
+        let scout = game_data
+            .enemies
+            .get(&EnemyId("earth-scout".to_string()))
+            .expect("sample data must contain enemy 'earth-scout'");
+        vec![
+            EnemyUnitData {
+                enemy_def: slime.clone(),
+            },
+            EnemyUnitData {
+                enemy_def: scout.clone(),
+            },
+        ]
+    };
+
+    assert!(
+        !enemy_data.is_empty(),
+        "encounter must have at least one valid enemy"
+    );
 
     // Build ability_defs map for the battle
     let ability_defs = game_data.abilities.clone();
@@ -83,18 +117,16 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
     );
 
     println!("\n=== BATTLE START ===");
-    println!(
-        "Party: {} (HP:{}) + {} (HP:{})",
-        adept.name,
-        adept.base_stats.hp,
-        blaze.name,
-        blaze.base_stats.hp
-    );
-    println!(
-        "Enemies: {} (HP:{}) + {} (HP:{})",
-        slime.name, slime.stats.hp, scout.name, scout.stats.hp
-    );
+    print!("Party:");
+    for pu in &battle.player_units {
+        print!(" {} (HP:{})", pu.unit.id, pu.unit.stats.hp);
+    }
     println!();
+    print!("Enemies:");
+    for eu in &battle.enemies {
+        print!(" {} (HP:{})", eu.unit.id, eu.unit.stats.hp);
+    }
+    println!("\n");
 
     loop {
         // Stalemate guard
@@ -131,6 +163,9 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
             let _ = plan_action(&mut battle, unit_ref, action);
         }
 
+        // Enemy planning: each alive enemy attacks first alive player
+        plan_enemy_actions(&mut battle);
+
         // Execute
         let events = execute_round(&mut battle);
 
@@ -145,6 +180,14 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
 
         // Check end
         if let Some(result) = check_battle_end(&battle) {
+            match &result {
+                BattleResult::Victory { .. } => {
+                    println!("=== VICTORY ===");
+                }
+                BattleResult::Defeat => {
+                    println!("=== DEFEAT — your party has fallen ===");
+                }
+            }
             return result;
         }
     }
@@ -450,7 +493,7 @@ mod tests {
         // Create a battle where enemies have very high HP so stalemate triggers
         let adept = game_data.units.get(&UnitId("adept".to_string())).unwrap();
 
-        // Make a custom enemy with absurd HP
+        // Make a custom enemy with absurd HP and low ATK so player survives 20 rounds
         let mut tanky_enemy = game_data
             .enemies
             .get(&EnemyId("mercury-slime".to_string()))
@@ -458,6 +501,7 @@ mod tests {
             .clone();
         tanky_enemy.stats.hp = 60000;
         tanky_enemy.stats.def = 200;
+        tanky_enemy.stats.atk = 1;
 
         let mut battle = new_battle(
             vec![PlayerUnitData {

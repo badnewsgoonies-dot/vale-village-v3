@@ -255,6 +255,42 @@ pub fn plan_action(
     Ok(())
 }
 
+// ── plan_enemy_actions ──────────────────────────────────────────────
+
+/// Simple enemy AI: each alive enemy auto-attacks the first alive player unit.
+///
+/// Call this after player actions are planned, before `execute_round`.
+pub fn plan_enemy_actions(battle: &mut Battle) {
+    let enemy_count = battle.enemies.len();
+    for ei in 0..enemy_count {
+        if !battle.enemies[ei].unit.is_alive {
+            continue;
+        }
+        // Find first alive player unit
+        let target_idx = battle
+            .player_units
+            .iter()
+            .position(|p| p.unit.is_alive);
+        let target_idx = match target_idx {
+            Some(i) => i,
+            None => break, // no player units left
+        };
+
+        let unit_ref = TargetRef {
+            side: Side::Enemy,
+            index: ei as u8,
+        };
+        let action = BattleAction::Attack {
+            target: TargetRef {
+                side: Side::Player,
+                index: target_idx as u8,
+            },
+        };
+        // plan_action validates and stores; ignore errors (e.g. stunned enemies)
+        let _ = plan_action(battle, unit_ref, action);
+    }
+}
+
 // ── execute_round ───────────────────────────────────────────────────
 
 /// Execute one full round of battle.
@@ -1458,5 +1494,205 @@ mod tests {
             .iter()
             .any(|e| matches!(e, BattleEvent::DjinnChanged(_)));
         assert!(has_djinn_change, "Should have DjinnChanged event");
+    }
+
+    // ── Test: plan_enemy_actions plans correctly ────────────────────
+
+    #[test]
+    fn test_plan_enemy_actions_targets_first_alive_player() {
+        let player_stats = Stats { hp: 100, atk: 20, def: 15, mag: 10, spd: 10 };
+        let enemy_stats = Stats { hp: 80, atk: 25, def: 10, mag: 10, spd: 12 };
+
+        let p1 = make_player("hero1", player_stats, 3);
+        let p2 = make_player("hero2", player_stats, 3);
+        let e1 = make_enemy("goblin-a", enemy_stats);
+        let e2 = make_enemy("goblin-b", enemy_stats);
+
+        let mut battle = new_battle(vec![p1, p2], vec![e1, e2], test_config(), HashMap::new());
+
+        plan_enemy_actions(&mut battle);
+
+        // Both enemies should have planned an attack on player index 0
+        assert_eq!(battle.planned_actions.len(), 2, "Both enemies should plan actions");
+        for (actor_ref, action) in &battle.planned_actions {
+            assert_eq!(actor_ref.side, Side::Enemy, "Actor should be enemy");
+            match action {
+                BattleAction::Attack { target } => {
+                    assert_eq!(target.side, Side::Player, "Target should be player");
+                    assert_eq!(target.index, 0, "Should target first alive player");
+                }
+                _ => panic!("Expected Attack action"),
+            }
+        }
+    }
+
+    // ── Test: plan_enemy_actions skips dead enemies ─────────────────
+
+    #[test]
+    fn test_plan_enemy_actions_skips_dead_enemies() {
+        let stats = Stats { hp: 100, atk: 20, def: 15, mag: 10, spd: 10 };
+        let p1 = make_player("hero", stats, 3);
+        let e1 = make_enemy("dead-goblin", stats);
+        let e2 = make_enemy("live-goblin", stats);
+
+        let mut battle = new_battle(vec![p1], vec![e1, e2], test_config(), HashMap::new());
+        // Kill first enemy
+        battle.enemies[0].unit.is_alive = false;
+        battle.enemies[0].unit.current_hp = 0;
+
+        plan_enemy_actions(&mut battle);
+
+        assert_eq!(battle.planned_actions.len(), 1, "Only alive enemy should plan");
+        assert_eq!(battle.planned_actions[0].0.index, 1, "Second enemy should be the actor");
+    }
+
+    // ── Test: plan_enemy_actions targets second player if first dead ─
+
+    #[test]
+    fn test_plan_enemy_actions_targets_second_player_if_first_dead() {
+        let stats = Stats { hp: 100, atk: 20, def: 15, mag: 10, spd: 10 };
+        let p1 = make_player("dead-hero", stats, 3);
+        let p2 = make_player("alive-hero", stats, 3);
+        let e1 = make_enemy("goblin", stats);
+
+        let mut battle = new_battle(vec![p1, p2], vec![e1], test_config(), HashMap::new());
+        // Kill first player
+        battle.player_units[0].unit.is_alive = false;
+        battle.player_units[0].unit.current_hp = 0;
+
+        plan_enemy_actions(&mut battle);
+
+        assert_eq!(battle.planned_actions.len(), 1);
+        match &battle.planned_actions[0].1 {
+            BattleAction::Attack { target } => {
+                assert_eq!(target.index, 1, "Should target second (alive) player");
+            }
+            _ => panic!("Expected Attack"),
+        }
+    }
+
+    // ── Test: enemy deals damage to player unit ─────────────────────
+
+    #[test]
+    fn test_enemy_deals_damage_to_player() {
+        let player_stats = Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 8 };
+        let enemy_stats = Stats { hp: 80, atk: 30, def: 10, mag: 10, spd: 12 };
+
+        let p1 = make_player("hero", player_stats, 3);
+        let e1 = make_enemy("strong-goblin", enemy_stats);
+
+        let mut battle = new_battle(vec![p1], vec![e1], test_config(), HashMap::new());
+
+        // Only plan enemy action (no player action)
+        plan_enemy_actions(&mut battle);
+
+        let player_hp_before = battle.player_units[0].unit.current_hp;
+        let events = execute_round(&mut battle);
+        let player_hp_after = battle.player_units[0].unit.current_hp;
+
+        assert!(
+            player_hp_after < player_hp_before,
+            "Player should have taken damage from enemy attack: before={}, after={}",
+            player_hp_before,
+            player_hp_after
+        );
+
+        // Verify a DamageDealt event from enemy to player exists
+        let has_enemy_damage = events.iter().any(|e| match e {
+            BattleEvent::DamageDealt(dd) => {
+                dd.source.side == Side::Enemy && dd.target.side == Side::Player
+            }
+            _ => false,
+        });
+        assert!(has_enemy_damage, "Should have enemy->player damage event");
+    }
+
+    // ── Test: player unit can die → battle ends in defeat ───────────
+
+    #[test]
+    fn test_player_death_leads_to_defeat() {
+        // Give enemy massive ATK so it kills the player in one round
+        let player_stats = Stats { hp: 30, atk: 5, def: 2, mag: 5, spd: 5 };
+        let enemy_stats = Stats { hp: 500, atk: 200, def: 50, mag: 10, spd: 20 };
+
+        let p1 = make_player("fragile-hero", player_stats, 1);
+        let e1 = make_enemy("boss-goblin", enemy_stats);
+
+        let mut battle = new_battle(vec![p1], vec![e1], test_config(), HashMap::new());
+
+        // Plan both sides
+        let player_ref = TargetRef { side: Side::Player, index: 0 };
+        let enemy_target = TargetRef { side: Side::Enemy, index: 0 };
+        let _ = plan_action(
+            &mut battle,
+            player_ref,
+            BattleAction::Attack { target: enemy_target },
+        );
+        plan_enemy_actions(&mut battle);
+
+        let events = execute_round(&mut battle);
+
+        // Player should be dead
+        assert!(
+            !battle.player_units[0].unit.is_alive,
+            "Player should be dead after enemy attack"
+        );
+
+        // Should have UnitDefeated event for the player
+        let has_player_defeated = events.iter().any(|e| match e {
+            BattleEvent::UnitDefeated(ud) => ud.unit.side == Side::Player,
+            _ => false,
+        });
+        assert!(
+            has_player_defeated,
+            "Should have UnitDefeated event for player"
+        );
+
+        // Battle should end in defeat
+        let result = check_battle_end(&battle);
+        assert_eq!(result, Some(BattleResult::Defeat));
+    }
+
+    // ── Test: two-sided combat — both sides attack each round ───────
+
+    #[test]
+    fn test_two_sided_combat_round() {
+        let player_stats = Stats { hp: 200, atk: 25, def: 15, mag: 10, spd: 15 };
+        let enemy_stats = Stats { hp: 150, atk: 20, def: 12, mag: 10, spd: 10 };
+
+        let p1 = make_player("hero", player_stats, 3);
+        let e1 = make_enemy("goblin", enemy_stats);
+
+        let mut battle = new_battle(vec![p1], vec![e1], test_config(), HashMap::new());
+
+        // Plan player attack
+        let player_ref = TargetRef { side: Side::Player, index: 0 };
+        let enemy_ref = TargetRef { side: Side::Enemy, index: 0 };
+        plan_action(
+            &mut battle,
+            player_ref,
+            BattleAction::Attack { target: enemy_ref },
+        )
+        .unwrap();
+
+        // Plan enemy attacks
+        plan_enemy_actions(&mut battle);
+
+        let enemy_hp_before = battle.enemies[0].unit.current_hp;
+        let player_hp_before = battle.player_units[0].unit.current_hp;
+
+        let _events = execute_round(&mut battle);
+
+        let enemy_hp_after = battle.enemies[0].unit.current_hp;
+        let player_hp_after = battle.player_units[0].unit.current_hp;
+
+        assert!(
+            enemy_hp_after < enemy_hp_before,
+            "Enemy should take damage from player"
+        );
+        assert!(
+            player_hp_after < player_hp_before,
+            "Player should take damage from enemy"
+        );
     }
 }
