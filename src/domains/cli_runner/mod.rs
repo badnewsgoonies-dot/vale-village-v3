@@ -292,8 +292,9 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
 
             // Every 3rd round: try to use an ability for this unit
             let mut used_ability = false;
+            #[allow(clippy::manual_is_multiple_of)]
             if current_round % 3 == 0 {
-                if let Some(ref ability_id) = unit_ability_ids.get(pi).and_then(|a| a.as_ref()) {
+                if let Some(ability_id) = unit_ability_ids.get(pi).and_then(|a| a.as_ref()) {
                     // Check if the ability exists and mana allows
                     let can_use = battle
                         .ability_defs
