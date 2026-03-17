@@ -8,8 +8,9 @@ use std::io::{self, Write};
 
 use crate::domains::ai::AiStrategy;
 use crate::domains::battle_engine::{
-    check_battle_end, execute_round, new_battle, plan_action, plan_enemy_actions_with_ai, Battle,
-    BattleEvent, BattleResult, EnemyUnitData, PlanError, PlayerUnitData,
+    check_battle_end, execute_round, get_planning_order, new_battle, plan_action,
+    plan_enemy_actions_with_ai, Battle, BattleEvent, BattleResult, EnemyUnitData, PlanError,
+    PlayerUnitData,
 };
 use crate::domains::data_loader::GameData;
 use crate::domains::djinn::DjinnSlots;
@@ -912,11 +913,25 @@ pub fn run_demo_battle(game_data: &GameData, encounter_id: &str) -> BattleResult
 
         let current_round = battle.round;
 
-        // Planning phase
-        for pi in 0..battle.player_units.len() {
-            if !battle.player_units[pi].unit.is_alive {
-                continue;
-            }
+        // Planning phase — units plan in effective-SPD order (fastest first)
+        let planning_order = get_planning_order(&battle);
+
+        // Show planning order to the player
+        let order_display: Vec<String> = planning_order
+            .iter()
+            .map(|&pi| {
+                let pu = &battle.player_units[pi];
+                let effective_spd =
+                    pu.unit.stats.spd as i32 + pu.unit.equipment_speed_bonus as i32;
+                format!("{}({})", pu.unit.id, effective_spd)
+            })
+            .collect();
+        println!(
+            "Planning order (by SPD): {}",
+            order_display.join(" → ")
+        );
+
+        for &pi in &planning_order {
             if auto_mode {
                 plan_auto_action_for_player(&mut battle, pi, current_round, &unit_auto_ability_ids);
             } else {

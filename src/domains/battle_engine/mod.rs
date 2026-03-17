@@ -207,6 +207,35 @@ pub fn new_battle(
     }
 }
 
+// ── get_planning_order ──────────────────────────────────────────────
+
+/// Returns player unit indices sorted by effective SPD descending (fastest first).
+///
+/// Effective SPD = unit.stats.spd + equipment_speed_bonus (as i32).
+/// Dead units are skipped.
+/// Tiebreaker: higher base SPD first, then lower index.
+pub fn get_planning_order(battle: &Battle) -> Vec<usize> {
+    let mut entries: Vec<(usize, i32, u16)> = Vec::new();
+
+    for (i, pu) in battle.player_units.iter().enumerate() {
+        if !pu.unit.is_alive {
+            continue;
+        }
+        let effective_spd = pu.unit.stats.spd as i32 + pu.unit.equipment_speed_bonus as i32;
+        let base_spd = pu.unit.stats.spd;
+        entries.push((i, effective_spd, base_spd));
+    }
+
+    // Sort descending by effective SPD, then base SPD, then ascending by index
+    entries.sort_by(|a, b| {
+        b.1.cmp(&a.1)
+            .then_with(|| b.2.cmp(&a.2))
+            .then_with(|| a.0.cmp(&b.0))
+    });
+
+    entries.into_iter().map(|(idx, _, _)| idx).collect()
+}
+
 // ── plan_action ─────────────────────────────────────────────────────
 
 /// Validate and store a planned action for a unit.
@@ -3066,5 +3095,77 @@ mod tests {
             has_barrier_event,
             "Should have BarrierBlocked event for first enemy"
         );
+    }
+
+    // ── Planning-order tests ────────────────────────────────────────
+
+    #[test]
+    fn test_planning_order_matches_spd() {
+        // Unit 0: SPD 10, Unit 1: SPD 18, Unit 2: SPD 13
+        // Expected order: 1 (18), 2 (13), 0 (10)
+        let battle = new_battle(
+            vec![
+                make_player("slow", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 10 }, 1),
+                make_player("fast", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 18 }, 1),
+                make_player("mid", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 13 }, 1),
+            ],
+            vec![make_enemy("foe", Stats { hp: 80, atk: 15, def: 8, mag: 5, spd: 10 })],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
+
+        let order = get_planning_order(&battle);
+        assert_eq!(order, vec![1, 2, 0], "Planning order should be fastest-first by effective SPD");
+    }
+
+    #[test]
+    fn test_planning_order_skips_dead() {
+        let mut battle = new_battle(
+            vec![
+                make_player("alive_slow", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 5 }, 1),
+                make_player("dead_fast", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 20 }, 1),
+                make_player("alive_fast", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 15 }, 1),
+            ],
+            vec![make_enemy("foe", Stats { hp: 80, atk: 15, def: 8, mag: 5, spd: 10 })],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
+
+        // Kill unit 1
+        battle.player_units[1].unit.is_alive = false;
+        battle.player_units[1].unit.current_hp = 0;
+
+        let order = get_planning_order(&battle);
+        assert_eq!(order, vec![2, 0], "Dead unit (index 1) must be excluded");
+        assert!(!order.contains(&1), "Dead unit index must not appear");
+    }
+
+    #[test]
+    fn test_planning_order_tiebreaker() {
+        // Unit 0: base SPD 10, equip bonus +5 → effective 15
+        // Unit 1: base SPD 15, equip bonus  0 → effective 15
+        // Same effective SPD; higher base SPD (unit 1) should come first.
+        // If base SPD also ties, lower index wins — tested by unit 2.
+        let mut battle = new_battle(
+            vec![
+                make_player("low_base", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 10 }, 1),
+                make_player("high_base", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 15 }, 1),
+                make_player("also_15", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 15 }, 1),
+            ],
+            vec![make_enemy("foe", Stats { hp: 80, atk: 15, def: 8, mag: 5, spd: 10 })],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
+
+        // Give unit 0 equipment speed bonus so effective SPD = 15
+        battle.player_units[0].unit.equipment_speed_bonus = 5;
+
+        let order = get_planning_order(&battle);
+        // Unit 1 and 2 both have base SPD 15, effective 15 — unit 1 wins by lower index.
+        // Unit 0 has base SPD 10, effective 15 — comes last among the three.
+        assert_eq!(order, vec![1, 2, 0], "Tiebreaker: higher base SPD first, then lower index");
     }
 }
