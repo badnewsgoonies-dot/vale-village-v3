@@ -1242,7 +1242,8 @@ mod tests {
     use super::*;
     use crate::data::default_combat_config;
     use crate::shared::{
-        AbilityCategory, DjinnId, Element, EnemyId, StatusEffect, StatusEffectType, TargetMode,
+        AbilityCategory, CleanseType, DjinnId, Element, EnemyId, Immunity, StatusEffect,
+        StatusEffectType, TargetMode,
     };
 
     // ── Helpers ──────────────────────────────────────────────────────
@@ -2088,5 +2089,562 @@ mod tests {
                 battle.planned_actions[0].1
             ),
         }
+    }
+
+    // ── FIX 1 Test: Planning order = execution order ────────────────
+
+    #[test]
+    fn test_planning_order_equals_execution_order() {
+        // Set up: 2 players with different SPD, slower one planned first.
+        // Under the old SPD-sort the faster unit would execute first.
+        // Under the fix, the planning order is preserved.
+        let slow_stats = Stats { hp: 200, atk: 30, def: 20, mag: 10, spd: 5 };
+        let fast_stats = Stats { hp: 200, atk: 30, def: 20, mag: 10, spd: 50 };
+        let enemy_stats = Stats { hp: 500, atk: 10, def: 5, mag: 5, spd: 1 };
+
+        let p1 = make_player("slow-hero", slow_stats, 3);
+        let p2 = make_player("fast-hero", fast_stats, 3);
+        let enemy = make_enemy("dummy", enemy_stats);
+
+        let mut battle = new_battle(
+            vec![p1, p2],
+            vec![enemy],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
+
+        let slow_ref = TargetRef { side: Side::Player, index: 0 };
+        let fast_ref = TargetRef { side: Side::Player, index: 1 };
+        let enemy_ref = TargetRef { side: Side::Enemy, index: 0 };
+
+        // Plan slow hero FIRST, then fast hero
+        plan_action(&mut battle, slow_ref, BattleAction::Attack { target: enemy_ref }).unwrap();
+        plan_action(&mut battle, fast_ref, BattleAction::Attack { target: enemy_ref }).unwrap();
+
+        let events = execute_round(&mut battle);
+
+        // Collect DamageDealt events in order
+        let damage_sources: Vec<TargetRef> = events
+            .iter()
+            .filter_map(|e| match e {
+                BattleEvent::DamageDealt(dd) if dd.source.side == Side::Player => {
+                    Some(dd.source)
+                }
+                _ => None,
+            })
+            .collect();
+
+        assert!(damage_sources.len() >= 2, "Both players should deal damage");
+        // The SLOW hero (index 0) was planned first, so should appear first
+        assert_eq!(
+            damage_sources[0].index, 0,
+            "Slow hero (planned first) should execute first, not sorted by SPD"
+        );
+        assert_eq!(
+            damage_sources[1].index, 1,
+            "Fast hero (planned second) should execute second"
+        );
+    }
+
+    // ── FIX 2 Test: Freeze broken by accumulated damage ─────────────
+
+    #[test]
+    fn test_freeze_broken_by_damage() {
+        let player_stats = Stats { hp: 200, atk: 50, def: 20, mag: 10, spd: 15 };
+        let enemy_stats = Stats { hp: 300, atk: 10, def: 5, mag: 5, spd: 5 };
+
+        let player = make_player("hero", player_stats, 5);
+        let enemy = make_enemy("frozen-goblin", enemy_stats);
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![enemy],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
+
+        // Apply freeze with a low threshold to the enemy
+        let freeze = StatusEffect {
+            effect_type: StatusEffectType::Freeze,
+            duration: 10,
+            burn_percent: None,
+            poison_percent: None,
+            freeze_threshold: Some(10), // breaks after 10 cumulative damage
+        };
+        status::apply_status(&mut battle.enemies[0].status_state, &freeze, &None);
+
+        // Verify freeze is active
+        assert_eq!(battle.enemies[0].status_state.statuses.len(), 1);
+        assert_eq!(
+            battle.enemies[0].status_state.statuses[0].effect_type,
+            StatusEffectType::Freeze
+        );
+
+        // Plan an attack that will deal damage
+        let actor = TargetRef { side: Side::Player, index: 0 };
+        let target = TargetRef { side: Side::Enemy, index: 0 };
+        plan_action(&mut battle, actor, BattleAction::Attack { target }).unwrap();
+
+        execute_round(&mut battle);
+
+        // The attack should have accumulated freeze damage
+        // After end-of-round tick, freeze should have broken
+        // (damage from ATK 50 vs DEF 5 should easily exceed threshold of 10)
+        // The freeze status should have been removed by tick_statuses
+        let freeze_statuses: Vec<_> = battle.enemies[0]
+            .status_state
+            .statuses
+            .iter()
+            .filter(|s| s.effect_type == StatusEffectType::Freeze)
+            .collect();
+        assert!(
+            freeze_statuses.is_empty(),
+            "Freeze should be broken after sufficient damage accumulation"
+        );
+    }
+
+    // ── FIX 3 Test: Chain damage hits all enemies ────────────────────
+
+    #[test]
+    fn test_chain_damage_hits_all_enemies() {
+        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 40, spd: 15 };
+        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+
+        let player = make_player("hero", player_stats, 10);
+        let e1 = make_enemy("goblin-a", enemy_stats);
+        let e2 = make_enemy("goblin-b", enemy_stats);
+        let e3 = make_enemy("goblin-c", enemy_stats);
+
+        let chain_ability_id = AbilityId("chain-bolt".to_string());
+        let chain_ability = AbilityDef {
+            id: chain_ability_id.clone(),
+            name: "Chain Bolt".to_string(),
+            category: AbilityCategory::Psynergy,
+            damage_type: Some(DamageType::Psynergy),
+            element: Some(Element::Jupiter),
+            mana_cost: 2,
+            base_power: 30,
+            targets: TargetMode::SingleEnemy,
+            unlock_level: 1,
+            hit_count: 1,
+            status_effect: None,
+            buff_effect: None,
+            debuff_effect: None,
+            shield_charges: None,
+            shield_duration: None,
+            heal_over_time: None,
+            grant_immunity: None,
+            cleanse: None,
+            ignore_defense_percent: None,
+            splash_damage_percent: None,
+            chain_damage: true, // chain damage enabled
+            revive: false,
+            revive_hp_percent: None,
+        };
+
+        let mut abilities = HashMap::new();
+        abilities.insert(chain_ability_id.clone(), chain_ability);
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![e1, e2, e3],
+            test_config(),
+            abilities,
+            HashMap::new(),
+        );
+
+        let actor = TargetRef { side: Side::Player, index: 0 };
+        // Target only the first enemy
+        let primary_target = TargetRef { side: Side::Enemy, index: 0 };
+        plan_action(
+            &mut battle,
+            actor,
+            BattleAction::UseAbility {
+                ability_id: AbilityId("chain-bolt".into()),
+                targets: vec![primary_target],
+            },
+        )
+        .unwrap();
+
+        let e1_hp_before = battle.enemies[0].unit.current_hp;
+        let e2_hp_before = battle.enemies[1].unit.current_hp;
+        let e3_hp_before = battle.enemies[2].unit.current_hp;
+
+        execute_round(&mut battle);
+
+        // Primary target should be damaged
+        assert!(
+            battle.enemies[0].unit.current_hp < e1_hp_before,
+            "Primary target should take damage"
+        );
+        // Chain should hit other enemies too
+        assert!(
+            battle.enemies[1].unit.current_hp < e2_hp_before,
+            "Chain should hit second enemy"
+        );
+        assert!(
+            battle.enemies[2].unit.current_hp < e3_hp_before,
+            "Chain should hit third enemy"
+        );
+    }
+
+    // ── FIX 4 Test: Immunity blocks status ──────────────────────────
+
+    #[test]
+    fn test_immunity_blocks_status() {
+        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 30, spd: 15 };
+        let enemy_stats = Stats { hp: 200, atk: 20, def: 5, mag: 5, spd: 5 };
+
+        let player = make_player("hero", player_stats, 10);
+        let enemy = make_enemy("goblin", enemy_stats);
+
+        // Create an immunity-granting ability
+        let imm_ability_id = AbilityId("ward".to_string());
+        let imm_ability = AbilityDef {
+            id: imm_ability_id.clone(),
+            name: "Ward".to_string(),
+            category: AbilityCategory::Buff,
+            damage_type: None,
+            element: None,
+            mana_cost: 2,
+            base_power: 0,
+            targets: TargetMode::SingleAlly,
+            unlock_level: 1,
+            hit_count: 0,
+            status_effect: None,
+            buff_effect: None,
+            debuff_effect: None,
+            shield_charges: None,
+            shield_duration: None,
+            heal_over_time: None,
+            grant_immunity: Some(Immunity {
+                all: true,
+                types: vec![],
+                duration: 3,
+            }),
+            cleanse: None,
+            ignore_defense_percent: None,
+            splash_damage_percent: None,
+            chain_damage: false,
+            revive: false,
+            revive_hp_percent: None,
+        };
+
+        let mut abilities = HashMap::new();
+        abilities.insert(imm_ability_id.clone(), imm_ability);
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![enemy],
+            test_config(),
+            abilities,
+            HashMap::new(),
+        );
+
+        // Use ward on self
+        let actor = TargetRef { side: Side::Player, index: 0 };
+        plan_action(
+            &mut battle,
+            actor,
+            BattleAction::UseAbility {
+                ability_id: AbilityId("ward".into()),
+                targets: vec![actor],
+            },
+        )
+        .unwrap();
+        execute_round(&mut battle);
+
+        // Player should now have immunity
+        assert!(
+            battle.player_units[0].status_state.immunity.is_some(),
+            "Player should have immunity after using ward"
+        );
+
+        // Try to apply a burn status — should be blocked
+        let burn = StatusEffect {
+            effect_type: StatusEffectType::Burn,
+            duration: 3,
+            burn_percent: Some(0.10),
+            poison_percent: None,
+            freeze_threshold: None,
+        };
+        let imm = battle.player_units[0].status_state.immunity.clone();
+        let applied = status::apply_status(
+            &mut battle.player_units[0].status_state,
+            &burn,
+            &imm,
+        );
+        assert!(!applied, "Status should be blocked by immunity");
+        assert!(
+            battle.player_units[0].status_state.statuses.is_empty(),
+            "No status should be applied when immune"
+        );
+    }
+
+    // ── FIX 4 Test: Cleanse removes statuses ────────────────────────
+
+    #[test]
+    fn test_cleanse_removes_statuses() {
+        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 30, spd: 15 };
+        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+
+        let player = make_player("hero", player_stats, 10);
+        let enemy = make_enemy("goblin", enemy_stats);
+
+        // Create a cleanse ability (Buff category, not Healing, to avoid the healing continue path)
+        let cleanse_id = AbilityId("purify".to_string());
+        let cleanse_ability = AbilityDef {
+            id: cleanse_id.clone(),
+            name: "Purify".to_string(),
+            category: AbilityCategory::Buff,
+            damage_type: None,
+            element: None,
+            mana_cost: 2,
+            base_power: 0,
+            targets: TargetMode::SingleAlly,
+            unlock_level: 1,
+            hit_count: 0,
+            status_effect: None,
+            buff_effect: None,
+            debuff_effect: None,
+            shield_charges: None,
+            shield_duration: None,
+            heal_over_time: None,
+            grant_immunity: None,
+            cleanse: Some(CleanseType::All),
+            ignore_defense_percent: None,
+            splash_damage_percent: None,
+            chain_damage: false,
+            revive: false,
+            revive_hp_percent: None,
+        };
+
+        let mut abilities = HashMap::new();
+        abilities.insert(cleanse_id.clone(), cleanse_ability);
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![enemy],
+            test_config(),
+            abilities,
+            HashMap::new(),
+        );
+
+        // Apply burn and poison to the player (not stun — stun prevents acting)
+        let burn = StatusEffect {
+            effect_type: StatusEffectType::Burn,
+            duration: 5,
+            burn_percent: Some(0.10),
+            poison_percent: None,
+            freeze_threshold: None,
+        };
+        let poison = StatusEffect {
+            effect_type: StatusEffectType::Poison,
+            duration: 5,
+            burn_percent: None,
+            poison_percent: Some(0.05),
+            freeze_threshold: None,
+        };
+        status::apply_status(&mut battle.player_units[0].status_state, &burn, &None);
+        status::apply_status(&mut battle.player_units[0].status_state, &poison, &None);
+        assert_eq!(battle.player_units[0].status_state.statuses.len(), 2);
+
+        // Use cleanse on self
+        let actor = TargetRef { side: Side::Player, index: 0 };
+        plan_action(
+            &mut battle,
+            actor,
+            BattleAction::UseAbility {
+                ability_id: AbilityId("purify".into()),
+                targets: vec![actor],
+            },
+        )
+        .unwrap();
+        execute_round(&mut battle);
+
+        // All statuses should be cleansed
+        assert!(
+            battle.player_units[0].status_state.statuses.is_empty(),
+            "All statuses should be removed by cleanse"
+        );
+    }
+
+    // ── FIX 5 Test: Revive dead ally ────────────────────────────────
+
+    #[test]
+    fn test_revive_dead_ally() {
+        let player_stats = Stats { hp: 100, atk: 10, def: 20, mag: 30, spd: 15 };
+        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+
+        let p1 = make_player("healer", player_stats, 10);
+        let p2 = make_player("dead-ally", player_stats, 0);
+        let enemy = make_enemy("goblin", enemy_stats);
+
+        // Create a revive ability
+        let revive_id = AbilityId("revive".to_string());
+        let revive_ability = AbilityDef {
+            id: revive_id.clone(),
+            name: "Revive".to_string(),
+            category: AbilityCategory::Healing,
+            damage_type: None,
+            element: None,
+            mana_cost: 3,
+            base_power: 0,
+            targets: TargetMode::SingleAlly,
+            unlock_level: 1,
+            hit_count: 0,
+            status_effect: None,
+            buff_effect: None,
+            debuff_effect: None,
+            shield_charges: None,
+            shield_duration: None,
+            heal_over_time: None,
+            grant_immunity: None,
+            cleanse: None,
+            ignore_defense_percent: None,
+            splash_damage_percent: None,
+            chain_damage: false,
+            revive: true,
+            revive_hp_percent: Some(0.5), // revive at 50% HP
+        };
+
+        let mut abilities = HashMap::new();
+        abilities.insert(revive_id.clone(), revive_ability);
+
+        let mut battle = new_battle(
+            vec![p1, p2],
+            vec![enemy],
+            test_config(),
+            abilities,
+            HashMap::new(),
+        );
+
+        // Kill the second player
+        battle.player_units[1].unit.is_alive = false;
+        battle.player_units[1].unit.current_hp = 0;
+
+        // Use revive
+        let actor = TargetRef { side: Side::Player, index: 0 };
+        // Target the dead ally (the ability is healing category, targeting the ally)
+        let dead_ally = TargetRef { side: Side::Player, index: 1 };
+        plan_action(
+            &mut battle,
+            actor,
+            BattleAction::UseAbility {
+                ability_id: AbilityId("revive".into()),
+                targets: vec![dead_ally],
+            },
+        )
+        .unwrap();
+
+        let events = execute_round(&mut battle);
+
+        // Dead ally should be revived
+        assert!(
+            battle.player_units[1].unit.is_alive,
+            "Dead ally should be revived"
+        );
+        // HP should be 50% of max (100 * 0.5 = 50)
+        assert_eq!(
+            battle.player_units[1].unit.current_hp, 50,
+            "Revived ally should have 50% max HP"
+        );
+
+        // Should have a HealingDone event for the revive
+        let has_revive_heal = events.iter().any(|e| match e {
+            BattleEvent::HealingDone(hd) => {
+                hd.target.side == Side::Player && hd.target.index == 1
+            }
+            _ => false,
+        });
+        assert!(has_revive_heal, "Should have HealingDone event for revive");
+    }
+
+    // ── FIX 6 Test: Healing includes MAG stat ───────────────────────
+
+    #[test]
+    fn test_healing_includes_mag_stat() {
+        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 30, spd: 15 };
+        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+
+        let player = make_player("healer", player_stats, 10);
+        let enemy = make_enemy("goblin", enemy_stats);
+
+        // Create a healing ability with base_power 20
+        let heal_id = AbilityId("cure".to_string());
+        let heal_ability = AbilityDef {
+            id: heal_id.clone(),
+            name: "Cure".to_string(),
+            category: AbilityCategory::Healing,
+            damage_type: None,
+            element: None,
+            mana_cost: 2,
+            base_power: 20, // base heal = 20
+            targets: TargetMode::SingleAlly,
+            unlock_level: 1,
+            hit_count: 0,
+            status_effect: None,
+            buff_effect: None,
+            debuff_effect: None,
+            shield_charges: None,
+            shield_duration: None,
+            heal_over_time: None,
+            grant_immunity: None,
+            cleanse: None,
+            ignore_defense_percent: None,
+            splash_damage_percent: None,
+            chain_damage: false,
+            revive: false,
+            revive_hp_percent: None,
+        };
+
+        let mut abilities = HashMap::new();
+        abilities.insert(heal_id.clone(), heal_ability);
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![enemy],
+            test_config(),
+            abilities,
+            HashMap::new(),
+        );
+
+        // Damage the player to make healing visible
+        battle.player_units[0].unit.current_hp = 100;
+
+        let actor = TargetRef { side: Side::Player, index: 0 };
+        plan_action(
+            &mut battle,
+            actor,
+            BattleAction::UseAbility {
+                ability_id: AbilityId("cure".into()),
+                targets: vec![actor],
+            },
+        )
+        .unwrap();
+
+        let events = execute_round(&mut battle);
+
+        // Expected heal: base_power (20) + mag (30) = 50
+        // Player started at 100/200, should now be 150
+        assert_eq!(
+            battle.player_units[0].unit.current_hp, 150,
+            "Healing should be base_power + MAG: 20 + 30 = 50, so 100 + 50 = 150"
+        );
+
+        // Verify the HealingDone event has the correct amount
+        let heal_event = events.iter().find_map(|e| match e {
+            BattleEvent::HealingDone(hd) if hd.source == actor && hd.target == actor => {
+                Some(hd.amount)
+            }
+            _ => None,
+        });
+        assert_eq!(
+            heal_event,
+            Some(50),
+            "HealingDone amount should be 50 (base 20 + MAG 30)"
+        );
     }
 }
