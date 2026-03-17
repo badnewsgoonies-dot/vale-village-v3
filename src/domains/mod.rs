@@ -6,4 +6,5 @@ use crate::shared;
 pub mod combat;
 pub mod damage_mods;
 pub mod data_loader;
+pub mod equipment;
 pub mod status;
