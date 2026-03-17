@@ -14,6 +14,7 @@ use crate::shared::{
 };
 
 use super::battle_scene;
+use super::hud;
 
 /// Bevy resource wrapping the loaded game data.
 #[derive(Resource)]
@@ -58,7 +59,7 @@ impl Plugin for ValeVillagePlugin {
         )))
         .insert_resource(BattleRes(battle))
         .insert_resource(GameDataRes(game_data))
-        .add_systems(Startup, battle_scene::setup_battle_scene);
+        .add_systems(Startup, (battle_scene::setup_battle_scene, hud::setup_hud));
     }
 }
 

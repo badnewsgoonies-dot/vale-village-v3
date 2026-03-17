@@ -4,3 +4,4 @@
 
 pub mod plugin;
 pub mod battle_scene;
+pub mod hud;
