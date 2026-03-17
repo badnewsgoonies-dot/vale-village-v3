@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use crate::shared::{
     AbilityDef, AbilityId, BattleAction, BattlePhase, CombatConfig, DamageDealt, DamageType,
     DjinnDef, DjinnId, DjinnState, DjinnStateChanged, EnemyDef, HealingDone, ManaPoolChanged,
-    Side, Stats, StatusApplied, TargetRef, UnitDefeated,
+    Side, Stats, StatusApplied, StatusEffectType, TargetRef, UnitDefeated,
 };
 
 use crate::domains::ai::{self, AiSelfView, AiStrategy, AiUnitView};
@@ -402,7 +402,7 @@ pub fn plan_enemy_actions_with_ai(battle: &mut Battle, strategy: AiStrategy) {
 
 /// Execute one full round of battle.
 ///
-/// 1. Compute execution order (summons first, then SPD descending).
+/// 1. Compute execution order (summons first, then planning order — DESIGN_LOCK §2).
 /// 2. Execute each actor's planned action.
 /// 3. End-of-round ticks (statuses, HoT, buffs, barriers, djinn recovery).
 /// 4. Reset mana pool, increment round.
@@ -421,29 +421,13 @@ pub fn execute_round(battle: &mut Battle) -> Vec<BattleEvent> {
         }
     }
 
-    // Compute SPD-based execution order for non-summon actions
-    let mut spd_order: Vec<(TargetRef, BattleAction, i32, u16)> = other_actions
-        .into_iter()
-        .map(|(tr, action)| {
-            let unit = get_unit(battle, tr);
-            let (eff_spd, base_spd) = match unit {
-                Some(u) => {
-                    let eff = u.unit.stats.spd as i32 + u.unit.equipment_speed_bonus as i32;
-                    (eff, u.unit.stats.spd)
-                }
-                None => (0, 0),
-            };
-            (tr, action, eff_spd, base_spd)
-        })
-        .collect();
-    spd_order.sort_by(|a, b| b.2.cmp(&a.2).then_with(|| b.3.cmp(&a.3)));
-
-    // Build final execution sequence: summons first, then SPD order
+    // DESIGN_LOCK §2: Planning order = execution order.
+    // Summons execute first, then all other actions in the order they were planned.
     let mut execution_sequence: Vec<(TargetRef, BattleAction)> = Vec::new();
     for (tr, action) in summon_actions {
         execution_sequence.push((tr, action));
     }
-    for (tr, action, _, _) in spd_order {
+    for (tr, action) in other_actions {
         execution_sequence.push((tr, action));
     }
 
@@ -575,6 +559,12 @@ fn execute_attack(
             if target_unit.unit.current_hp == 0 {
                 target_unit.unit.is_alive = false;
             }
+            // FIX 2: Accumulate freeze damage
+            for status in target_unit.status_state.statuses.iter_mut() {
+                if status.effect_type == StatusEffectType::Freeze {
+                    status.freeze_damage_taken += hit.damage;
+                }
+            }
         }
 
         events.push(BattleEvent::DamageDealt(DamageDealt {
@@ -656,8 +646,9 @@ fn execute_ability(
         }
 
         // Handle healing abilities
+        // FIX 6: heal_amount = base_power + attacker MAG, floor 1
         if ability.category == crate::shared::AbilityCategory::Healing {
-            let heal_amount = ability.base_power;
+            let heal_amount = (ability.base_power + attacker_stats.mag).max(1);
             {
                 let target = get_unit_mut(battle, target_ref).unwrap();
                 let max_hp = target.unit.stats.hp;
@@ -714,6 +705,12 @@ fn execute_ability(
                         target.unit.current_hp.saturating_sub(hit.damage);
                     if target.unit.current_hp == 0 {
                         target.unit.is_alive = false;
+                    }
+                    // FIX 2: Accumulate freeze damage
+                    for status in target.status_state.statuses.iter_mut() {
+                        if status.effect_type == StatusEffectType::Freeze {
+                            status.freeze_damage_taken += hit.damage;
+                        }
                     }
                 }
 
@@ -776,6 +773,63 @@ fn execute_ability(
                     }
                 }
             }
+
+            // FIX 3: Chain damage — hits all targets on the opposing side
+            if ability.chain_damage {
+                let primary_damage = hits.iter().map(|h| h.damage).sum::<u16>();
+                if primary_damage > 0 {
+                    // Build list of all alive targets on both sides
+                    let mut all_targets: Vec<TargetRef> = Vec::new();
+                    for i in 0..battle.player_units.len() {
+                        all_targets.push(TargetRef { side: Side::Player, index: i as u8 });
+                    }
+                    for i in 0..battle.enemies.len() {
+                        all_targets.push(TargetRef { side: Side::Enemy, index: i as u8 });
+                    }
+                    let chain_targets =
+                        damage_mods::calculate_chain_targets(actor_ref, &all_targets);
+                    for chain_tr in chain_targets {
+                        // Skip the primary target (already damaged)
+                        if chain_tr == target_ref {
+                            continue;
+                        }
+                        let alive = get_unit(battle, chain_tr)
+                            .map(|u| u.unit.is_alive)
+                            .unwrap_or(false);
+                        if alive {
+                            {
+                                let t = get_unit_mut(battle, chain_tr).unwrap();
+                                t.unit.current_hp =
+                                    t.unit.current_hp.saturating_sub(primary_damage);
+                                if t.unit.current_hp == 0 {
+                                    t.unit.is_alive = false;
+                                }
+                                // Accumulate freeze damage for chain hits
+                                for status in t.status_state.statuses.iter_mut() {
+                                    if status.effect_type == StatusEffectType::Freeze {
+                                        status.freeze_damage_taken += primary_damage;
+                                    }
+                                }
+                            }
+                            events.push(BattleEvent::DamageDealt(DamageDealt {
+                                source: actor_ref,
+                                target: chain_tr,
+                                amount: primary_damage,
+                                damage_type,
+                                is_crit: false,
+                            }));
+                            if get_unit(battle, chain_tr)
+                                .map(|u| !u.unit.is_alive)
+                                .unwrap_or(false)
+                            {
+                                events.push(BattleEvent::UnitDefeated(UnitDefeated {
+                                    unit: chain_tr,
+                                }));
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // Apply status effect if any
@@ -795,13 +849,14 @@ fn execute_ability(
         }
 
         // Apply buff/debuff
+        let max_stacks = battle.config.max_buff_stacks as usize;
         if let Some(ref buff_effect) = ability.buff_effect {
             let target = get_unit_mut(battle, target_ref).unwrap();
-            status::apply_buff(&mut target.status_state, buff_effect);
+            status::apply_buff(&mut target.status_state, buff_effect, max_stacks);
         }
         if let Some(ref debuff_effect) = ability.debuff_effect {
             let target = get_unit_mut(battle, target_ref).unwrap();
-            status::apply_debuff(&mut target.status_state, debuff_effect);
+            status::apply_debuff(&mut target.status_state, debuff_effect, max_stacks);
         }
 
         // Apply barrier
@@ -816,6 +871,49 @@ fn execute_ability(
         if let Some(ref hot) = ability.heal_over_time {
             let target = get_unit_mut(battle, target_ref).unwrap();
             status::apply_hot(&mut target.status_state, hot.amount, hot.duration);
+        }
+
+        // FIX 4: Apply immunity
+        if let Some(ref immunity) = ability.grant_immunity {
+            let target = get_unit_mut(battle, target_ref).unwrap();
+            status::apply_immunity(&mut target.status_state, immunity);
+        }
+
+        // FIX 4: Apply cleanse
+        if let Some(ref cleanse_type) = ability.cleanse {
+            let target = get_unit_mut(battle, target_ref).unwrap();
+            status::cleanse(&mut target.status_state.statuses, cleanse_type);
+        }
+    }
+
+    // FIX 5: Revive dead allies
+    if ability.revive {
+        if let Some(pct) = ability.revive_hp_percent {
+            let ally_count = match actor_ref.side {
+                Side::Player => battle.player_units.len(),
+                Side::Enemy => battle.enemies.len(),
+            };
+            for i in 0..ally_count {
+                let ally_ref = TargetRef {
+                    side: actor_ref.side,
+                    index: i as u8,
+                };
+                let (is_dead, max_hp) = {
+                    let ally = get_unit(battle, ally_ref).unwrap();
+                    (!ally.unit.is_alive, ally.unit.stats.hp)
+                };
+                if is_dead {
+                    let revive_hp = ((max_hp as f32 * pct) as u16).max(1);
+                    let ally = get_unit_mut(battle, ally_ref).unwrap();
+                    ally.unit.is_alive = true;
+                    ally.unit.current_hp = revive_hp;
+                    events.push(BattleEvent::HealingDone(HealingDone {
+                        source: actor_ref,
+                        target: ally_ref,
+                        amount: revive_hp,
+                    }));
+                }
+            }
         }
     }
 }

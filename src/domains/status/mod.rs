@@ -179,11 +179,10 @@ pub fn tick_statuses(
 
 // ── S08 — Buff / Debuff ─────────────────────────────────────────────
 
-const MAX_BUFF_STACKS: usize = 3;
-
-/// Apply a buff to the unit. Max 3 stacks.
-pub fn apply_buff(state: &mut UnitStatusState, buff_effect: &BuffEffect) {
-    if state.buffs.len() < MAX_BUFF_STACKS {
+/// Apply a buff to the unit. Rejects if already at `max_stacks`.
+/// `max_stacks` should come from `CombatConfig::max_buff_stacks`.
+pub fn apply_buff(state: &mut UnitStatusState, buff_effect: &BuffEffect, max_stacks: usize) {
+    if state.buffs.len() < max_stacks {
         state.buffs.push(ActiveBuff {
             stat_modifiers: buff_effect.stat_modifiers,
             remaining_turns: buff_effect.duration,
@@ -191,9 +190,10 @@ pub fn apply_buff(state: &mut UnitStatusState, buff_effect: &BuffEffect) {
     }
 }
 
-/// Apply a debuff to the unit. Max 3 stacks.
-pub fn apply_debuff(state: &mut UnitStatusState, debuff_effect: &DebuffEffect) {
-    if state.debuffs.len() < MAX_BUFF_STACKS {
+/// Apply a debuff to the unit. Rejects if already at `max_stacks`.
+/// `max_stacks` should come from `CombatConfig::max_buff_stacks`.
+pub fn apply_debuff(state: &mut UnitStatusState, debuff_effect: &DebuffEffect, max_stacks: usize) {
+    if state.debuffs.len() < max_stacks {
         state.debuffs.push(ActiveBuff {
             stat_modifiers: debuff_effect.stat_modifiers,
             remaining_turns: debuff_effect.duration,
@@ -602,17 +602,30 @@ mod tests {
         assert!(result.expired.contains(&StatusEffectType::Stun));
     }
 
-    // ── S08: Buff stacking up to 3 ─────────────────────────────────
+    // ── S08: Buff stacking up to max_stacks ────────────────────────
 
     #[test]
     fn test_buff_stacking_max_3() {
         let mut state = make_state();
         let b = buff(5, 0, 3);
-        apply_buff(&mut state, &b);
-        apply_buff(&mut state, &b);
-        apply_buff(&mut state, &b);
-        apply_buff(&mut state, &b); // 4th should be rejected
+        apply_buff(&mut state, &b, 3);
+        apply_buff(&mut state, &b, 3);
+        apply_buff(&mut state, &b, 3);
+        apply_buff(&mut state, &b, 3); // 4th should be rejected
         assert_eq!(state.buffs.len(), 3);
+    }
+
+    #[test]
+    fn test_buff_stacking_respects_custom_max() {
+        let mut state = make_state();
+        let b = buff(5, 0, 3);
+        apply_buff(&mut state, &b, 5);
+        apply_buff(&mut state, &b, 5);
+        apply_buff(&mut state, &b, 5);
+        apply_buff(&mut state, &b, 5);
+        apply_buff(&mut state, &b, 5);
+        apply_buff(&mut state, &b, 5); // 6th should be rejected at max_stacks=5
+        assert_eq!(state.buffs.len(), 5);
     }
 
     // ── S08: Buff stat modifier computation ─────────────────────────
@@ -906,11 +919,21 @@ mod tests {
     fn test_debuff_stacking_max_3() {
         let mut state = make_state();
         let d = debuff(-3, -2, 2);
-        apply_debuff(&mut state, &d);
-        apply_debuff(&mut state, &d);
-        apply_debuff(&mut state, &d);
-        apply_debuff(&mut state, &d); // 4th rejected
+        apply_debuff(&mut state, &d, 3);
+        apply_debuff(&mut state, &d, 3);
+        apply_debuff(&mut state, &d, 3);
+        apply_debuff(&mut state, &d, 3); // 4th rejected
         assert_eq!(state.debuffs.len(), 3);
+    }
+
+    #[test]
+    fn test_debuff_stacking_respects_custom_max() {
+        let mut state = make_state();
+        let d = debuff(-3, -2, 2);
+        apply_debuff(&mut state, &d, 2);
+        apply_debuff(&mut state, &d, 2);
+        apply_debuff(&mut state, &d, 2); // 3rd rejected at max_stacks=2
+        assert_eq!(state.debuffs.len(), 2);
     }
 
     // ── Immunity tick expires ───────────────────────────────────────
@@ -924,6 +947,41 @@ mod tests {
         });
         tick_immunity(&mut immunity);
         assert!(immunity.is_none());
+    }
+
+    // ── S08: Negative buff values work as functional debuffs ─────────
+    // NOTE: Some data entries (e.g. Guard Break) use buff_effect with
+    // negative stat values. This is semantically a debuff but delivered
+    // via buff_effect. Because StatBonus uses i16, negative values
+    // compose correctly in compute_stat_modifiers and no special
+    // handling is needed.
+
+    #[test]
+    fn test_negative_buff_values_work_as_debuffs() {
+        let mut state = make_state();
+        // A buff_effect with negative stats (like Guard Break in data)
+        let negative_buff = buff(-5, -3, 2);
+        apply_buff(&mut state, &negative_buff, 3);
+
+        // A normal positive buff
+        let positive_buff = buff(10, 8, 2);
+        apply_buff(&mut state, &positive_buff, 3);
+
+        // compute_stat_modifiers should sum them: atk = -5 + 10 = 5, def = -3 + 8 = 5
+        let total = compute_stat_modifiers(&state.buffs, &state.debuffs);
+        assert_eq!(total.atk, 5);
+        assert_eq!(total.def, 5);
+    }
+
+    #[test]
+    fn test_negative_buff_alone_reduces_stats() {
+        let mut state = make_state();
+        let negative_buff = buff(-7, -4, 3);
+        apply_buff(&mut state, &negative_buff, 3);
+
+        let total = compute_stat_modifiers(&state.buffs, &state.debuffs);
+        assert_eq!(total.atk, -7);
+        assert_eq!(total.def, -4);
     }
 
     // ── Multiple barriers stack from different sources ───────────────

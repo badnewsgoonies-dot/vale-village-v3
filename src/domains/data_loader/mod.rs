@@ -158,6 +158,56 @@ fn validate(data: &GameData, errors: &mut Vec<LoadError>) {
             }
         }
     }
+
+    // All AbilityId references in DjinnDef.ability_pairs exist in abilities map
+    for djinn in data.djinn.values() {
+        for (compat_label, ability_set) in [
+            ("same", &djinn.ability_pairs.same),
+            ("counter", &djinn.ability_pairs.counter),
+            ("neutral", &djinn.ability_pairs.neutral),
+        ] {
+            for ability_id in &ability_set.good_abilities {
+                if !data.abilities.contains_key(ability_id) {
+                    errors.push(LoadError::ValidationError(format!(
+                        "Djinn '{}' {}.good_abilities references ability '{}' which does not exist",
+                        djinn.id.0, compat_label, ability_id.0
+                    )));
+                }
+            }
+            for ability_id in &ability_set.recovery_abilities {
+                if !data.abilities.contains_key(ability_id) {
+                    errors.push(LoadError::ValidationError(format!(
+                        "Djinn '{}' {}.recovery_abilities references ability '{}' which does not exist",
+                        djinn.id.0, compat_label, ability_id.0
+                    )));
+                }
+            }
+        }
+    }
+
+    // All EquipmentId references in EncounterDef.equipment_rewards exist
+    for encounter in data.encounters.values() {
+        for equip_id in &encounter.equipment_rewards {
+            if !data.equipment.contains_key(equip_id) {
+                errors.push(LoadError::ValidationError(format!(
+                    "Encounter '{}' equipment_rewards references equipment '{}' which does not exist",
+                    encounter.id.0, equip_id.0
+                )));
+            }
+        }
+    }
+
+    // All UnitId references in EncounterDef.recruit exist
+    for encounter in data.encounters.values() {
+        if let Some(ref unit_id) = encounter.recruit {
+            if !data.units.contains_key(unit_id) {
+                errors.push(LoadError::ValidationError(format!(
+                    "Encounter '{}' recruit references unit '{}' which does not exist",
+                    encounter.id.0, unit_id.0
+                )));
+            }
+        }
+    }
 }
 
 // ── Public API ──────────────────────────────────────────────────────
@@ -404,6 +454,74 @@ mod tests {
         let errors = result.unwrap_err();
         let has_fnf = errors.iter().any(|e| matches!(e, LoadError::FileNotFound(_)));
         assert!(has_fnf, "Should contain a FileNotFound error");
+    }
+
+    #[test]
+    fn test_validation_catches_missing_ability_in_djinn() {
+        let dir = sample_dir();
+        let mut data = load_game_data(&dir).expect("sample data should load");
+        // Remove all abilities so djinn ability_pairs refs break
+        data.abilities.clear();
+        let mut errors = Vec::new();
+        validate(&data, &mut errors);
+        let has_djinn_err = errors.iter().any(|e| match e {
+            LoadError::ValidationError(msg) => msg.contains("Djinn"),
+            _ => false,
+        });
+        assert!(
+            has_djinn_err,
+            "Should have a djinn-related validation error for ability_pairs"
+        );
+    }
+
+    #[test]
+    fn test_validation_catches_missing_equipment_reward() {
+        let dir = sample_dir();
+        let mut data = load_game_data(&dir).expect("sample data should load");
+        // Remove all equipment so encounter equipment_rewards refs break
+        data.equipment.clear();
+        let mut errors = Vec::new();
+        validate(&data, &mut errors);
+        let has_equip_err = errors.iter().any(|e| match e {
+            LoadError::ValidationError(msg) => msg.contains("equipment_rewards"),
+            _ => false,
+        });
+        assert!(
+            has_equip_err,
+            "Should have an equipment_rewards validation error"
+        );
+    }
+
+    #[test]
+    fn test_validation_catches_missing_recruit_unit() {
+        let dir = sample_dir();
+        let mut data = load_game_data(&dir).expect("sample data should load");
+        // Insert an encounter with a recruit that doesn't exist
+        use crate::shared::{Difficulty, EncounterDef, EncounterId, UnitId};
+        data.encounters.insert(
+            EncounterId("test-enc".to_string()),
+            EncounterDef {
+                id: EncounterId("test-enc".to_string()),
+                name: "Test".to_string(),
+                difficulty: Difficulty::Easy,
+                enemies: Vec::new(),
+                xp_reward: 0,
+                gold_reward: 0,
+                recruit: Some(UnitId("nonexistent-unit".to_string())),
+                djinn_reward: None,
+                equipment_rewards: Vec::new(),
+            },
+        );
+        let mut errors = Vec::new();
+        validate(&data, &mut errors);
+        let has_recruit_err = errors.iter().any(|e| match e {
+            LoadError::ValidationError(msg) => msg.contains("recruit"),
+            _ => false,
+        });
+        assert!(
+            has_recruit_err,
+            "Should have a recruit validation error"
+        );
     }
 
     #[test]
