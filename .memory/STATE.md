@@ -1,32 +1,49 @@
 # Vale Village v3 — Current State
 
-**Phase:** Wave 9 complete — P0 debt clear, orchestrator takeover
-**HEAD:** 098f524
+**Phase:** Visual Wave 5 complete — ready for Wave 6 (djinn interaction)
+**HEAD:** 8fcddbb
 **Date:** 2026-03-17
 
-## Engine Status: VERIFIED
-Headless combat engine fully audited by 3 independent Codex workers.
-All DESIGN_LOCK rules verified correct. Both audit gaps patched.
+## Build Status
+12,115 LOC | 227+ tests | 53 commits
 
-10,740 LOC | 227 tests (217 unit + 10 graduation) | 46 commits
+### Headless Engine: VERIFIED
+- All DESIGN_LOCK rules confirmed by 3 independent auditors
+- 217 unit tests + 10 graduation tests, all green (last verified at cb955bd)
+- Contract checksum passes
 
-## All Gates GREEN
-- [x] Contract checksum: OK
-- [x] cargo check: clean
-- [x] cargo test: 227 passed, 0 failed
-- [x] Audit: all DESIGN_LOCK rules confirmed in code
+### Visual Layer: 5 WAVES COMPLETE (unverified in container)
+Bevy compile requires GPU headers — cannot gate-check from Claude container.
+Must verify on local machine with `cargo run -- --gui`.
 
-## P0 Debt: CLEAR
-- [x] Djinn activation immediate effect — FIXED (098f524)
-- [x] Projected mana from planned ATTACKs — FIXED (098f524)
+| Wave | Feature | LOC | Status |
+|------|---------|-----|--------|
+| 1 | Bevy bootstrap, camera, placeholder sprites | ~170 | Committed |
+| 2 | Data-driven battle scene, element colors, name labels | ~177 | Committed |
+| 3 | HUD: HP bars, mana circles, crit counters | ~279 | Committed |
+| 4 | Planning phase: action/target selection, live mana | ~414 | Committed |
+| 5 | Animation: floating damage, status icons, event playback | ~316 | Committed |
 
-## P1 Debt (next wave targets)
-- [ ] End-to-end demo: equip djinn + items, activate, summon, recover, verify ability swap visible
-- [ ] Bevy visual layer (rendering, sprites, UI)
-- [ ] Interactive planning UI (click to select actions)
-- [ ] Pre-battle screen (team select + equipment + djinn assignment)
+### UI Module (src/domains/ui/)
+- plugin.rs (170 lines) — Bevy plugin, window, camera, demo battle setup
+- battle_scene.rs (177 lines) — spawn units/enemies with element colors
+- hud.rs (279 lines) — HP bars, mana circles, crit counter badges
+- planning.rs (414 lines) — action selection state machine, target picking
+- animation.rs (316 lines) — event queue playback, floating numbers, status icons
+
+## P0 Debt: NONE (engine)
+- [x] Djinn activation immediate effect — FIXED
+- [x] Projected mana from planned ATTACKs — FIXED
+
+## P1 Debt
+- [ ] VERIFY: Visual waves 1-5 compile and render on local machine
+- [ ] Wave 6: Djinn interaction (click sprite → menu → activate/summon)
+- [ ] Wave 7: Pre-battle screen (team select + equipment + djinn assignment)
+- [ ] Wave 8: Out-of-battle screens (shop, character details, abilities)
 
 ## P2 Debt
+- [ ] Feature-gate Bevy (allow headless build without GPU)
 - [ ] SPD tiebreaker 4-level (2 implemented)
 - [ ] Same-element 2+2 ability count enforcement
-- [ ] 10 equipment stub abilities zero-power
+- [ ] Sprite pipeline (GIF → PNG atlas)
+- [ ] Sound system
