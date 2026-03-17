@@ -1,40 +1,43 @@
 # Vale Village v3 — Current State
 
-**Phase:** Wave 7 complete — two-sided combat works, spine scaffolded
-**HEAD:** 9808d33 (pre-commit)
+**Phase:** Wave 8 complete — P0 debt cleared, spine finished
+**HEAD:** d650235 (pre-commit)
 **Date:** 2026-03-17
 
-## Spine Status
-Boot → load full data (346 abilities, 137 enemies, 109 equipment, 23 djinn, 55 encounters, 11 units) → create battle from encounter → plan actions (both sides) → execute rounds (SPD-ordered, interleaved) → victory/defeat. **Working end-to-end.**
+## Spine Status: COMPLETE
+Boot → load full data (346 abilities with real stats, 137 enemies, 109 equipment, 23 djinn, 55 encounters, 11 units) → create encounter-based battle → two-sided SPD-ordered combat → victory/defeat.
 
-## Domains (8 complete, 144 tests)
+## Domains (8 domains, 144 tests)
 
-| Domain | Tests | Reachable? |
-|--------|-------|------------|
-| data_loader | 9 | YES |
-| combat | 23 | YES |
-| status | 27 | YES (via battle_engine) |
-| djinn | 26 | Unit tests only |
-| equipment | 15 | Unit tests only |
-| damage_mods | 14 | Unit tests only |
-| battle_engine | 27 | YES |
-| cli_runner | 3 | YES |
+| Domain | Tests | Reachable? | Verified? |
+|--------|-------|------------|-----------|
+| data_loader | 9 | YES | [Observed] full data loads |
+| combat | 23 | YES | [Observed] damage formulas correct |
+| status | 27 | YES | [Observed] via battle_engine |
+| djinn | 26 | NO — ghost | [Observed] unit tests only |
+| equipment | 15 | NO — ghost | [Observed] unit tests only |
+| damage_mods | 14 | NO — ghost | [Observed] unit tests only |
+| battle_engine | 27 | YES | [Observed] two-sided combat |
+| cli_runner | 3 | YES | [Observed] cargo run works |
 
 ## Gate Status (all PASS)
-Contract, check, test (144), clippy, connectivity, scope clamp, cargo run (two-sided battle)
+Contract, check, test (144), clippy, connectivity, scope clamp, cargo run
 
-## P0 Debt
-- [ ] 105 stub abilities need real stats (djinn/equipment abilities are zero-power placeholders)
+## Verified Claims (upgraded from [Assumed])
+- [Observed] Djinn recovery delay = 2 turns (matches DESIGN_LOCK "turn after next")
+- [Observed] Equipment bonuses applied at battle init (but never exercised — ghost)
+- [Observed] SPD tiebreaker = 2 levels (gap: DESIGN_LOCK says 4, filed as P2)
+
+## P0 Debt: NONE
 
 ## P1 Debt
-- [ ] Ability usage in demo (only auto-attacks exercised)
-- [ ] Bevy app with visual rendering
+- [ ] Djinn exercised in demo (equip djinn on units, use activation/summon)
+- [ ] Equipment exercised in demo (equip items on units)
+- [ ] Ability usage in demo (use abilities, not just auto-attacks)
+- [ ] Bevy visual app
 - [ ] Player input (interactive planning)
-- [ ] Smarter enemy AI
-- [ ] Djinn/equipment exercised in battle demo
-- [ ] Graduation tests
+- [ ] Enemy AI (smarter than "attack first alive")
 
-## [Assumed] on Critical Path
-1. Djinn recovery delay = 1 turn (possibly 2)
-2. SPD tiebreaker = 2 levels (DESIGN_LOCK says 4)
-3. 105 stub abilities are placeholders — game balance incomplete
+## P2 Debt
+- [ ] SPD tiebreaker depth (2/4 levels implemented)
+- [ ] 10 equipment stub abilities still zero-power
