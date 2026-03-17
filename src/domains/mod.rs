@@ -14,3 +14,4 @@ pub mod equipment;
 pub mod progression;
 pub mod save;
 pub mod status;
+pub mod ui;
