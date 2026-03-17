@@ -4,16 +4,18 @@
 //! Makes `cargo run` execute an actual battle using the battle_engine,
 //! printing each round's events to the terminal.
 
+use std::io::{self, Write};
+
 use crate::domains::battle_engine::{
     check_battle_end, execute_round, new_battle, plan_action, plan_enemy_actions, Battle,
-    BattleEvent, BattleResult, EnemyUnitData, PlayerUnitData,
+    BattleEvent, BattleResult, EnemyUnitData, PlanError, PlayerUnitData,
 };
 use crate::domains::data_loader::GameData;
 use crate::domains::djinn::DjinnSlots;
 use crate::domains::equipment::{self, EquipmentEffects, EquipmentLoadout};
 use crate::shared::{
-    AbilityId, BattleAction, DjinnId, EncounterId, EnemyId, EquipmentId, EquipmentSlot, Side,
-    TargetRef, UnitDef, UnitId,
+    AbilityCategory, AbilityId, BattleAction, DjinnId, EncounterId, EnemyId, EquipmentId,
+    EquipmentSlot, Side, TargetMode, TargetRef, UnitDef, UnitId,
 };
 
 // ── Public API ──────────────────────────────────────────────────────
@@ -128,6 +130,482 @@ fn find_first_psynergy_ability(unit_def: &UnitDef, game_data: &GameData) -> Opti
         }
     }
     None
+}
+
+fn format_djinn_states(djinn_slots: &DjinnSlots, game_data: &GameData) -> String {
+    if djinn_slots.slots.is_empty() {
+        return "none".to_string();
+    }
+
+    djinn_slots
+        .slots
+        .iter()
+        .map(|inst| {
+            let name = game_data
+                .djinn
+                .get(&inst.djinn_id)
+                .map(|djinn| djinn.name.clone())
+                .unwrap_or_else(|| inst.djinn_id.0.clone());
+            format!("{}({:?})", name, inst.state)
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+fn ability_category_label(category: AbilityCategory) -> &'static str {
+    match category {
+        AbilityCategory::Physical => "physical",
+        AbilityCategory::Psynergy => "psynergy",
+        AbilityCategory::Healing => "healing",
+        AbilityCategory::Buff => "buff",
+        AbilityCategory::Debuff => "debuff",
+    }
+}
+
+fn target_mode_label(target_mode: TargetMode) -> &'static str {
+    match target_mode {
+        TargetMode::SingleEnemy => "single-enemy",
+        TargetMode::AllEnemies => "all-enemies",
+        TargetMode::SingleAlly => "single-ally",
+        TargetMode::AllAllies => "all-allies",
+        TargetMode::SelfOnly => "self-only",
+    }
+}
+
+fn ability_menu_entry(battle: &Battle, ability_id: &AbilityId) -> String {
+    battle
+        .ability_defs
+        .get(ability_id)
+        .map(|ability| {
+            let multi_hit = if ability.hit_count > 1 {
+                format!(", {}-hit", ability.hit_count)
+            } else {
+                String::new()
+            };
+            format!(
+                "{} (cost:{}, power:{}, {}, {}{})",
+                ability.name,
+                ability.mana_cost,
+                ability.base_power,
+                ability_category_label(ability.category),
+                target_mode_label(ability.targets),
+                multi_hit
+            )
+        })
+        .unwrap_or_else(|| format!("{} (missing definition)", ability_id.0))
+}
+
+fn prompt_for_usize(prompt: &str, min: usize, max: usize, default_on_eof: usize) -> usize {
+    loop {
+        print!("{prompt}");
+        let _ = io::stdout().flush();
+
+        let mut input = String::new();
+        match io::stdin().read_line(&mut input) {
+            Ok(0) => {
+                println!("  End of input detected. Using {default_on_eof}.");
+                return default_on_eof;
+            }
+            Ok(_) => match input.trim().parse::<usize>() {
+                Ok(value) if (min..=max).contains(&value) => return value,
+                Ok(_) => {
+                    println!("  Please enter a number from {min} to {max}.");
+                }
+                Err(_) => {
+                    println!("  Please enter a valid number.");
+                }
+            },
+            Err(error) => {
+                println!("  Failed to read input: {error}. Try again.");
+            }
+        }
+    }
+}
+
+fn alive_targets_for_side(battle: &Battle, side: Side) -> Vec<TargetRef> {
+    match side {
+        Side::Player => battle
+            .player_units
+            .iter()
+            .enumerate()
+            .filter(|(_, unit)| unit.unit.is_alive)
+            .map(|(index, _)| TargetRef {
+                side: Side::Player,
+                index: index as u8,
+            })
+            .collect(),
+        Side::Enemy => battle
+            .enemies
+            .iter()
+            .enumerate()
+            .filter(|(_, unit)| unit.unit.is_alive)
+            .map(|(index, _)| TargetRef {
+                side: Side::Enemy,
+                index: index as u8,
+            })
+            .collect(),
+    }
+}
+
+fn target_hp_snapshot(battle: &Battle, target: TargetRef) -> Option<(u16, u16)> {
+    match target.side {
+        Side::Player => battle
+            .player_units
+            .get(target.index as usize)
+            .map(|unit| (unit.unit.current_hp, unit.unit.stats.hp)),
+        Side::Enemy => battle
+            .enemies
+            .get(target.index as usize)
+            .map(|unit| (unit.unit.current_hp, unit.unit.stats.hp)),
+    }
+}
+
+fn print_target_menu(battle: &Battle, targets: &[TargetRef], heading: &str) {
+    println!("{heading}");
+    for (menu_index, target) in targets.iter().enumerate() {
+        if let Some((current_hp, max_hp)) = target_hp_snapshot(battle, *target) {
+            println!(
+                "  [{}] {} (HP:{}/{}) {}",
+                menu_index,
+                format_target(target, battle),
+                current_hp,
+                max_hp,
+                hp_bar(current_hp, max_hp)
+            );
+        }
+    }
+}
+
+fn prompt_for_target(
+    battle: &Battle,
+    targets: &[TargetRef],
+    heading: &str,
+    prompt: &str,
+) -> TargetRef {
+    print_target_menu(battle, targets, heading);
+    let selected = prompt_for_usize(prompt, 0, targets.len() - 1, 0);
+    targets[selected]
+}
+
+fn print_planning_overview(battle: &Battle, current_player_index: usize, game_data: &GameData) {
+    println!(
+        "  Mana pool available: {}/{}",
+        battle.mana_pool.projected_mana, battle.mana_pool.max_mana
+    );
+    println!("  Allies:");
+    for (index, unit) in battle.player_units.iter().enumerate() {
+        if !unit.unit.is_alive {
+            continue;
+        }
+
+        let focus = if index == current_player_index {
+            ">"
+        } else {
+            " "
+        };
+        println!(
+            "  {} [{}] {}: {}/{} {} Djinn: {}",
+            focus,
+            index,
+            unit.unit.id,
+            unit.unit.current_hp,
+            unit.unit.stats.hp,
+            hp_bar(unit.unit.current_hp, unit.unit.stats.hp),
+            format_djinn_states(&unit.djinn_slots, game_data)
+        );
+    }
+
+    println!("  Enemies:");
+    for (index, unit) in battle.enemies.iter().enumerate() {
+        if !unit.unit.is_alive {
+            continue;
+        }
+
+        println!(
+            "    [{}] {}: {}/{} {}",
+            index,
+            unit.unit.id,
+            unit.unit.current_hp,
+            unit.unit.stats.hp,
+            hp_bar(unit.unit.current_hp, unit.unit.stats.hp)
+        );
+    }
+}
+
+fn build_ability_targets(
+    battle: &Battle,
+    unit_ref: TargetRef,
+    ability_id: &AbilityId,
+) -> Option<Vec<TargetRef>> {
+    let ability = battle.ability_defs.get(ability_id)?;
+    match ability.targets {
+        TargetMode::SingleEnemy => {
+            let targets = alive_targets_for_side(battle, Side::Enemy);
+            if targets.is_empty() {
+                None
+            } else {
+                Some(vec![prompt_for_target(
+                    battle,
+                    &targets,
+                    "  Targets:",
+                    "Choose target: ",
+                )])
+            }
+        }
+        TargetMode::AllEnemies => {
+            let targets = alive_targets_for_side(battle, Side::Enemy);
+            if targets.is_empty() {
+                None
+            } else {
+                println!("  {} will target all alive enemies.", ability.name);
+                Some(targets)
+            }
+        }
+        TargetMode::SingleAlly => {
+            let targets = alive_targets_for_side(battle, Side::Player);
+            if targets.is_empty() {
+                None
+            } else {
+                Some(vec![prompt_for_target(
+                    battle,
+                    &targets,
+                    "  Allies:",
+                    "Choose target: ",
+                )])
+            }
+        }
+        TargetMode::AllAllies => {
+            let targets = alive_targets_for_side(battle, Side::Player);
+            if targets.is_empty() {
+                None
+            } else {
+                println!("  {} will target all alive allies.", ability.name);
+                Some(targets)
+            }
+        }
+        TargetMode::SelfOnly => {
+            println!(
+                "  {} targets {}.",
+                ability.name,
+                format_target(&unit_ref, battle)
+            );
+            Some(vec![unit_ref])
+        }
+    }
+}
+
+fn try_plan_action(
+    battle: &mut Battle,
+    unit_ref: TargetRef,
+    action: BattleAction,
+    unit_name: &str,
+) -> bool {
+    match plan_action(battle, unit_ref, action) {
+        Ok(()) => true,
+        Err(PlanError::InsufficientMana) => {
+            println!("  Not enough mana for that choice. Pick again.");
+            false
+        }
+        Err(PlanError::InvalidTarget) => {
+            println!("  That target is not valid. Pick again.");
+            false
+        }
+        Err(PlanError::UnitCannotAct) => {
+            println!("  {unit_name} cannot act this round.");
+            true
+        }
+        Err(error) => {
+            println!("  Could not plan action: {error:?}. Pick again.");
+            false
+        }
+    }
+}
+
+fn plan_auto_action_for_player(
+    battle: &mut Battle,
+    player_index: usize,
+    current_round: u32,
+    auto_ability_ids: &[Option<AbilityId>],
+) {
+    let target_idx = battle.enemies.iter().position(|enemy| enemy.unit.is_alive);
+    let target_idx = match target_idx {
+        Some(index) => index,
+        None => return,
+    };
+
+    let unit_ref = TargetRef {
+        side: Side::Player,
+        index: player_index as u8,
+    };
+    let enemy_target = TargetRef {
+        side: Side::Enemy,
+        index: target_idx as u8,
+    };
+
+    let mut used_ability = false;
+    #[allow(clippy::manual_is_multiple_of)]
+    if current_round % 3 == 0 {
+        if let Some(ability_id) = auto_ability_ids
+            .get(player_index)
+            .and_then(|id| id.as_ref())
+        {
+            let can_use = battle
+                .ability_defs
+                .get(ability_id)
+                .map(|ability| battle.mana_pool.current_mana >= ability.mana_cost)
+                .unwrap_or(false);
+
+            if can_use {
+                let ability_name = battle
+                    .ability_defs
+                    .get(ability_id)
+                    .map(|ability| ability.name.clone())
+                    .unwrap_or_else(|| ability_id.0.clone());
+                let enemy_name = battle
+                    .enemies
+                    .get(target_idx)
+                    .map(|enemy| enemy.unit.id.clone())
+                    .unwrap_or_else(|| format!("Enemy[{target_idx}]"));
+                println!(
+                    "  >> {} uses {} on {}!",
+                    battle.player_units[player_index].unit.id, ability_name, enemy_name
+                );
+                let action = BattleAction::UseAbility {
+                    ability_id: (*ability_id).clone(),
+                    targets: vec![enemy_target],
+                };
+                if plan_action(battle, unit_ref, action).is_ok() {
+                    used_ability = true;
+                }
+            }
+        }
+    }
+
+    if !used_ability {
+        let action = BattleAction::Attack {
+            target: enemy_target,
+        };
+        let _ = plan_action(battle, unit_ref, action);
+    }
+}
+
+fn plan_interactive_action_for_player(
+    battle: &mut Battle,
+    player_index: usize,
+    current_round: u32,
+    auto_ability_ids: &[Option<AbilityId>],
+    unit_ability_ids: &[AbilityId],
+    game_data: &GameData,
+) {
+    if !battle.player_units[player_index].unit.is_alive
+        || alive_targets_for_side(battle, Side::Enemy).is_empty()
+    {
+        return;
+    }
+
+    let unit_ref = TargetRef {
+        side: Side::Player,
+        index: player_index as u8,
+    };
+
+    loop {
+        let unit = &battle.player_units[player_index].unit;
+        println!(
+            "\n── Planning: {} (HP:{}/{}, Mana: {}/{}) ──",
+            unit.id,
+            unit.current_hp,
+            unit.stats.hp,
+            battle.mana_pool.projected_mana,
+            battle.mana_pool.max_mana
+        );
+        print_planning_overview(battle, player_index, game_data);
+        println!("  [1] ATTACK -> target?");
+        println!("  [2] ABILITY -> which ability?");
+        println!("  [3] AUTO (let AI choose)");
+
+        match prompt_for_usize("Choose action (1/2/3): ", 1, 3, 3) {
+            1 => {
+                let targets = alive_targets_for_side(battle, Side::Enemy);
+                if targets.is_empty() {
+                    return;
+                }
+
+                let target = prompt_for_target(battle, &targets, "  Targets:", "Choose target: ");
+                let unit_name = battle.player_units[player_index].unit.id.clone();
+                if try_plan_action(
+                    battle,
+                    unit_ref,
+                    BattleAction::Attack { target },
+                    &unit_name,
+                ) {
+                    break;
+                }
+            }
+            2 => {
+                let available_abilities: Vec<AbilityId> = unit_ability_ids
+                    .iter()
+                    .filter(|ability_id| battle.ability_defs.contains_key(*ability_id))
+                    .cloned()
+                    .collect();
+
+                if available_abilities.is_empty() {
+                    println!("  No abilities are available for this unit.");
+                    continue;
+                }
+
+                println!("  Abilities:");
+                for (menu_index, ability_id) in available_abilities.iter().enumerate() {
+                    let mana_note = battle
+                        .ability_defs
+                        .get(ability_id)
+                        .filter(|ability| battle.mana_pool.projected_mana < ability.mana_cost)
+                        .map(|_| " [insufficient mana]")
+                        .unwrap_or("");
+                    println!(
+                        "  [{}] {}{}",
+                        menu_index,
+                        ability_menu_entry(battle, ability_id),
+                        mana_note
+                    );
+                }
+                println!("  Mana available: {}", battle.mana_pool.projected_mana);
+
+                let selected =
+                    prompt_for_usize("Choose ability: ", 0, available_abilities.len() - 1, 0);
+                let ability_id = available_abilities[selected].clone();
+
+                if let Some(ability) = battle.ability_defs.get(&ability_id) {
+                    if battle.mana_pool.projected_mana < ability.mana_cost {
+                        println!("  Not enough mana left for {}.", ability.name);
+                        continue;
+                    }
+                }
+
+                let Some(targets) = build_ability_targets(battle, unit_ref, &ability_id) else {
+                    println!("  No valid targets are available for that ability.");
+                    continue;
+                };
+
+                let unit_name = battle.player_units[player_index].unit.id.clone();
+                if try_plan_action(
+                    battle,
+                    unit_ref,
+                    BattleAction::UseAbility {
+                        ability_id,
+                        targets,
+                    },
+                    &unit_name,
+                ) {
+                    break;
+                }
+            }
+            3 => {
+                plan_auto_action_for_player(battle, player_index, current_round, auto_ability_ids);
+                break;
+            }
+            _ => unreachable!(),
+        }
+    }
 }
 
 /// Run a demo battle using loaded game data.
@@ -253,8 +731,22 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
     }
     println!("\n");
 
-    // Collect ability names for printing (indexed by player index)
-    let unit_ability_ids: Vec<Option<AbilityId>> = vec![adept_ability, blaze_ability];
+    let auto_mode = cfg!(test) || std::env::args().any(|arg| arg == "--auto");
+
+    // Collect ability IDs for auto-play and interactive menus (indexed by player index)
+    let unit_auto_ability_ids: Vec<Option<AbilityId>> = vec![adept_ability, blaze_ability];
+    let unit_ability_ids: Vec<Vec<AbilityId>> = vec![
+        adept
+            .abilities
+            .iter()
+            .map(|progression| progression.ability_id.clone())
+            .collect(),
+        blaze
+            .abilities
+            .iter()
+            .map(|progression| progression.ability_id.clone())
+            .collect(),
+    ];
 
     loop {
         // Stalemate guard
@@ -265,74 +757,22 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
 
         let current_round = battle.round;
 
-        // Planning phase: each alive player unit attacks first alive enemy
-        // Every 3rd round, first alive player uses an ability instead
+        // Planning phase
         for pi in 0..battle.player_units.len() {
             if !battle.player_units[pi].unit.is_alive {
                 continue;
             }
-            // Find first alive enemy
-            let target_idx = battle
-                .enemies
-                .iter()
-                .position(|e| e.unit.is_alive);
-            let target_idx = match target_idx {
-                Some(i) => i,
-                None => break, // no enemies left
-            };
-
-            let unit_ref = TargetRef {
-                side: Side::Player,
-                index: pi as u8,
-            };
-            let enemy_target = TargetRef {
-                side: Side::Enemy,
-                index: target_idx as u8,
-            };
-
-            // Every 3rd round: try to use an ability for this unit
-            let mut used_ability = false;
-            #[allow(clippy::manual_is_multiple_of)]
-            if current_round % 3 == 0 {
-                if let Some(ability_id) = unit_ability_ids.get(pi).and_then(|a| a.as_ref()) {
-                    // Check if the ability exists and mana allows
-                    let can_use = battle
-                        .ability_defs
-                        .get(ability_id)
-                        .map(|adef| battle.mana_pool.current_mana >= adef.mana_cost)
-                        .unwrap_or(false);
-
-                    if can_use {
-                        let ability_name = battle
-                            .ability_defs
-                            .get(ability_id)
-                            .map(|a| a.name.clone())
-                            .unwrap_or_else(|| ability_id.0.clone());
-                        let enemy_name = battle
-                            .enemies
-                            .get(target_idx)
-                            .map(|e| e.unit.id.clone())
-                            .unwrap_or_else(|| format!("Enemy[{}]", target_idx));
-                        println!(
-                            "  >> {} uses {} on {}!",
-                            battle.player_units[pi].unit.id, ability_name, enemy_name
-                        );
-                        let action = BattleAction::UseAbility {
-                            ability_id: (*ability_id).clone(),
-                            targets: vec![enemy_target],
-                        };
-                        if plan_action(&mut battle, unit_ref, action).is_ok() {
-                            used_ability = true;
-                        }
-                    }
-                }
-            }
-
-            if !used_ability {
-                let action = BattleAction::Attack {
-                    target: enemy_target,
-                };
-                let _ = plan_action(&mut battle, unit_ref, action);
+            if auto_mode {
+                plan_auto_action_for_player(&mut battle, pi, current_round, &unit_auto_ability_ids);
+            } else {
+                plan_interactive_action_for_player(
+                    &mut battle,
+                    pi,
+                    current_round,
+                    &unit_auto_ability_ids,
+                    unit_ability_ids.get(pi).map(Vec::as_slice).unwrap_or(&[]),
+                    game_data,
+                );
             }
         }
 
@@ -404,10 +844,7 @@ pub fn format_event(event: &BattleEvent, battle: &Battle) -> String {
             )
         }
         BattleEvent::BarrierBlocked(unit) => {
-            format!(
-                "{}'s barrier absorbs the hit!",
-                format_target(unit, battle)
-            )
+            format!("{}'s barrier absorbs the hit!", format_target(unit, battle))
         }
         BattleEvent::UnitDefeated(ud) => {
             format!("{} is defeated!", format_target(&ud.unit, battle))
@@ -614,7 +1051,11 @@ mod tests {
 
         // Spot-check specific formats
         let damage_text = format_event(&events[0], &battle);
-        assert!(damage_text.contains("deals"), "damage event: {}", damage_text);
+        assert!(
+            damage_text.contains("deals"),
+            "damage event: {}",
+            damage_text
+        );
         assert!(damage_text.contains("10"), "damage amount: {}", damage_text);
 
         let crit_text = format_event(&events[1], &battle);
