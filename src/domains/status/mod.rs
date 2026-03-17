@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![allow(dead_code, clippy::ptr_arg)]
 //! Status Effects & Buffs domain (S07-S13)
 //!
 //! All status effects, buffs, debuffs, barriers, HoT, immunity, and cleansing.
