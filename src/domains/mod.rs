@@ -11,4 +11,5 @@ pub mod damage_mods;
 pub mod data_loader;
 pub mod djinn;
 pub mod equipment;
+pub mod save;
 pub mod status;
