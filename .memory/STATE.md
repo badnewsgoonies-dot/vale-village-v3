@@ -1,57 +1,49 @@
 # Vale Village v3 — Current State
 
-**Phase:** Wave 5 complete — first playable surface exists
-**HEAD:** 38f2371 (pre-commit, about to commit Wave 5)
+**Phase:** Wave 6 complete — full data loads, spine scaffolded
+**HEAD:** d84bad2 (pre-commit)
 **Date:** 2026-03-17
 
 ## Milestone
-`cargo run` executes a full battle: load data → create battle → 5 rounds of combat → victory. First player-reachable surface.
+Full v2 dataset converted and loading: 346 abilities, 137 enemies, 109 equipment, 23 djinn, 55 encounters, 11 units. `cargo run` executes a complete battle with full data loaded.
 
 ## Completed Domains
 
-| Domain | Tests | Surface reachable? |
-|--------|-------|--------------------|
-| data_loader | 9 | YES — loads sample RON |
-| combat | 23 | YES — via battle_engine |
-| status | 27 | YES — via battle_engine |
-| djinn | 26 | NO — not exercised in demo |
-| equipment | 15 | NO — not exercised in demo |
-| damage_mods | 14 | NO — not exercised in demo |
-| battle_engine | 21 | YES — wired and running |
-| cli_runner | 3 | YES — cargo run works |
+| Domain | Tests | Status |
+|--------|-------|--------|
+| data_loader | 9 | Full data loads |
+| combat | 23 | All formulas working |
+| status | 27 | All 6 status types |
+| djinn | 26 | State machine + oscillation |
+| equipment | 15 | Loadout + bonuses |
+| damage_mods | 14 | Pen/splash/chain |
+| battle_engine | 21 | Integration layer |
+| cli_runner | 3 | cargo run works |
 | **Total** | **138** | |
 
-## Gate Status
-- Contract checksum: PASS
-- cargo check: PASS
-- cargo test: 138 passing
-- cargo clippy: PASS
-- Connectivity: PASS
-- cargo run: PASS (battle completes in 5 rounds)
-- Scope clamp: PASS (verified clean)
+## Data Counts (all [Observed])
+- Abilities: 346 (241 base + 105 djinn/equipment stubs)
+- Enemies: 137
+- Equipment: 109
+- Djinn: 23
+- Encounters: 55
+- Units: 11
 
-## [Assumed] Claims on Critical Path
-1. [Assumed] Djinn recovery delay = 1 turn (DESIGN_LOCK says "turn after next" = possibly 2)
-2. [Assumed] SPD tiebreaker = 2 levels (DESIGN_LOCK specifies 4)
-3. [Assumed] Chain damage = no decay
-4. [Assumed] Ability usage works in battle_engine (only auto-attacks exercised)
-5. [Assumed] Splash/chain/summon work in integration (unit tested only)
+## Gate Status (all PASS)
+Contract, cargo check, cargo test (138), clippy, connectivity, scope clamp, cargo run
 
 ## P0 Debt
-- [ ] Full data conversion (241 abilities, 137 enemies, 109 equipment → RON)
-- [ ] Enemy actions in battle (enemies don't attack back)
-- [ ] Ability usage in demo (only auto-attacks used)
+- [ ] Enemy actions in battle (enemies don't attack)
+- [ ] 105 stub abilities need real stats designed
+- [ ] Demo should use a real encounter from encounters.ron
 
 ## P1 Debt
-- [ ] Bevy app with visual rendering
-- [ ] Player input (interactive planning phase)
-- [ ] Enemy AI decision engine
-- [ ] Djinn/equipment exercised in demo
-- [ ] Graduation tests for: battle completion, retargeting on death
+- [ ] Bevy app
+- [ ] Player input
+- [ ] Enemy AI
+- [ ] Graduation tests for: full data load, battle completion, retargeting
 
-## Process Status
-- Wave cadence followed correctly from Wave 5 onward
-- Scope clamp run after worker
-- Player trace written
-- Worker report written
-- Harden assessment done with [Observed] tags
+## [Assumed] on Critical Path
+1. Djinn recovery delay = 1 turn (possibly 2 per DESIGN_LOCK)
+2. SPD tiebreaker = 2 levels (DESIGN_LOCK says 4)
+3. 105 stub abilities are zero-power placeholders — game balance incomplete
