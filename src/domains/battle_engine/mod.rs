@@ -1873,4 +1873,122 @@ mod tests {
             "Player should take damage from enemy"
         );
     }
+
+    // ── Test: AI enemy uses ability when mana available ──────────────
+
+    #[test]
+    fn test_ai_enemy_uses_ability_when_mana_available() {
+        let player_stats = Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 10 };
+        let enemy_stats = Stats { hp: 80, atk: 25, def: 10, mag: 15, spd: 12 };
+
+        let player = make_player("hero", player_stats, 5);
+        let mut enemy_data = make_enemy("smart-goblin", enemy_stats);
+        // Give the enemy an ability it can use
+        let (aid, adef) = make_basic_ability("fire-bolt", 2, 40);
+        enemy_data.enemy_def.abilities = vec![aid.clone()];
+
+        let mut abilities = HashMap::new();
+        abilities.insert(aid, adef);
+
+        let mut battle = new_battle(vec![player], vec![enemy_data], test_config(), abilities, HashMap::new());
+
+        // Verify the enemy has ability_ids populated
+        assert_eq!(battle.enemies[0].ability_ids.len(), 1);
+        assert_eq!(battle.enemies[0].ability_ids[0].0, "fire-bolt");
+
+        // Use AI planning with Aggressive strategy (prefers abilities)
+        plan_enemy_actions_with_ai(&mut battle, AiStrategy::Aggressive);
+
+        // The enemy should have planned a UseAbility action (not just Attack)
+        assert_eq!(battle.planned_actions.len(), 1);
+        match &battle.planned_actions[0].1 {
+            BattleAction::UseAbility { ability_id, targets } => {
+                assert_eq!(ability_id.0, "fire-bolt", "Enemy should use fire-bolt");
+                assert!(!targets.is_empty(), "Should have at least one target");
+                assert_eq!(targets[0].side, Side::Player, "Target should be a player");
+            }
+            _ => panic!("Expected UseAbility, got {:?}", battle.planned_actions[0].1),
+        }
+
+        // Execute and verify the ability actually deals damage
+        let player_hp_before = battle.player_units[0].unit.current_hp;
+        let events = execute_round(&mut battle);
+        let player_hp_after = battle.player_units[0].unit.current_hp;
+
+        assert!(
+            player_hp_after < player_hp_before,
+            "Player should take damage from enemy ability"
+        );
+
+        // Should have an EnemyAbilityUsed event
+        let has_ability_event = events.iter().any(|e| {
+            matches!(e, BattleEvent::EnemyAbilityUsed { ability_name, .. } if ability_name == "fire-bolt")
+        });
+        assert!(has_ability_event, "Should emit EnemyAbilityUsed event");
+    }
+
+    // ── Test: AI enemy targets lowest HP player when aggressive ──────
+
+    #[test]
+    fn test_ai_enemy_targets_lowest_hp_player_when_aggressive() {
+        let player_stats = Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 10 };
+        let enemy_stats = Stats { hp: 80, atk: 25, def: 10, mag: 10, spd: 12 };
+
+        let p1 = make_player("hero-a", player_stats, 3);
+        let p2 = make_player("hero-b", player_stats, 3);
+        let enemy = make_enemy("aggressive-goblin", enemy_stats);
+
+        let mut battle = new_battle(vec![p1, p2], vec![enemy], test_config(), HashMap::new(), HashMap::new());
+
+        // Damage player 1 so it has lower HP
+        battle.player_units[1].unit.current_hp = 20;
+
+        plan_enemy_actions_with_ai(&mut battle, AiStrategy::Aggressive);
+
+        assert_eq!(battle.planned_actions.len(), 1);
+        match &battle.planned_actions[0].1 {
+            BattleAction::Attack { target } => {
+                assert_eq!(target.side, Side::Player);
+                assert_eq!(
+                    target.index, 1,
+                    "Aggressive AI should target the player with lowest HP (index 1 at 20 HP)"
+                );
+            }
+            _ => panic!("Expected Attack action"),
+        }
+    }
+
+    // ── Test: AI falls back to basic attack when no abilities ────────
+
+    #[test]
+    fn test_ai_fallback_to_basic_attack_when_no_abilities() {
+        let player_stats = Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 10 };
+        let enemy_stats = Stats { hp: 80, atk: 25, def: 10, mag: 10, spd: 12 };
+
+        let player = make_player("hero", player_stats, 5);
+        let enemy = make_enemy("dumb-goblin", enemy_stats);
+        // Enemy has no abilities (empty list from make_enemy)
+
+        let mut battle = new_battle(vec![player], vec![enemy], test_config(), HashMap::new(), HashMap::new());
+
+        assert!(
+            battle.enemies[0].ability_ids.is_empty(),
+            "Enemy should have no abilities"
+        );
+
+        plan_enemy_actions_with_ai(&mut battle, AiStrategy::Balanced);
+
+        // With no abilities, AI should fall back to a basic Attack
+        assert_eq!(battle.planned_actions.len(), 1);
+        match &battle.planned_actions[0].1 {
+            BattleAction::Attack { target } => {
+                assert_eq!(target.side, Side::Player);
+                assert_eq!(target.index, 0, "Should target first alive player");
+            }
+            _ => panic!(
+                "Expected Attack fallback when no abilities, got {:?}",
+                battle.planned_actions[0].1
+            ),
+        }
+    }
 }

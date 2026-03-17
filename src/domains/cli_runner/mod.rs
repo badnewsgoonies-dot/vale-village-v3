@@ -6,8 +6,9 @@
 
 use std::io::{self, Write};
 
+use crate::domains::ai::AiStrategy;
 use crate::domains::battle_engine::{
-    check_battle_end, execute_round, new_battle, plan_action, plan_enemy_actions, Battle,
+    check_battle_end, execute_round, new_battle, plan_action, plan_enemy_actions_with_ai, Battle,
     BattleEvent, BattleResult, EnemyUnitData, PlanError, PlayerUnitData,
 };
 use crate::domains::data_loader::GameData;
@@ -929,8 +930,8 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
             }
         }
 
-        // Enemy planning: each alive enemy attacks first alive player
-        plan_enemy_actions(&mut battle);
+        // Enemy planning: use AI strategy for smart enemy decisions
+        plan_enemy_actions_with_ai(&mut battle, AiStrategy::Balanced);
 
         // Execute
         let events = execute_round(&mut battle);
@@ -1036,6 +1037,23 @@ pub fn format_event(event: &BattleEvent, battle: &Battle) -> String {
                     )
                 }
             }
+        }
+        BattleEvent::EnemyAbilityUsed {
+            actor,
+            ability_name,
+            targets,
+        } => {
+            let actor_name = format_target(actor, battle);
+            let target_names: Vec<String> = targets
+                .iter()
+                .map(|t| format_target(t, battle))
+                .collect();
+            format!(
+                "{} uses {} on {}!",
+                actor_name,
+                ability_name,
+                target_names.join(", ")
+            )
         }
     }
 }
