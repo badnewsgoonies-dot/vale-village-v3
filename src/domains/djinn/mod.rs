@@ -4,7 +4,7 @@
 
 use crate::shared::{
     AbilityId, DjinnCompatibility, DjinnDef, DjinnId, DjinnState, DjinnStateChanged, Element,
-    Side, StatBonus, TargetRef,
+    StatBonus, TargetRef,
 };
 
 // ── Structs ─────────────────────────────────────────────────────────
@@ -269,7 +269,7 @@ pub fn tick_recovery(slots: &mut DjinnSlots, unit_ref: TargetRef) -> Vec<DjinnSt
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::shared::{DjinnAbilityPairs, DjinnAbilitySet};
+    use crate::shared::{DjinnAbilityPairs, DjinnAbilitySet, Side};
 
     fn unit_ref() -> TargetRef {
         TargetRef {
