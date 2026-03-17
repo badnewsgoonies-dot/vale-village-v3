@@ -6,8 +6,8 @@ use std::collections::HashMap;
 
 use crate::shared::{
     AbilityDef, AbilityId, BattleAction, BattlePhase, CombatConfig, DamageDealt, DamageType,
-    DjinnState, DjinnStateChanged, EnemyDef, HealingDone, ManaPoolChanged, Side, Stats,
-    StatusApplied, TargetRef, UnitDefeated,
+    DjinnDef, DjinnId, DjinnState, DjinnStateChanged, EnemyDef, HealingDone, ManaPoolChanged,
+    Side, Stats, StatusApplied, TargetRef, UnitDefeated,
 };
 
 use crate::domains::combat::{self, BattleUnit, ManaPool};
@@ -40,6 +40,7 @@ pub struct Battle {
     pub log: Vec<BattleEvent>,
     pub config: CombatConfig,
     pub ability_defs: HashMap<AbilityId, AbilityDef>,
+    pub djinn_defs: HashMap<DjinnId, DjinnDef>,
 }
 
 /// Events emitted during battle execution.
@@ -105,6 +106,7 @@ pub fn new_battle(
     enemy_data: Vec<EnemyUnitData>,
     config: CombatConfig,
     ability_defs: HashMap<AbilityId, AbilityDef>,
+    djinn_defs: HashMap<DjinnId, DjinnDef>,
 ) -> Battle {
     let mut total_mana: u8 = 0;
 
@@ -175,6 +177,7 @@ pub fn new_battle(
         log: Vec::new(),
         config,
         ability_defs,
+        djinn_defs,
     }
 }
 
@@ -725,12 +728,72 @@ fn execute_summon_action(
     let recovery_turns = battle.config.djinn_recovery_start_delay
         + battle.config.djinn_recovery_per_turn;
     let indices: Vec<usize> = djinn_indices.iter().map(|&i| i as usize).collect();
+
+    // Collect djinn IDs before mutating slots (for summon damage lookup)
+    let djinn_ids: Vec<DjinnId> = {
+        let actor = get_unit(battle, actor_ref).unwrap();
+        indices
+            .iter()
+            .filter_map(|&i| actor.djinn_slots.slots.get(i))
+            .map(|inst| inst.djinn_id.clone())
+            .collect()
+    };
+
+    // Transition djinn to Recovery
     let actor = get_unit_mut(battle, actor_ref).unwrap();
-    if let Some(djinn_events) =
+    let summon_succeeded = if let Some(djinn_events) =
         djinn::execute_summon(&mut actor.djinn_slots, &indices, actor_ref, recovery_turns)
     {
         for ev in djinn_events {
             events.push(BattleEvent::DjinnChanged(ev));
+        }
+        true
+    } else {
+        false
+    };
+
+    if !summon_succeeded {
+        return;
+    }
+
+    // Calculate total summon damage from all used djinn
+    let mut total_summon_damage: u16 = 0;
+    for djinn_id in &djinn_ids {
+        if let Some(djinn_def) = battle.djinn_defs.get(djinn_id) {
+            if let Some(ref summon_effect) = djinn_def.summon_effect {
+                total_summon_damage = total_summon_damage.saturating_add(summon_effect.damage);
+            }
+        }
+    }
+
+    // Apply summon damage to all alive enemies
+    if total_summon_damage > 0 {
+        let enemy_count = battle.enemies.len();
+        for ei in 0..enemy_count {
+            if !battle.enemies[ei].unit.is_alive {
+                continue;
+            }
+            let target_ref = TargetRef {
+                side: Side::Enemy,
+                index: ei as u8,
+            };
+            battle.enemies[ei].unit.current_hp = battle.enemies[ei]
+                .unit
+                .current_hp
+                .saturating_sub(total_summon_damage);
+            if battle.enemies[ei].unit.current_hp == 0 {
+                battle.enemies[ei].unit.is_alive = false;
+            }
+            events.push(BattleEvent::DamageDealt(DamageDealt {
+                source: actor_ref,
+                target: target_ref,
+                amount: total_summon_damage,
+                damage_type: DamageType::Psynergy,
+                is_crit: false,
+            }));
+            if !battle.enemies[ei].unit.is_alive {
+                events.push(BattleEvent::UnitDefeated(UnitDefeated { unit: target_ref }));
+            }
         }
     }
 }
@@ -1042,7 +1105,7 @@ mod tests {
         let mut abilities = HashMap::new();
         abilities.insert(aid, adef);
 
-        new_battle(vec![player], vec![enemy], test_config(), abilities)
+        new_battle(vec![player], vec![enemy], test_config(), abilities, HashMap::new())
     }
 
     // ── Test: new_battle correct mana pool ──────────────────────────
@@ -1196,7 +1259,7 @@ mod tests {
         player.equipment_effects.total_hit_count_bonus = 0;
 
         let enemy = make_enemy("troll", enemy_stats);
-        let mut battle = new_battle(vec![player], vec![enemy], test_config(), HashMap::new());
+        let mut battle = new_battle(vec![player], vec![enemy], test_config(), HashMap::new(), HashMap::new());
 
         // Spend some mana first to track generation
         battle.mana_pool.spend_mana(3);
@@ -1275,7 +1338,7 @@ mod tests {
 
         let player = make_player("hero", player_stats, 5);
         let enemy = make_enemy("weak_goblin", enemy_stats);
-        let mut battle = new_battle(vec![player], vec![enemy], test_config(), HashMap::new());
+        let mut battle = new_battle(vec![player], vec![enemy], test_config(), HashMap::new(), HashMap::new());
 
         let actor = TargetRef { side: Side::Player, index: 0 };
         let target = TargetRef { side: Side::Enemy, index: 0 };
@@ -1390,7 +1453,7 @@ mod tests {
         let mut abilities = HashMap::new();
         abilities.insert(aid, adef);
 
-        let mut battle = new_battle(vec![player], vec![enemy], test_config(), abilities);
+        let mut battle = new_battle(vec![player], vec![enemy], test_config(), abilities, HashMap::new());
 
         // Round 1: auto-attack
         let actor = TargetRef { side: Side::Player, index: 0 };
@@ -1462,7 +1525,7 @@ mod tests {
         let p2 = make_player("hero2", stats, 4);
         let enemy = make_enemy("goblin", stats);
 
-        let battle = new_battle(vec![p1, p2], vec![enemy], test_config(), HashMap::new());
+        let battle = new_battle(vec![p1, p2], vec![enemy], test_config(), HashMap::new(), HashMap::new());
         assert_eq!(battle.mana_pool.max_mana, 7);
         assert_eq!(battle.mana_pool.current_mana, 7);
     }
@@ -1508,7 +1571,7 @@ mod tests {
         let e1 = make_enemy("goblin-a", enemy_stats);
         let e2 = make_enemy("goblin-b", enemy_stats);
 
-        let mut battle = new_battle(vec![p1, p2], vec![e1, e2], test_config(), HashMap::new());
+        let mut battle = new_battle(vec![p1, p2], vec![e1, e2], test_config(), HashMap::new(), HashMap::new());
 
         plan_enemy_actions(&mut battle);
 
@@ -1535,7 +1598,7 @@ mod tests {
         let e1 = make_enemy("dead-goblin", stats);
         let e2 = make_enemy("live-goblin", stats);
 
-        let mut battle = new_battle(vec![p1], vec![e1, e2], test_config(), HashMap::new());
+        let mut battle = new_battle(vec![p1], vec![e1, e2], test_config(), HashMap::new(), HashMap::new());
         // Kill first enemy
         battle.enemies[0].unit.is_alive = false;
         battle.enemies[0].unit.current_hp = 0;
@@ -1555,7 +1618,7 @@ mod tests {
         let p2 = make_player("alive-hero", stats, 3);
         let e1 = make_enemy("goblin", stats);
 
-        let mut battle = new_battle(vec![p1, p2], vec![e1], test_config(), HashMap::new());
+        let mut battle = new_battle(vec![p1, p2], vec![e1], test_config(), HashMap::new(), HashMap::new());
         // Kill first player
         battle.player_units[0].unit.is_alive = false;
         battle.player_units[0].unit.current_hp = 0;
@@ -1581,7 +1644,7 @@ mod tests {
         let p1 = make_player("hero", player_stats, 3);
         let e1 = make_enemy("strong-goblin", enemy_stats);
 
-        let mut battle = new_battle(vec![p1], vec![e1], test_config(), HashMap::new());
+        let mut battle = new_battle(vec![p1], vec![e1], test_config(), HashMap::new(), HashMap::new());
 
         // Only plan enemy action (no player action)
         plan_enemy_actions(&mut battle);
@@ -1618,7 +1681,7 @@ mod tests {
         let p1 = make_player("fragile-hero", player_stats, 1);
         let e1 = make_enemy("boss-goblin", enemy_stats);
 
-        let mut battle = new_battle(vec![p1], vec![e1], test_config(), HashMap::new());
+        let mut battle = new_battle(vec![p1], vec![e1], test_config(), HashMap::new(), HashMap::new());
 
         // Plan both sides
         let player_ref = TargetRef { side: Side::Player, index: 0 };
@@ -1663,7 +1726,7 @@ mod tests {
         let p1 = make_player("hero", player_stats, 3);
         let e1 = make_enemy("goblin", enemy_stats);
 
-        let mut battle = new_battle(vec![p1], vec![e1], test_config(), HashMap::new());
+        let mut battle = new_battle(vec![p1], vec![e1], test_config(), HashMap::new(), HashMap::new());
 
         // Plan player attack
         let player_ref = TargetRef { side: Side::Player, index: 0 };

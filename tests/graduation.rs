@@ -138,6 +138,7 @@ fn test_battle_completes_to_victory_or_defeat() {
         vec![e1, e2],
         config(),
         abilities,
+        HashMap::new(),
     );
 
     let mut result: Option<BattleResult> = None;
@@ -263,7 +264,7 @@ fn test_dead_unit_cannot_act() {
     let mut abilities = HashMap::new();
     abilities.insert(aid, adef);
 
-    let mut battle = battle_engine::new_battle(vec![p], vec![e], config(), abilities);
+    let mut battle = battle_engine::new_battle(vec![p], vec![e], config(), abilities, HashMap::new());
 
     // Kill the player unit
     battle.player_units[0].unit.current_hp = 0;
@@ -331,7 +332,7 @@ fn test_barrier_blocks_damage_instance() {
     let (aid, adef) = basic_ability("quake", 3, 40);
     abilities.insert(aid, adef);
 
-    let mut battle = battle_engine::new_battle(vec![p], vec![e], config(), abilities);
+    let mut battle = battle_engine::new_battle(vec![p], vec![e], config(), abilities, HashMap::new());
 
     // Give player unit a barrier with 1 charge
     status::apply_barrier(&mut battle.player_units[0].status_state, 1, 5);
@@ -379,7 +380,7 @@ fn test_enemies_attack_player_units() {
     );
 
     let abilities = HashMap::new();
-    let mut battle = battle_engine::new_battle(vec![p], vec![e], config(), abilities);
+    let mut battle = battle_engine::new_battle(vec![p], vec![e], config(), abilities, HashMap::new());
 
     let hp_before = battle.player_units[0].unit.current_hp;
 

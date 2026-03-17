@@ -13,9 +13,10 @@ use crate::domains::battle_engine::{
 use crate::domains::data_loader::GameData;
 use crate::domains::djinn::DjinnSlots;
 use crate::domains::equipment::{self, EquipmentEffects, EquipmentLoadout};
+use crate::domains::djinn;
 use crate::shared::{
-    AbilityCategory, AbilityId, BattleAction, DjinnId, EncounterId, EnemyId, EquipmentId,
-    EquipmentSlot, Side, TargetMode, TargetRef, UnitDef, UnitId,
+    AbilityCategory, AbilityId, BattleAction, DjinnId, DjinnState, EncounterId, EnemyId,
+    EquipmentId, EquipmentSlot, Side, TargetMode, TargetRef, UnitDef, UnitId,
 };
 
 // ── Public API ──────────────────────────────────────────────────────
@@ -442,6 +443,36 @@ fn plan_auto_action_for_player(
         index: target_idx as u8,
     };
 
+    // On round 4, activate a djinn if any are in Good state
+    if current_round == 4 {
+        let good_djinn_idx = battle.player_units[player_index]
+            .djinn_slots
+            .slots
+            .iter()
+            .position(|inst| inst.state == DjinnState::Good);
+
+        if let Some(djinn_idx) = good_djinn_idx {
+            let djinn_name = {
+                let inst = &battle.player_units[player_index].djinn_slots.slots[djinn_idx];
+                battle
+                    .djinn_defs
+                    .get(&inst.djinn_id)
+                    .map(|d| d.name.clone())
+                    .unwrap_or_else(|| inst.djinn_id.0.clone())
+            };
+            println!(
+                "  >> {} activates {}!",
+                battle.player_units[player_index].unit.id, djinn_name
+            );
+            let action = BattleAction::ActivateDjinn {
+                djinn_index: djinn_idx as u8,
+            };
+            if plan_action(battle, unit_ref, action).is_ok() {
+                return;
+            }
+        }
+    }
+
     let mut used_ability = false;
     #[allow(clippy::manual_is_multiple_of)]
     if current_round % 3 == 0 {
@@ -522,8 +553,10 @@ fn plan_interactive_action_for_player(
         println!("  [1] ATTACK -> target?");
         println!("  [2] ABILITY -> which ability?");
         println!("  [3] AUTO (let AI choose)");
+        println!("  [4] DJINN -> activate a djinn");
+        println!("  [5] SUMMON -> use standby djinn for summon");
 
-        match prompt_for_usize("Choose action (1/2/3): ", 1, 3, 3) {
+        match prompt_for_usize("Choose action (1/2/3/4/5): ", 1, 5, 3) {
             1 => {
                 let targets = alive_targets_for_side(battle, Side::Enemy);
                 if targets.is_empty() {
@@ -602,6 +635,124 @@ fn plan_interactive_action_for_player(
             3 => {
                 plan_auto_action_for_player(battle, player_index, current_round, auto_ability_ids);
                 break;
+            }
+            4 => {
+                // DJINN -> activate a Good-state djinn
+                let good_djinn: Vec<(usize, String)> = battle.player_units[player_index]
+                    .djinn_slots
+                    .slots
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, inst)| inst.state == DjinnState::Good)
+                    .map(|(idx, inst)| {
+                        let name = game_data
+                            .djinn
+                            .get(&inst.djinn_id)
+                            .map(|d| d.name.clone())
+                            .unwrap_or_else(|| inst.djinn_id.0.clone());
+                        (idx, name)
+                    })
+                    .collect();
+
+                if good_djinn.is_empty() {
+                    println!("  No djinn in Good state to activate.");
+                    continue;
+                }
+
+                println!("  Good-state djinn:");
+                for (menu_i, (slot_idx, name)) in good_djinn.iter().enumerate() {
+                    println!(
+                        "  [{}] {} (slot {}) — activate for immediate effect",
+                        menu_i, name, slot_idx
+                    );
+                }
+
+                let selected =
+                    prompt_for_usize("Choose djinn to activate: ", 0, good_djinn.len() - 1, 0);
+                let (djinn_slot_index, djinn_name) = &good_djinn[selected];
+                println!("  >> Activating {}!", djinn_name);
+
+                let unit_name = battle.player_units[player_index].unit.id.clone();
+                if try_plan_action(
+                    battle,
+                    unit_ref,
+                    BattleAction::ActivateDjinn {
+                        djinn_index: *djinn_slot_index as u8,
+                    },
+                    &unit_name,
+                ) {
+                    break;
+                }
+            }
+            5 => {
+                // SUMMON -> use Good djinn for a summon
+                let good_count = battle.player_units[player_index]
+                    .djinn_slots
+                    .good_count();
+                let tiers = djinn::get_available_summons(good_count);
+
+                if tiers.is_empty() {
+                    println!("  No djinn in Good state for summoning.");
+                    continue;
+                }
+
+                println!("  Available summon tiers (Good djinn: {}):", good_count);
+                for (menu_i, tier) in tiers.iter().enumerate() {
+                    println!(
+                        "  [{}] Tier {} (requires {} Good djinn)",
+                        menu_i, tier.tier, tier.required_good
+                    );
+                }
+
+                let selected =
+                    prompt_for_usize("Choose summon tier: ", 0, tiers.len() - 1, 0);
+                let chosen_tier = &tiers[selected];
+                let needed = chosen_tier.required_good as usize;
+
+                // Collect indices of Good djinn for selection
+                let good_indices: Vec<(usize, String)> = battle.player_units[player_index]
+                    .djinn_slots
+                    .slots
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, inst)| inst.state == DjinnState::Good)
+                    .map(|(idx, inst)| {
+                        let name = game_data
+                            .djinn
+                            .get(&inst.djinn_id)
+                            .map(|d| d.name.clone())
+                            .unwrap_or_else(|| inst.djinn_id.0.clone());
+                        (idx, name)
+                    })
+                    .collect();
+
+                // Auto-select the first N Good djinn for the summon
+                let selected_indices: Vec<u8> = good_indices
+                    .iter()
+                    .take(needed)
+                    .map(|(idx, _)| *idx as u8)
+                    .collect();
+                let selected_names: Vec<&str> = good_indices
+                    .iter()
+                    .take(needed)
+                    .map(|(_, name)| name.as_str())
+                    .collect();
+                println!(
+                    "  >> Summoning with: {}!",
+                    selected_names.join(" + ")
+                );
+
+                let unit_name = battle.player_units[player_index].unit.id.clone();
+                if try_plan_action(
+                    battle,
+                    unit_ref,
+                    BattleAction::Summon {
+                        djinn_indices: selected_indices,
+                    },
+                    &unit_name,
+                ) {
+                    break;
+                }
             }
             _ => unreachable!(),
         }
@@ -713,14 +864,16 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
         "encounter must have at least one valid enemy"
     );
 
-    // Build ability_defs map for the battle
+    // Build ability_defs and djinn_defs maps for the battle
     let ability_defs = game_data.abilities.clone();
+    let djinn_defs = game_data.djinn.clone();
 
     let mut battle = new_battle(
         player_data,
         enemy_data,
         game_data.config.clone(),
         ability_defs,
+        djinn_defs,
     );
 
     println!("\n=== BATTLE START ===");
@@ -859,13 +1012,30 @@ pub fn format_event(event: &BattleEvent, battle: &Battle) -> String {
             format!("── End of Round {} ──", n)
         }
         BattleEvent::DjinnChanged(dc) => {
-            format!(
-                "Djinn {} on {}: {:?} -> {:?}",
-                dc.djinn_id.0,
-                format_target(&dc.unit, battle),
-                dc.old_state,
-                dc.new_state
-            )
+            let djinn_name = battle
+                .djinn_defs
+                .get(&dc.djinn_id)
+                .map(|d| d.name.clone())
+                .unwrap_or_else(|| dc.djinn_id.0.clone());
+            let unit_name = format_target(&dc.unit, battle);
+            match (dc.old_state, dc.new_state) {
+                (DjinnState::Good, DjinnState::Recovery) => {
+                    let turns = dc.recovery_turns.unwrap_or(0);
+                    format!(
+                        "{} activates {}! {} enters Recovery ({} turns)",
+                        unit_name, djinn_name, djinn_name, turns
+                    )
+                }
+                (DjinnState::Recovery, DjinnState::Good) => {
+                    format!("{} recovers to Good state on {}", djinn_name, unit_name)
+                }
+                _ => {
+                    format!(
+                        "Djinn {} on {}: {:?} -> {:?}",
+                        djinn_name, unit_name, dc.old_state, dc.new_state
+                    )
+                }
+            }
         }
     }
 }
@@ -983,6 +1153,7 @@ mod tests {
             }],
             game_data.config.clone(),
             ability_defs,
+            game_data.djinn.clone(),
         );
 
         let player_ref = TargetRef {
@@ -1131,6 +1302,7 @@ mod tests {
             }],
             game_data.config.clone(),
             game_data.abilities.clone(),
+            game_data.djinn.clone(),
         );
 
         // Run 21 rounds manually
@@ -1160,5 +1332,241 @@ mod tests {
         }
 
         assert!(stalemate, "Stalemate guard should trigger at round > 20");
+    }
+
+    #[test]
+    fn test_djinn_activation_via_interactive_menu() {
+        let game_data = load_sample_data();
+        let adept = game_data.units.get(&UnitId("adept".to_string())).unwrap();
+        let slime = game_data
+            .enemies
+            .get(&EnemyId("mercury-slime".to_string()))
+            .unwrap();
+
+        let mut djinn_slots = DjinnSlots::new();
+        djinn_slots.add(crate::shared::DjinnId("flint".to_string()));
+
+        let mut battle = new_battle(
+            vec![PlayerUnitData {
+                id: adept.id.0.clone(),
+                base_stats: adept.base_stats,
+                equipment: EquipmentLoadout::default(),
+                djinn_slots,
+                mana_contribution: adept.mana_contribution,
+                equipment_effects: EquipmentEffects::default(),
+            }],
+            vec![EnemyUnitData {
+                enemy_def: slime.clone(),
+            }],
+            game_data.config.clone(),
+            game_data.abilities.clone(),
+            game_data.djinn.clone(),
+        );
+
+        // Verify djinn starts in Good state
+        assert_eq!(
+            battle.player_units[0].djinn_slots.slots[0].state,
+            crate::shared::DjinnState::Good,
+            "Djinn should start in Good state"
+        );
+
+        // Plan djinn activation (simulating option [4])
+        let unit_ref = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let result = plan_action(
+            &mut battle,
+            unit_ref,
+            BattleAction::ActivateDjinn { djinn_index: 0 },
+        );
+        assert!(result.is_ok(), "Djinn activation should succeed");
+
+        // Execute the round
+        let events = execute_round(&mut battle);
+
+        // Verify djinn transitioned to Recovery
+        assert_eq!(
+            battle.player_units[0].djinn_slots.slots[0].state,
+            crate::shared::DjinnState::Recovery,
+            "Djinn should be in Recovery after activation"
+        );
+
+        // Verify DjinnChanged event was emitted
+        let has_djinn_event = events.iter().any(|e| matches!(e, BattleEvent::DjinnChanged(_)));
+        assert!(has_djinn_event, "Should have DjinnChanged event");
+
+        // Verify the event formats correctly
+        let djinn_event = events
+            .iter()
+            .find(|e| matches!(e, BattleEvent::DjinnChanged(_)))
+            .unwrap();
+        let text = format_event(djinn_event, &battle);
+        assert!(
+            text.contains("activates") && text.contains("Flint"),
+            "Event text should mention activation and djinn name: {}",
+            text
+        );
+    }
+
+    #[test]
+    fn test_djinn_recovery_ticks_after_activation() {
+        let game_data = load_sample_data();
+        let adept = game_data.units.get(&UnitId("adept".to_string())).unwrap();
+        let slime = game_data
+            .enemies
+            .get(&EnemyId("mercury-slime".to_string()))
+            .unwrap();
+
+        // Make enemy very tanky so battle lasts multiple rounds
+        let mut tanky = slime.clone();
+        tanky.stats.hp = 50000;
+        tanky.stats.def = 200;
+        tanky.stats.atk = 1;
+
+        let mut djinn_slots = DjinnSlots::new();
+        djinn_slots.add(crate::shared::DjinnId("flint".to_string()));
+
+        let mut battle = new_battle(
+            vec![PlayerUnitData {
+                id: adept.id.0.clone(),
+                base_stats: adept.base_stats,
+                equipment: EquipmentLoadout::default(),
+                djinn_slots,
+                mana_contribution: adept.mana_contribution,
+                equipment_effects: EquipmentEffects::default(),
+            }],
+            vec![EnemyUnitData {
+                enemy_def: tanky,
+            }],
+            game_data.config.clone(),
+            game_data.abilities.clone(),
+            game_data.djinn.clone(),
+        );
+
+        // Round 1: activate djinn
+        let unit_ref = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        plan_action(
+            &mut battle,
+            unit_ref,
+            BattleAction::ActivateDjinn { djinn_index: 0 },
+        )
+        .unwrap();
+        execute_round(&mut battle);
+
+        assert_eq!(
+            battle.player_units[0].djinn_slots.slots[0].state,
+            crate::shared::DjinnState::Recovery,
+            "Djinn should be in Recovery after round 1"
+        );
+
+        // Recovery turns = djinn_recovery_start_delay + djinn_recovery_per_turn = 1 + 1 = 2
+        // After tick in round 1 end: remaining = 2 - 1 = 1 (no recovery yet)
+        // Round 2: attack, then tick: remaining = 1 - 1 = 0, recovers!
+        let _ = plan_action(
+            &mut battle,
+            unit_ref,
+            BattleAction::Attack {
+                target: TargetRef {
+                    side: Side::Enemy,
+                    index: 0,
+                },
+            },
+        );
+        let events_r2 = execute_round(&mut battle);
+
+        // After round 2, djinn should have recovered to Good
+        assert_eq!(
+            battle.player_units[0].djinn_slots.slots[0].state,
+            crate::shared::DjinnState::Good,
+            "Djinn should recover to Good after sufficient ticks"
+        );
+
+        // Should have a recovery DjinnChanged event in round 2
+        let has_recovery_event = events_r2.iter().any(|e| match e {
+            BattleEvent::DjinnChanged(dc) => dc.new_state == crate::shared::DjinnState::Good,
+            _ => false,
+        });
+        assert!(
+            has_recovery_event,
+            "Should have DjinnChanged event showing recovery to Good"
+        );
+    }
+
+    #[test]
+    fn test_auto_mode_activates_djinn_on_round_4() {
+        let game_data = load_sample_data();
+        let adept = game_data.units.get(&UnitId("adept".to_string())).unwrap();
+        let slime = game_data
+            .enemies
+            .get(&EnemyId("mercury-slime".to_string()))
+            .unwrap();
+
+        // Make enemy tanky so battle lasts 4+ rounds
+        let mut tanky = slime.clone();
+        tanky.stats.hp = 50000;
+        tanky.stats.def = 200;
+        tanky.stats.atk = 1;
+
+        let adept_ability = find_first_psynergy_ability(adept, &game_data);
+
+        let mut djinn_slots = DjinnSlots::new();
+        djinn_slots.add(crate::shared::DjinnId("flint".to_string()));
+
+        let mut battle = new_battle(
+            vec![PlayerUnitData {
+                id: adept.id.0.clone(),
+                base_stats: adept.base_stats,
+                equipment: EquipmentLoadout::default(),
+                djinn_slots,
+                mana_contribution: adept.mana_contribution,
+                equipment_effects: EquipmentEffects::default(),
+            }],
+            vec![EnemyUnitData {
+                enemy_def: tanky,
+            }],
+            game_data.config.clone(),
+            game_data.abilities.clone(),
+            game_data.djinn.clone(),
+        );
+
+        let auto_abilities: Vec<Option<AbilityId>> = vec![adept_ability];
+
+        // Rounds 1-3: should attack normally, djinn stays Good
+        for round in 1..=3 {
+            plan_auto_action_for_player(&mut battle, 0, round, &auto_abilities);
+            execute_round(&mut battle);
+            assert_eq!(
+                battle.player_units[0].djinn_slots.slots[0].state,
+                crate::shared::DjinnState::Good,
+                "Djinn should still be Good before round 4 (round {})",
+                round
+            );
+        }
+
+        // Round 4: auto mode should activate djinn
+        plan_auto_action_for_player(&mut battle, 0, 4, &auto_abilities);
+        let events = execute_round(&mut battle);
+
+        assert_eq!(
+            battle.player_units[0].djinn_slots.slots[0].state,
+            crate::shared::DjinnState::Recovery,
+            "Djinn should be in Recovery after auto-activation on round 4"
+        );
+
+        let has_djinn_activation = events.iter().any(|e| match e {
+            BattleEvent::DjinnChanged(dc) => {
+                dc.old_state == crate::shared::DjinnState::Good
+                    && dc.new_state == crate::shared::DjinnState::Recovery
+            }
+            _ => false,
+        });
+        assert!(
+            has_djinn_activation,
+            "Round 4 events should include djinn activation"
+        );
     }
 }
