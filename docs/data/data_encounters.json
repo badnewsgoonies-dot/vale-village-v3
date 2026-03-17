@@ -1,0 +1,1037 @@
+[
+  {
+    "id": "house-01",
+    "name": "House 1: Garet's Liberation",
+    "difficulty": null,
+    "enemies": [
+      "garet-enemy"
+    ],
+    "reward": {
+      "xp": null,
+      "gold": null,
+      "equipment": null,
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "vs1-garet",
+    "name": "VS1: Garet's Liberation",
+    "difficulty": null,
+    "enemies": [
+      "garet-enemy"
+    ],
+    "reward": {
+      "xp": null,
+      "gold": null,
+      "equipment": null,
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-02",
+    "name": "House 2: The Bronze Trial",
+    "difficulty": "easy",
+    "enemies": [
+      "earth-scout",
+      "venus-wolf"
+    ],
+    "reward": {
+      "xp": null,
+      "gold": null,
+      "equipment": null,
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-03",
+    "name": "House 3: Iron Bonds",
+    "difficulty": "easy",
+    "enemies": [
+      "flame-scout",
+      "mars-wolf"
+    ],
+    "reward": {
+      "xp": null,
+      "gold": null,
+      "equipment": null,
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-04",
+    "name": "House 4: Arcane Power",
+    "difficulty": "easy",
+    "enemies": [
+      "frost-scout",
+      "frost-mystic"
+    ],
+    "reward": {
+      "xp": null,
+      "gold": null,
+      "equipment": null,
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-05",
+    "name": "House 5: The Blazing Warrior",
+    "difficulty": "easy",
+    "enemies": [
+      "gale-scout",
+      "gale-priest"
+    ],
+    "reward": {
+      "xp": null,
+      "gold": null,
+      "equipment": null,
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-06",
+    "name": "House 6: The Steel Guardian",
+    "difficulty": "medium",
+    "enemies": [
+      "stone-guardian",
+      "ember-cleric",
+      "flame-scout"
+    ],
+    "reward": {
+      "xp": 120,
+      "gold": 32,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "steel-helm"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-07",
+    "name": "House 7: Winds of Liberation",
+    "difficulty": "medium",
+    "enemies": [
+      "terra-soldier",
+      "venus-bear",
+      "earth-shaman"
+    ],
+    "reward": {
+      "xp": 150,
+      "gold": 40,
+      "equipment": null,
+      "djinn": "breeze",
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-08",
+    "name": "House 8: The Frozen Sentinel",
+    "difficulty": "medium",
+    "enemies": [
+      "jupiter-bear",
+      "wind-soldier",
+      "tide-enchanter"
+    ],
+    "reward": {
+      "xp": 200,
+      "gold": 55,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "steel-armor"
+      },
+      "djinn": "fizz",
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-09",
+    "name": "House 9: Inferno's Rage",
+    "difficulty": "medium",
+    "enemies": [
+      "mercury-bear",
+      "frost-oracle",
+      "ice-elemental"
+    ],
+    "reward": {
+      "xp": 215,
+      "gold": 58,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "battle-axe"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-10",
+    "name": "House 10: The Burning Gauntlet",
+    "difficulty": "medium",
+    "enemies": [
+      "blaze-soldier",
+      "mars-bear",
+      "flame-elemental"
+    ],
+    "reward": {
+      "xp": 235,
+      "gold": 62,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "silver-circlet"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-11",
+    "name": "House 11: The Scholar's Trial",
+    "difficulty": "hard",
+    "enemies": [
+      "stone-captain",
+      "rock-elemental",
+      "terra-warden"
+    ],
+    "reward": {
+      "xp": 255,
+      "gold": 68,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "silver-armor"
+      },
+      "djinn": null,
+      "unlockUnit": "karis"
+    }
+  },
+  {
+    "id": "house-12",
+    "name": "House 12: The Granite Fortress",
+    "difficulty": "hard",
+    "enemies": [
+      "inferno-captain",
+      "phoenix",
+      "flame-herald"
+    ],
+    "reward": {
+      "xp": 275,
+      "gold": 72,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "valkyrie-mail"
+      },
+      "djinn": "granite",
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-13",
+    "name": "House 13: The Silver Strike",
+    "difficulty": "hard",
+    "enemies": [
+      "glacier-captain",
+      "leviathan"
+    ],
+    "reward": {
+      "xp": 295,
+      "gold": 76,
+      "equipment": {
+        "type": "choice",
+        "options": [
+          "silver-blade",
+          "great-axe",
+          "zodiac-wand"
+        ]
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-14",
+    "name": "House 14: The Speed Demon",
+    "difficulty": "hard",
+    "enemies": [
+      "thunder-captain",
+      "thunderbird"
+    ],
+    "reward": {
+      "xp": 320,
+      "gold": 82,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "hyper-boots"
+      },
+      "djinn": null,
+      "unlockUnit": "tyrell"
+    }
+  },
+  {
+    "id": "house-15",
+    "name": "House 15: The Storm Unleashed",
+    "difficulty": "hard",
+    "enemies": [
+      "terra-soldier",
+      "blaze-soldier",
+      "wind-soldier"
+    ],
+    "reward": {
+      "xp": 400,
+      "gold": 110,
+      "equipment": null,
+      "djinn": "squall",
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-16",
+    "name": "House 16: The Mythril Edge",
+    "difficulty": "boss",
+    "enemies": [
+      "lightning-commander",
+      "storm-elemental",
+      "jupiter-bear"
+    ],
+    "reward": {
+      "xp": 450,
+      "gold": 120,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "mythril-blade"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-17",
+    "name": "House 17: The Master's Arrival",
+    "difficulty": "boss",
+    "enemies": [
+      "mountain-commander",
+      "basilisk",
+      "rock-elemental"
+    ],
+    "reward": {
+      "xp": 500,
+      "gold": 130,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "dragon-scales"
+      },
+      "djinn": null,
+      "unlockUnit": "felix"
+    }
+  },
+  {
+    "id": "house-18",
+    "name": "House 18: The Earth's Bane",
+    "difficulty": "boss",
+    "enemies": [
+      "fire-commander",
+      "volcano-warlord"
+    ],
+    "reward": {
+      "xp": 550,
+      "gold": 140,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "oracles-crown"
+      },
+      "djinn": "bane",
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-19",
+    "name": "House 19: The Final Armament",
+    "difficulty": "boss",
+    "enemies": [
+      "storm-commander",
+      "hydra"
+    ],
+    "reward": {
+      "xp": 600,
+      "gold": 150,
+      "equipment": {
+        "type": "choice",
+        "options": [
+          "gaia-blade",
+          "titans-axe",
+          "staff-of-ages"
+        ]
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-20",
+    "name": "House 20: The Overseer Falls",
+    "difficulty": "boss",
+    "enemies": [
+      "overseer",
+      "chimera",
+      "tempest-warlord"
+    ],
+    "reward": {
+      "xp": 1500,
+      "gold": 300,
+      "equipment": null,
+      "djinn": "storm",
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-21",
+    "name": "House 21: The Risen Dead",
+    "difficulty": "medium",
+    "enemies": [
+      "skeleton-warrior",
+      "ghost-wisp",
+      "zombie-hound"
+    ],
+    "reward": {
+      "xp": 650,
+      "gold": 160,
+      "equipment": {
+        "type": "choice",
+        "options": [
+          "silver-blade",
+          "steel-armor",
+          "crystal-rod"
+        ]
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-22",
+    "name": "House 22: Wings of Fury",
+    "difficulty": "medium",
+    "enemies": [
+      "wind-hawk",
+      "fire-eagle",
+      "storm-raven"
+    ],
+    "reward": {
+      "xp": 700,
+      "gold": 170,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "hyper-boots"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-23",
+    "name": "House 23: The Earthen Guardians",
+    "difficulty": "hard",
+    "enemies": [
+      "clay-golem",
+      "iron-golem"
+    ],
+    "reward": {
+      "xp": 750,
+      "gold": 185,
+      "equipment": null,
+      "djinn": "corona",
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-24",
+    "name": "House 24: Frozen Depths",
+    "difficulty": "hard",
+    "enemies": [
+      "frost-serpent",
+      "aqua-drake",
+      "ice-owl"
+    ],
+    "reward": {
+      "xp": 800,
+      "gold": 195,
+      "equipment": {
+        "type": "choice",
+        "options": [
+          "mythril-blade",
+          "zodiac-wand",
+          "valkyrie-mail"
+        ]
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-25",
+    "name": "House 25: Storm's Wrath",
+    "difficulty": "hard",
+    "enemies": [
+      "lightning-lynx",
+      "cyclone-djinni",
+      "thunderbird"
+    ],
+    "reward": {
+      "xp": 850,
+      "gold": 205,
+      "equipment": null,
+      "djinn": "tonic",
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-26",
+    "name": "House 26: Necromantic Rites",
+    "difficulty": "boss",
+    "enemies": [
+      "bone-mage",
+      "skeleton-warrior",
+      "ghost-wisp",
+      "zombie-hound"
+    ],
+    "reward": {
+      "xp": 900,
+      "gold": 220,
+      "equipment": {
+        "type": "choice",
+        "options": [
+          "oracles-crown",
+          "staff-of-ages",
+          "cosmos-shield"
+        ]
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-27",
+    "name": "House 27: Crystal Convergence",
+    "difficulty": "boss",
+    "enemies": [
+      "crystal-golem",
+      "storm-golem",
+      "iron-golem"
+    ],
+    "reward": {
+      "xp": 950,
+      "gold": 235,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "gaia-blade"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-28",
+    "name": "House 28: Draconic Convergence",
+    "difficulty": "boss",
+    "enemies": [
+      "glacier-wyrm",
+      "tempest-dragon",
+      "hydra"
+    ],
+    "reward": {
+      "xp": 1000,
+      "gold": 250,
+      "equipment": null,
+      "djinn": "fury",
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-29",
+    "name": "House 29: Abyssal Depths",
+    "difficulty": "boss",
+    "enemies": [
+      "tidal-wraith",
+      "neptune-warden",
+      "frost-serpent"
+    ],
+    "reward": {
+      "xp": 1100,
+      "gold": 270,
+      "equipment": {
+        "type": "choice",
+        "options": [
+          "mythril-armor",
+          "zodiac-wand",
+          "hyper-boots"
+        ]
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-30",
+    "name": "House 30: Volcanic Summit",
+    "difficulty": "boss",
+    "enemies": [
+      "magma-colossus",
+      "flame-elemental",
+      "fire-commander"
+    ],
+    "reward": {
+      "xp": 1200,
+      "gold": 290,
+      "equipment": null,
+      "djinn": "scorch",
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-31",
+    "name": "House 31: Frozen Citadel",
+    "difficulty": "boss",
+    "enemies": [
+      "permafrost-golem",
+      "polar-guardian",
+      "arctic-sovereign"
+    ],
+    "reward": {
+      "xp": 1300,
+      "gold": 310,
+      "equipment": {
+        "type": "choice",
+        "options": [
+          "valkyrie-mail",
+          "oracles-crown",
+          "elemental-star"
+        ]
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-32",
+    "name": "House 32: Stratosphere Keep",
+    "difficulty": "boss",
+    "enemies": [
+      "stratosphere-lord",
+      "thunderstorm-colossus",
+      "storm-titan"
+    ],
+    "reward": {
+      "xp": 1400,
+      "gold": 330,
+      "equipment": null,
+      "djinn": "crystal",
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-33",
+    "name": "House 33: Chimera's Lair",
+    "difficulty": "boss",
+    "enemies": [
+      "voltage-chimera",
+      "chimera",
+      "elder-basilisk"
+    ],
+    "reward": {
+      "xp": 1500,
+      "gold": 350,
+      "equipment": {
+        "type": "choice",
+        "options": [
+          "gaia-blade",
+          "sol-blade",
+          "cosmos-shield"
+        ]
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-34",
+    "name": "House 34: Spectral Void",
+    "difficulty": "boss",
+    "enemies": [
+      "frost-lich",
+      "void-specter",
+      "bone-mage",
+      "ghost-wisp"
+    ],
+    "reward": {
+      "xp": 1600,
+      "gold": 370,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "oracles-crown"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-35",
+    "name": "House 35: Elemental Convergence",
+    "difficulty": "boss",
+    "enemies": [
+      "aurora-elemental",
+      "storm-elemental",
+      "flame-elemental",
+      "rock-elemental"
+    ],
+    "reward": {
+      "xp": 1800,
+      "gold": 400,
+      "equipment": null,
+      "djinn": "serac",
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-36",
+    "name": "House 36: Divine Judgment",
+    "difficulty": "boss",
+    "enemies": [
+      "zeus-avatar",
+      "celestial-fury",
+      "vortex-sentinel"
+    ],
+    "reward": {
+      "xp": 2500,
+      "gold": 500,
+      "equipment": null,
+      "djinn": "eclipse",
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "training-dummy",
+    "name": "Training Arena",
+    "difficulty": "easy",
+    "enemies": [
+      "mercury-slime"
+    ],
+    "reward": {
+      "xp": 10,
+      "gold": 0,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "roadside-bandits",
+    "name": "Roadside Bandits",
+    "difficulty": "easy",
+    "enemies": [
+      "bandit",
+      "scavenger"
+    ],
+    "reward": {
+      "xp": 25,
+      "gold": 12,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "merchant-guard",
+    "name": "Merchant Guard",
+    "difficulty": "easy",
+    "enemies": [
+      "merchant-guard"
+    ],
+    "reward": {
+      "xp": 40,
+      "gold": 20,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "sol-blade"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "abandoned-farm",
+    "name": "Abandoned Farm",
+    "difficulty": "easy",
+    "enemies": [
+      "wild-boar",
+      "carrion-bird"
+    ],
+    "reward": {
+      "xp": 30,
+      "gold": 15,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-37",
+    "name": "House 37: Granite Guard",
+    "difficulty": "hard",
+    "enemies": [
+      "granite-warlord",
+      "granite-warlord"
+    ],
+    "reward": {
+      "xp": 3000,
+      "gold": 600,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-38",
+    "name": "House 38: Magma Twins",
+    "difficulty": "hard",
+    "enemies": [
+      "volcano-warlord",
+      "volcano-warlord"
+    ],
+    "reward": {
+      "xp": 3200,
+      "gold": 650,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-39",
+    "name": "House 39: Frozen Duo",
+    "difficulty": "hard",
+    "enemies": [
+      "blizzard-warlord",
+      "blizzard-warlord"
+    ],
+    "reward": {
+      "xp": 3400,
+      "gold": 700,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-40",
+    "name": "House 40: Storm Gate",
+    "difficulty": "boss",
+    "enemies": [
+      "tempest-warlord",
+      "tempest-dragon"
+    ],
+    "reward": {
+      "xp": 4000,
+      "gold": 1000,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-41",
+    "name": "House 41: Sky Breach",
+    "difficulty": "hard",
+    "enemies": [
+      "stratosphere-lord"
+    ],
+    "reward": {
+      "xp": 4200,
+      "gold": 800,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-42",
+    "name": "House 42: Cloud Walker",
+    "difficulty": "hard",
+    "enemies": [
+      "storm-titan"
+    ],
+    "reward": {
+      "xp": 4400,
+      "gold": 850,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-43",
+    "name": "House 43: Thunder Peak",
+    "difficulty": "hard",
+    "enemies": [
+      "tempest-dragon",
+      "storm-titan"
+    ],
+    "reward": {
+      "xp": 4600,
+      "gold": 900,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-44",
+    "name": "House 44: Gale Force",
+    "difficulty": "hard",
+    "enemies": [
+      "stratosphere-lord",
+      "jupiter-vortex-sentry"
+    ],
+    "reward": {
+      "xp": 4800,
+      "gold": 950,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-45",
+    "name": "House 45: The Eye",
+    "difficulty": "boss",
+    "enemies": [
+      "zeus-avatar"
+    ],
+    "reward": {
+      "xp": 5000,
+      "gold": 2000,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "mythril-crown"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-46",
+    "name": "House 46: Chaos 1",
+    "difficulty": "hard",
+    "enemies": [
+      "granite-warlord",
+      "tempest-warlord"
+    ],
+    "reward": {
+      "xp": 5500,
+      "gold": 1100,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-47",
+    "name": "House 47: Chaos 2",
+    "difficulty": "hard",
+    "enemies": [
+      "volcano-warlord",
+      "blizzard-warlord"
+    ],
+    "reward": {
+      "xp": 6000,
+      "gold": 1200,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-48",
+    "name": "House 48: Chaos 3",
+    "difficulty": "hard",
+    "enemies": [
+      "tempest-dragon",
+      "zeus-avatar"
+    ],
+    "reward": {
+      "xp": 7000,
+      "gold": 1500,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-49",
+    "name": "House 49: The Gatekeeper",
+    "difficulty": "boss",
+    "enemies": [
+      "celestial-fury",
+      "vortex-sentinel"
+    ],
+    "reward": {
+      "xp": 8000,
+      "gold": 2000,
+      "equipment": {
+        "type": "none"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  },
+  {
+    "id": "house-50",
+    "name": "House 50: Golden Sun",
+    "difficulty": "boss",
+    "enemies": [
+      "the-golden-sun"
+    ],
+    "reward": {
+      "xp": 99999,
+      "gold": 99999,
+      "equipment": {
+        "type": "fixed",
+        "itemId": "sol-blade"
+      },
+      "djinn": null,
+      "unlockUnit": null
+    }
+  }
+]

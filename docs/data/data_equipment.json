@@ -1,0 +1,2229 @@
+[
+  {
+    "id": "wooden-sword",
+    "name": "Wooden Sword",
+    "slot": "weapon",
+    "tier": "basic",
+    "cost": 50,
+    "statBonus": {
+      "atk": 5,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Jupiter"
+    ],
+    "unlocksAbility": "wooden-strike",
+    "setId": null
+  },
+  {
+    "id": "bronze-sword",
+    "name": "Bronze Sword",
+    "slot": "weapon",
+    "tier": "bronze",
+    "cost": 120,
+    "statBonus": {
+      "atk": 9,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "bronze-slash",
+    "setId": null
+  },
+  {
+    "id": "iron-sword",
+    "name": "Iron Sword",
+    "slot": "weapon",
+    "tier": "iron",
+    "cost": 200,
+    "statBonus": {
+      "atk": 14,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "iron-thrust",
+    "setId": null
+  },
+  {
+    "id": "steel-sword",
+    "name": "Steel Sword",
+    "slot": "weapon",
+    "tier": "steel",
+    "cost": 500,
+    "statBonus": {
+      "atk": 22,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "steel-slash",
+    "setId": null
+  },
+  {
+    "id": "silver-blade",
+    "name": "Silver Blade",
+    "slot": "weapon",
+    "tier": "silver",
+    "cost": 1200,
+    "statBonus": {
+      "atk": 32,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "silver-strike",
+    "setId": null
+  },
+  {
+    "id": "mythril-blade",
+    "name": "Mythril Blade",
+    "slot": "weapon",
+    "tier": "mythril",
+    "cost": 3000,
+    "statBonus": {
+      "atk": 45,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "mythril-edge",
+    "setId": null
+  },
+  {
+    "id": "gaia-blade",
+    "name": "Gaia Blade",
+    "slot": "weapon",
+    "tier": "legendary",
+    "cost": 7500,
+    "statBonus": {
+      "atk": 58,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "mythril-edge",
+    "setId": null
+  },
+  {
+    "id": "sol-blade",
+    "name": "Sol Blade",
+    "slot": "weapon",
+    "tier": "artifact",
+    "cost": 15000,
+    "statBonus": {
+      "atk": 72,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "mythril-edge",
+    "setId": null
+  },
+  {
+    "id": "wooden-axe",
+    "name": "Wooden Axe",
+    "slot": "weapon",
+    "tier": "basic",
+    "cost": 60,
+    "statBonus": {
+      "atk": 7,
+      "def": 0,
+      "mag": 0,
+      "spd": -1,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "battle-axe",
+    "name": "Battle Axe",
+    "slot": "weapon",
+    "tier": "iron",
+    "cost": 280,
+    "statBonus": {
+      "atk": 18,
+      "def": 0,
+      "mag": 0,
+      "spd": -2,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": "axe-cleave",
+    "setId": null
+  },
+  {
+    "id": "great-axe",
+    "name": "Great Axe",
+    "slot": "weapon",
+    "tier": "steel",
+    "cost": 800,
+    "statBonus": {
+      "atk": 30,
+      "def": 0,
+      "mag": 0,
+      "spd": -3,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": "great-cleave",
+    "setId": null
+  },
+  {
+    "id": "titans-axe",
+    "name": "Titan's Axe",
+    "slot": "weapon",
+    "tier": "legendary",
+    "cost": 9000,
+    "statBonus": {
+      "atk": 65,
+      "def": 10,
+      "mag": 0,
+      "spd": -2,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": "great-cleave",
+    "setId": null
+  },
+  {
+    "id": "mace",
+    "name": "Mace",
+    "slot": "weapon",
+    "tier": "bronze",
+    "cost": 150,
+    "statBonus": {
+      "atk": 11,
+      "def": 2,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "heavy-mace",
+    "name": "Heavy Mace",
+    "slot": "weapon",
+    "tier": "steel",
+    "cost": 650,
+    "statBonus": {
+      "atk": 26,
+      "def": 5,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "demon-mace",
+    "name": "Demon Mace",
+    "slot": "weapon",
+    "tier": "mythril",
+    "cost": 3500,
+    "statBonus": {
+      "atk": 48,
+      "def": 8,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "wooden-staff",
+    "name": "Wooden Staff",
+    "slot": "weapon",
+    "tier": "basic",
+    "cost": 40,
+    "statBonus": {
+      "atk": 3,
+      "def": 0,
+      "mag": 4,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "magic-rod",
+    "name": "Magic Rod",
+    "slot": "weapon",
+    "tier": "bronze",
+    "cost": 180,
+    "statBonus": {
+      "atk": 6,
+      "def": 0,
+      "mag": 8,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": "arcane-bolt",
+    "setId": null
+  },
+  {
+    "id": "shaman-rod",
+    "name": "Shaman Rod",
+    "slot": "weapon",
+    "tier": "iron",
+    "cost": 400,
+    "statBonus": {
+      "atk": 10,
+      "def": 0,
+      "mag": 14,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "crystal-rod",
+    "name": "Crystal Rod",
+    "slot": "weapon",
+    "tier": "silver",
+    "cost": 1500,
+    "statBonus": {
+      "atk": 18,
+      "def": 0,
+      "mag": 24,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": "crystal-blast",
+    "setId": null
+  },
+  {
+    "id": "zodiac-wand",
+    "name": "Zodiac Wand",
+    "slot": "weapon",
+    "tier": "mythril",
+    "cost": 4000,
+    "statBonus": {
+      "atk": 28,
+      "def": 0,
+      "mag": 38,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": "zodiac-bolt",
+    "setId": null
+  },
+  {
+    "id": "staff-of-ages",
+    "name": "Staff of Ages",
+    "slot": "weapon",
+    "tier": "artifact",
+    "cost": 18000,
+    "statBonus": {
+      "atk": 42,
+      "def": 0,
+      "mag": 58,
+      "spd": 0,
+      "hp": 0,
+      "pp": 25
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": "zodiac-bolt",
+    "setId": null
+  },
+  {
+    "id": "cotton-shirt",
+    "name": "Cotton Shirt",
+    "slot": "armor",
+    "tier": "basic",
+    "cost": 30,
+    "statBonus": {
+      "atk": 0,
+      "def": 3,
+      "mag": 0,
+      "spd": 0,
+      "hp": 5,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "leather-vest",
+    "name": "Leather Vest",
+    "slot": "armor",
+    "tier": "basic",
+    "cost": 80,
+    "statBonus": {
+      "atk": 0,
+      "def": 6,
+      "mag": 0,
+      "spd": 0,
+      "hp": 10,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Mars",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "bronze-armor",
+    "name": "Bronze Armor",
+    "slot": "armor",
+    "tier": "bronze",
+    "cost": 200,
+    "statBonus": {
+      "atk": 0,
+      "def": 10,
+      "mag": 0,
+      "spd": 0,
+      "hp": 15,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "iron-armor",
+    "name": "Iron Armor",
+    "slot": "armor",
+    "tier": "iron",
+    "cost": 350,
+    "statBonus": {
+      "atk": 0,
+      "def": 15,
+      "mag": 0,
+      "spd": 0,
+      "hp": 25,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Mars"
+    ],
+    "unlocksAbility": "iron-bulwark",
+    "setId": null
+  },
+  {
+    "id": "steel-armor",
+    "name": "Steel Armor",
+    "slot": "armor",
+    "tier": "steel",
+    "cost": 800,
+    "statBonus": {
+      "atk": 0,
+      "def": 24,
+      "mag": 0,
+      "spd": 0,
+      "hp": 40,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "steel-ward",
+    "setId": null
+  },
+  {
+    "id": "silver-armor",
+    "name": "Silver Armor",
+    "slot": "armor",
+    "tier": "silver",
+    "cost": 2000,
+    "statBonus": {
+      "atk": 0,
+      "def": 35,
+      "mag": 0,
+      "spd": 0,
+      "hp": 60,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "silver-shield",
+    "setId": null
+  },
+  {
+    "id": "mythril-armor",
+    "name": "Mythril Armor",
+    "slot": "armor",
+    "tier": "mythril",
+    "cost": 5000,
+    "statBonus": {
+      "atk": 0,
+      "def": 48,
+      "mag": 0,
+      "spd": 0,
+      "hp": 85,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "steel-ward",
+    "setId": null
+  },
+  {
+    "id": "dragon-scales",
+    "name": "Dragon Scales",
+    "slot": "armor",
+    "tier": "legendary",
+    "cost": 10000,
+    "statBonus": {
+      "atk": 0,
+      "def": 62,
+      "mag": 0,
+      "spd": 0,
+      "hp": 110,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "dragon-ward",
+    "setId": null
+  },
+  {
+    "id": "valkyrie-mail",
+    "name": "Valkyrie Mail",
+    "slot": "armor",
+    "tier": "artifact",
+    "cost": 20000,
+    "statBonus": {
+      "atk": 0,
+      "def": 78,
+      "mag": 0,
+      "spd": 0,
+      "hp": 140,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "leather-cap",
+    "name": "Leather Cap",
+    "slot": "helm",
+    "tier": "basic",
+    "cost": 25,
+    "statBonus": {
+      "atk": 0,
+      "def": 2,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Mars",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "cloth-cap",
+    "name": "Cloth Cap",
+    "slot": "helm",
+    "tier": "basic",
+    "cost": 60,
+    "statBonus": {
+      "atk": 0,
+      "def": 4,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "bronze-helm",
+    "name": "Bronze Helm",
+    "slot": "helm",
+    "tier": "bronze",
+    "cost": 140,
+    "statBonus": {
+      "atk": 0,
+      "def": 6,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Mars"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "iron-helm",
+    "name": "Iron Helm",
+    "slot": "helm",
+    "tier": "iron",
+    "cost": 220,
+    "statBonus": {
+      "atk": 0,
+      "def": 9,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "iron-mind",
+    "setId": null
+  },
+  {
+    "id": "steel-helm",
+    "name": "Steel Helm",
+    "slot": "helm",
+    "tier": "steel",
+    "cost": 500,
+    "statBonus": {
+      "atk": 0,
+      "def": 14,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "steel-focus",
+    "setId": null
+  },
+  {
+    "id": "silver-circlet",
+    "name": "Silver Circlet",
+    "slot": "helm",
+    "tier": "silver",
+    "cost": 1300,
+    "statBonus": {
+      "atk": 0,
+      "def": 20,
+      "mag": 5,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "mythril-crown",
+    "name": "Mythril Crown",
+    "slot": "helm",
+    "tier": "mythril",
+    "cost": 3200,
+    "statBonus": {
+      "atk": 0,
+      "def": 28,
+      "mag": 8,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": "mythril-wisdom",
+    "setId": null
+  },
+  {
+    "id": "oracles-crown",
+    "name": "Oracle's Crown",
+    "slot": "helm",
+    "tier": "legendary",
+    "cost": 8000,
+    "statBonus": {
+      "atk": 0,
+      "def": 38,
+      "mag": 14,
+      "spd": 0,
+      "hp": 0,
+      "pp": 20
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": "oracle-vision",
+    "setId": null
+  },
+  {
+    "id": "glory-helm",
+    "name": "Glory Helm",
+    "slot": "helm",
+    "tier": "artifact",
+    "cost": 16000,
+    "statBonus": {
+      "atk": 0,
+      "def": 50,
+      "mag": 18,
+      "spd": 0,
+      "hp": 0,
+      "pp": 30
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "leather-boots",
+    "name": "Leather Boots",
+    "slot": "boots",
+    "tier": "basic",
+    "cost": 70,
+    "statBonus": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 2,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Mars",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "iron-boots",
+    "name": "Iron Boots",
+    "slot": "boots",
+    "tier": "iron",
+    "cost": 150,
+    "statBonus": {
+      "atk": 0,
+      "def": 2,
+      "mag": 0,
+      "spd": 3,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "steel-greaves",
+    "name": "Steel Greaves",
+    "slot": "boots",
+    "tier": "steel",
+    "cost": 400,
+    "statBonus": {
+      "atk": 0,
+      "def": 4,
+      "mag": 0,
+      "spd": 5,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "silver-greaves",
+    "name": "Silver Greaves",
+    "slot": "boots",
+    "tier": "silver",
+    "cost": 1100,
+    "statBonus": {
+      "atk": 0,
+      "def": 6,
+      "mag": 0,
+      "spd": 7,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "hyper-boots",
+    "name": "Hyper Boots",
+    "slot": "boots",
+    "tier": "mythril",
+    "cost": 2800,
+    "statBonus": {
+      "atk": 0,
+      "def": 8,
+      "mag": 0,
+      "spd": 10,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": "hyper-speed",
+    "setId": null
+  },
+  {
+    "id": "quick-boots",
+    "name": "Quick Boots",
+    "slot": "boots",
+    "tier": "legendary",
+    "cost": 6500,
+    "statBonus": {
+      "atk": 0,
+      "def": 10,
+      "mag": 0,
+      "spd": 14,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "hermes-sandals",
+    "name": "Hermes' Sandals",
+    "slot": "boots",
+    "tier": "artifact",
+    "cost": 14000,
+    "statBonus": {
+      "atk": 0,
+      "def": 12,
+      "mag": 0,
+      "spd": 20,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "power-ring",
+    "name": "Power Ring",
+    "slot": "accessory",
+    "tier": "basic",
+    "cost": 100,
+    "statBonus": {
+      "atk": 5,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Mars",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "guardian-ring",
+    "name": "Guardian Ring",
+    "slot": "accessory",
+    "tier": "basic",
+    "cost": 120,
+    "statBonus": {
+      "atk": 0,
+      "def": 5,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "adepts-ring",
+    "name": "Adept's Ring",
+    "slot": "accessory",
+    "tier": "bronze",
+    "cost": 250,
+    "statBonus": {
+      "atk": 0,
+      "def": 0,
+      "mag": 6,
+      "spd": 0,
+      "hp": 0,
+      "pp": 5
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "war-gloves",
+    "name": "War Gloves",
+    "slot": "accessory",
+    "tier": "iron",
+    "cost": 400,
+    "statBonus": {
+      "atk": 10,
+      "def": 3,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "spirit-gloves",
+    "name": "Spirit Gloves",
+    "slot": "accessory",
+    "tier": "steel",
+    "cost": 900,
+    "statBonus": {
+      "atk": 0,
+      "def": 0,
+      "mag": 12,
+      "spd": 0,
+      "hp": 0,
+      "pp": 10
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "lucky-medal",
+    "name": "Lucky Medal",
+    "slot": "accessory",
+    "tier": "silver",
+    "cost": 1800,
+    "statBonus": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 5,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "elemental-star",
+    "name": "Elemental Star",
+    "slot": "accessory",
+    "tier": "mythril",
+    "cost": 4500,
+    "statBonus": {
+      "atk": 0,
+      "def": 0,
+      "mag": 18,
+      "spd": 0,
+      "hp": 0,
+      "pp": 20
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": "mythril-wisdom",
+    "setId": null
+  },
+  {
+    "id": "dragons-eye",
+    "name": "Dragon's Eye",
+    "slot": "accessory",
+    "tier": "legendary",
+    "cost": 8500,
+    "statBonus": {
+      "atk": 15,
+      "def": 10,
+      "mag": 15,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "cleric-ring",
+    "name": "Cleric Ring",
+    "slot": "accessory",
+    "tier": "legendary",
+    "cost": 9000,
+    "statBonus": {
+      "atk": 0,
+      "def": 0,
+      "mag": 12,
+      "spd": 0,
+      "hp": 0,
+      "pp": 30
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "iris-robe",
+    "name": "Iris Robe",
+    "slot": "accessory",
+    "tier": "artifact",
+    "cost": 12000,
+    "statBonus": {
+      "atk": 0,
+      "def": 20,
+      "mag": 20,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "cosmos-shield",
+    "name": "Cosmos Shield",
+    "slot": "accessory",
+    "tier": "artifact",
+    "cost": 17000,
+    "statBonus": {
+      "atk": 0,
+      "def": 30,
+      "mag": 0,
+      "spd": 0,
+      "hp": 50,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "silver-shield",
+    "setId": null
+  },
+  {
+    "id": "eclipse-blade",
+    "name": "Eclipse Blade",
+    "slot": "weapon",
+    "tier": "artifact",
+    "cost": 0,
+    "statBonus": {
+      "atk": 80,
+      "def": 0,
+      "mag": 15,
+      "spd": 5,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Mars"
+    ],
+    "unlocksAbility": "mythril-edge",
+    "setId": null
+  },
+  {
+    "id": "storm-cleaver",
+    "name": "Storm Cleaver",
+    "slot": "weapon",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 55,
+      "def": 0,
+      "mag": 20,
+      "spd": 8,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": "storm-slash",
+    "setId": null
+  },
+  {
+    "id": "frost-reaver",
+    "name": "Frost Reaver",
+    "slot": "weapon",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 52,
+      "def": 5,
+      "mag": 25,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury"
+    ],
+    "unlocksAbility": "frost-strike",
+    "setId": null
+  },
+  {
+    "id": "volcanic-hammer",
+    "name": "Volcanic Hammer",
+    "slot": "weapon",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 68,
+      "def": 15,
+      "mag": 0,
+      "spd": -3,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": "volcanic-smash",
+    "setId": null
+  },
+  {
+    "id": "gaia-greatshield",
+    "name": "Gaia Greatshield",
+    "slot": "accessory",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 45,
+      "mag": 0,
+      "spd": 0,
+      "hp": 80,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "tempest-armor",
+    "name": "Tempest Armor",
+    "slot": "armor",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 55,
+      "mag": 10,
+      "spd": 12,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "glacier-mail",
+    "name": "Glacier Mail",
+    "slot": "armor",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 58,
+      "mag": 8,
+      "spd": 0,
+      "hp": 75,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "inferno-plate",
+    "name": "Inferno Plate",
+    "slot": "armor",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 15,
+      "def": 52,
+      "mag": 0,
+      "spd": 0,
+      "hp": 50,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "stormking-crown",
+    "name": "Stormking Crown",
+    "slot": "helm",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 42,
+      "mag": 20,
+      "spd": 0,
+      "hp": 0,
+      "pp": 25
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": "storm-mastery",
+    "setId": null
+  },
+  {
+    "id": "frostqueen-tiara",
+    "name": "Frostqueen Tiara",
+    "slot": "helm",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 38,
+      "mag": 22,
+      "spd": 0,
+      "hp": 0,
+      "pp": 30
+    },
+    "allowedElements": [
+      "Mercury"
+    ],
+    "unlocksAbility": "frost-mastery",
+    "setId": null
+  },
+  {
+    "id": "volcanic-visor",
+    "name": "Volcanic Visor",
+    "slot": "helm",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 12,
+      "def": 45,
+      "mag": 0,
+      "spd": 0,
+      "hp": 30,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "windstrider-boots",
+    "name": "Windstrider Boots",
+    "slot": "boots",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 15,
+      "mag": 0,
+      "spd": 18,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "tidal-treads",
+    "name": "Tidal Treads",
+    "slot": "boots",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 18,
+      "mag": 8,
+      "spd": 12,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "tower-champions-ring",
+    "name": "Tower Champion's Ring",
+    "slot": "accessory",
+    "tier": "artifact",
+    "cost": 0,
+    "statBonus": {
+      "atk": 20,
+      "def": 20,
+      "mag": 20,
+      "spd": 10,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Mars",
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "tower-masters-medallion",
+    "name": "Tower Master's Medallion",
+    "slot": "accessory",
+    "tier": "artifact",
+    "cost": 0,
+    "statBonus": {
+      "atk": 25,
+      "def": 25,
+      "mag": 25,
+      "spd": 15,
+      "hp": 100,
+      "pp": 50
+    },
+    "allowedElements": [
+      "Venus",
+      "Mars",
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "mythril-axe",
+    "name": "Mythril Axe",
+    "slot": "weapon",
+    "tier": "mythril",
+    "cost": 3200,
+    "statBonus": {
+      "atk": 46,
+      "def": 0,
+      "mag": 0,
+      "spd": -2,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": "mythril-cleave",
+    "setId": null
+  },
+  {
+    "id": "mythril-staff",
+    "name": "Mythril Staff",
+    "slot": "weapon",
+    "tier": "mythril",
+    "cost": 3800,
+    "statBonus": {
+      "atk": 26,
+      "def": 0,
+      "mag": 36,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury"
+    ],
+    "unlocksAbility": "mythril-surge",
+    "setId": null
+  },
+  {
+    "id": "mythril-lance",
+    "name": "Mythril Lance",
+    "slot": "weapon",
+    "tier": "mythril",
+    "cost": 3100,
+    "statBonus": {
+      "atk": 42,
+      "def": 0,
+      "mag": 0,
+      "spd": 3,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": "mythril-pierce",
+    "setId": null
+  },
+  {
+    "id": "mythril-greaves",
+    "name": "Mythril Greaves",
+    "slot": "boots",
+    "tier": "mythril",
+    "cost": 2600,
+    "statBonus": {
+      "atk": 0,
+      "def": 10,
+      "mag": 0,
+      "spd": 9,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Mars"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "mythril-gauntlets",
+    "name": "Mythril Gauntlets",
+    "slot": "accessory",
+    "tier": "mythril",
+    "cost": 4200,
+    "statBonus": {
+      "atk": 16,
+      "def": 12,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Mars"
+    ],
+    "unlocksAbility": "mythril-strike",
+    "setId": null
+  },
+  {
+    "id": "earth-warden-shield",
+    "name": "Earth Warden Shield",
+    "slot": "accessory",
+    "tier": "silver",
+    "cost": 1900,
+    "statBonus": {
+      "atk": 0,
+      "def": 18,
+      "mag": 0,
+      "spd": 0,
+      "hp": 40,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "earth-wall",
+    "setId": null
+  },
+  {
+    "id": "gaia-helm",
+    "name": "Gaia Helm",
+    "slot": "helm",
+    "tier": "mythril",
+    "cost": 3400,
+    "statBonus": {
+      "atk": 0,
+      "def": 30,
+      "mag": 0,
+      "spd": 0,
+      "hp": 25,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": "gaia-fortitude",
+    "setId": null
+  },
+  {
+    "id": "flame-branded-axe",
+    "name": "Flame Branded Axe",
+    "slot": "weapon",
+    "tier": "silver",
+    "cost": 2200,
+    "statBonus": {
+      "atk": 38,
+      "def": 0,
+      "mag": 8,
+      "spd": -1,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": "flame-burst",
+    "setId": null
+  },
+  {
+    "id": "inferno-gauntlets",
+    "name": "Inferno Gauntlets",
+    "slot": "accessory",
+    "tier": "mythril",
+    "cost": 4000,
+    "statBonus": {
+      "atk": 18,
+      "def": 6,
+      "mag": 10,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": "inferno-fist",
+    "setId": null
+  },
+  {
+    "id": "frost-scepter",
+    "name": "Frost Scepter",
+    "slot": "weapon",
+    "tier": "silver",
+    "cost": 2100,
+    "statBonus": {
+      "atk": 20,
+      "def": 0,
+      "mag": 28,
+      "spd": 0,
+      "hp": 0,
+      "pp": 10
+    },
+    "allowedElements": [
+      "Mercury"
+    ],
+    "unlocksAbility": "frost-nova",
+    "setId": null
+  },
+  {
+    "id": "glacial-robes",
+    "name": "Glacial Robes",
+    "slot": "armor",
+    "tier": "mythril",
+    "cost": 4800,
+    "statBonus": {
+      "atk": 0,
+      "def": 40,
+      "mag": 15,
+      "spd": 0,
+      "hp": 60,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "thunderbolt-bow",
+    "name": "Thunderbolt Bow",
+    "slot": "weapon",
+    "tier": "silver",
+    "cost": 2400,
+    "statBonus": {
+      "atk": 35,
+      "def": 0,
+      "mag": 5,
+      "spd": 6,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": "lightning-shot",
+    "setId": null
+  },
+  {
+    "id": "storm-circlet",
+    "name": "Storm Circlet",
+    "slot": "helm",
+    "tier": "mythril",
+    "cost": 3600,
+    "statBonus": {
+      "atk": 0,
+      "def": 26,
+      "mag": 12,
+      "spd": 4,
+      "hp": 0,
+      "pp": 15
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": "storm-focus",
+    "setId": null
+  },
+  {
+    "id": "astral-blade",
+    "name": "Astral Blade",
+    "slot": "weapon",
+    "tier": "artifact",
+    "cost": 0,
+    "statBonus": {
+      "atk": 70,
+      "def": 0,
+      "mag": 20,
+      "spd": 8,
+      "hp": 0,
+      "pp": 20
+    },
+    "allowedElements": [
+      "Venus",
+      "Jupiter"
+    ],
+    "unlocksAbility": "astral-strike",
+    "setId": null
+  },
+  {
+    "id": "shadowflame-staff",
+    "name": "Shadowflame Staff",
+    "slot": "weapon",
+    "tier": "artifact",
+    "cost": 0,
+    "statBonus": {
+      "atk": 35,
+      "def": 0,
+      "mag": 55,
+      "spd": 0,
+      "hp": 0,
+      "pp": 30
+    },
+    "allowedElements": [
+      "Mars",
+      "Mercury"
+    ],
+    "unlocksAbility": "shadowflame",
+    "setId": null
+  },
+  {
+    "id": "aetheric-mantle",
+    "name": "Aetheric Mantle",
+    "slot": "armor",
+    "tier": "artifact",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 70,
+      "mag": 25,
+      "spd": 0,
+      "hp": 120,
+      "pp": 40
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "jesters-armlet",
+    "name": "Jester's Armlet",
+    "slot": "accessory",
+    "tier": "bronze",
+    "cost": 240,
+    "statBonus": {
+      "atk": 0,
+      "def": 0,
+      "mag": 4,
+      "spd": 4,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter",
+      "Mercury"
+    ],
+    "unlocksAbility": null,
+    "setId": null
+  },
+  {
+    "id": "night-dagger",
+    "name": "Night Dagger",
+    "slot": "weapon",
+    "tier": "silver",
+    "cost": 2600,
+    "statBonus": {
+      "atk": 34,
+      "def": 0,
+      "mag": 0,
+      "spd": 10,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Jupiter"
+    ],
+    "unlocksAbility": "shadow-step",
+    "setId": null
+  },
+  {
+    "id": "radiant-rapier",
+    "name": "Radiant Rapier",
+    "slot": "weapon",
+    "tier": "mythril",
+    "cost": 4200,
+    "statBonus": {
+      "atk": 40,
+      "def": 0,
+      "mag": 0,
+      "spd": 12,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Jupiter"
+    ],
+    "unlocksAbility": "radiant-stab",
+    "setId": null
+  },
+  {
+    "id": "storm-lance",
+    "name": "Storm Lance",
+    "slot": "weapon",
+    "tier": "mythril",
+    "cost": 3900,
+    "statBonus": {
+      "atk": 44,
+      "def": 0,
+      "mag": 10,
+      "spd": 6,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": "storm-pierce",
+    "setId": null
+  },
+  {
+    "id": "void-scythe",
+    "name": "Void Scythe",
+    "slot": "weapon",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 60,
+      "def": 0,
+      "mag": 25,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars",
+      "Mercury"
+    ],
+    "unlocksAbility": "void-swipe",
+    "setId": null
+  },
+  {
+    "id": "dawn-katana",
+    "name": "Dawn Katana",
+    "slot": "weapon",
+    "tier": "legendary",
+    "cost": 7000,
+    "statBonus": {
+      "atk": 58,
+      "def": 0,
+      "mag": 0,
+      "spd": 14,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Jupiter"
+    ],
+    "unlocksAbility": "dawn-slash",
+    "setId": null
+  },
+  {
+    "id": "ether-bow",
+    "name": "Ether Bow",
+    "slot": "weapon",
+    "tier": "mythril",
+    "cost": 3500,
+    "statBonus": {
+      "atk": 38,
+      "def": 0,
+      "mag": 12,
+      "spd": 8,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": "ether-shot",
+    "setId": null
+  },
+  {
+    "id": "seraphic-staff",
+    "name": "Seraphic Staff",
+    "slot": "weapon",
+    "tier": "legendary",
+    "cost": 8000,
+    "statBonus": {
+      "atk": 30,
+      "def": 0,
+      "mag": 50,
+      "spd": 0,
+      "hp": 0,
+      "pp": 25
+    },
+    "allowedElements": [
+      "Mercury"
+    ],
+    "unlocksAbility": "seraphic-beam",
+    "setId": null
+  },
+  {
+    "id": "heavy-halberd",
+    "name": "Heavy Halberd",
+    "slot": "weapon",
+    "tier": "steel",
+    "cost": 900,
+    "statBonus": {
+      "atk": 28,
+      "def": 6,
+      "mag": 0,
+      "spd": -2,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus",
+      "Mars"
+    ],
+    "unlocksAbility": "halberd-sweep",
+    "setId": null
+  },
+  {
+    "id": "gleaming-javelin",
+    "name": "Gleaming Javelin",
+    "slot": "weapon",
+    "tier": "silver",
+    "cost": 2100,
+    "statBonus": {
+      "atk": 36,
+      "def": 0,
+      "mag": 0,
+      "spd": 4,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": "javelin-throw",
+    "setId": null
+  },
+  {
+    "id": "mystic-dagger",
+    "name": "Mystic Dagger",
+    "slot": "weapon",
+    "tier": "bronze",
+    "cost": 300,
+    "statBonus": {
+      "atk": 12,
+      "def": 0,
+      "mag": 8,
+      "spd": 3,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": "mystic-stab",
+    "setId": null
+  },
+  {
+    "id": "stormplate-armor",
+    "name": "Stormplate Armor",
+    "slot": "armor",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 60,
+      "mag": 10,
+      "spd": 8,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": "tempest-set"
+  },
+  {
+    "id": "thunderplate-armor",
+    "name": "Thunderplate Armor",
+    "slot": "armor",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 8,
+      "def": 62,
+      "mag": 0,
+      "spd": 6,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": "tempest-set"
+  },
+  {
+    "id": "frostplate-armor",
+    "name": "Frostplate Armor",
+    "slot": "armor",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 64,
+      "mag": 12,
+      "spd": 0,
+      "hp": 90,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury"
+    ],
+    "unlocksAbility": null,
+    "setId": "glacier-set"
+  },
+  {
+    "id": "volcanic-plate-armor",
+    "name": "Volcanic Plate",
+    "slot": "armor",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 14,
+      "def": 66,
+      "mag": 0,
+      "spd": 0,
+      "hp": 60,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": null,
+    "setId": "inferno-set"
+  },
+  {
+    "id": "terra-guard-armor",
+    "name": "Terra Guard Armor",
+    "slot": "armor",
+    "tier": "mythril",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 50,
+      "mag": 0,
+      "spd": 0,
+      "hp": 80,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": null,
+    "setId": "aegis-set"
+  },
+  {
+    "id": "skywarden-mail",
+    "name": "Skywarden Mail",
+    "slot": "armor",
+    "tier": "mythril",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 48,
+      "mag": 8,
+      "spd": 10,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": "tempest-set"
+  },
+  {
+    "id": "oceanic-mail",
+    "name": "Oceanic Mail",
+    "slot": "armor",
+    "tier": "mythril",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 52,
+      "mag": 14,
+      "spd": 0,
+      "hp": 70,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mercury"
+    ],
+    "unlocksAbility": null,
+    "setId": "glacier-set"
+  },
+  {
+    "id": "pyro-mail",
+    "name": "Pyro Mail",
+    "slot": "armor",
+    "tier": "mythril",
+    "cost": 0,
+    "statBonus": {
+      "atk": 16,
+      "def": 54,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Mars"
+    ],
+    "unlocksAbility": null,
+    "setId": "inferno-set"
+  },
+  {
+    "id": "lunar-armor",
+    "name": "Lunar Armor",
+    "slot": "armor",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 0,
+      "def": 58,
+      "mag": 18,
+      "spd": 0,
+      "hp": 0,
+      "pp": 10
+    },
+    "allowedElements": [
+      "Mercury",
+      "Jupiter"
+    ],
+    "unlocksAbility": null,
+    "setId": "celestial-set"
+  },
+  {
+    "id": "solar-armor",
+    "name": "Solar Armor",
+    "slot": "armor",
+    "tier": "legendary",
+    "cost": 0,
+    "statBonus": {
+      "atk": 18,
+      "def": 70,
+      "mag": 0,
+      "spd": 0,
+      "hp": 120,
+      "pp": 0
+    },
+    "allowedElements": [
+      "Venus"
+    ],
+    "unlocksAbility": null,
+    "setId": "aegis-set"
+  }
+]

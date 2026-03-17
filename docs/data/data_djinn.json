@@ -1,0 +1,370 @@
+[
+  {
+    "id": "flint",
+    "name": "Flint",
+    "element": "Venus",
+    "tier": "1",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 80
+    }
+  },
+  {
+    "id": "granite",
+    "name": "Granite",
+    "element": "Venus",
+    "tier": "2",
+    "statBonuses": {
+      "atk": 0,
+      "def": 10,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 0
+    }
+  },
+  {
+    "id": "bane",
+    "name": "Bane",
+    "element": "Venus",
+    "tier": "3",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 300
+    }
+  },
+  {
+    "id": "forge",
+    "name": "Forge",
+    "element": "Mars",
+    "tier": "1",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 120
+    }
+  },
+  {
+    "id": "corona",
+    "name": "Corona",
+    "element": "Mars",
+    "tier": "2",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 8,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 0
+    }
+  },
+  {
+    "id": "fury",
+    "name": "Fury",
+    "element": "Mars",
+    "tier": "3",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 220
+    }
+  },
+  {
+    "id": "fizz",
+    "name": "Fizz",
+    "element": "Mercury",
+    "tier": "1",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 100
+    }
+  },
+  {
+    "id": "tonic",
+    "name": "Tonic",
+    "element": "Mercury",
+    "tier": "2",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 0
+    }
+  },
+  {
+    "id": "crystal",
+    "name": "Crystal",
+    "element": "Mercury",
+    "tier": "3",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 12,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 0
+    }
+  },
+  {
+    "id": "breeze",
+    "name": "Breeze",
+    "element": "Jupiter",
+    "tier": "1",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 110
+    }
+  },
+  {
+    "id": "squall",
+    "name": "Squall",
+    "element": "Jupiter",
+    "tier": "2",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 160
+    }
+  },
+  {
+    "id": "storm",
+    "name": "Storm",
+    "element": "Jupiter",
+    "tier": "3",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 0
+    }
+  },
+  {
+    "id": "surge",
+    "name": "Surge",
+    "element": "Mercury",
+    "tier": "2",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 180
+    }
+  },
+  {
+    "id": "chill",
+    "name": "Chill",
+    "element": "Mercury",
+    "tier": "3",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 0
+    }
+  },
+  {
+    "id": "gust",
+    "name": "Gust",
+    "element": "Jupiter",
+    "tier": "1",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 8,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 0
+    }
+  },
+  {
+    "id": "bolt",
+    "name": "Bolt",
+    "element": "Jupiter",
+    "tier": "2",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 200
+    }
+  },
+  {
+    "id": "tempest",
+    "name": "Tempest",
+    "element": "Jupiter",
+    "tier": "3",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 350
+    }
+  },
+  {
+    "id": "rockling",
+    "name": "Rockling",
+    "element": "Venus",
+    "tier": "1",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 46
+    }
+  },
+  {
+    "id": "ember",
+    "name": "Ember",
+    "element": "Mars",
+    "tier": "1",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 46
+    }
+  },
+  {
+    "id": "nova",
+    "name": "Nova",
+    "element": "Mars",
+    "tier": "3",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 320
+    }
+  },
+  {
+    "id": "scorch",
+    "name": "Scorch",
+    "element": "Mars",
+    "tier": "3",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 280
+    }
+  },
+  {
+    "id": "serac",
+    "name": "Serac",
+    "element": "Venus",
+    "tier": "3",
+    "statBonuses": {
+      "atk": 0,
+      "def": 15,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 0
+    }
+  },
+  {
+    "id": "eclipse",
+    "name": "Eclipse",
+    "element": "Jupiter",
+    "tier": "3",
+    "statBonuses": {
+      "atk": 0,
+      "def": 0,
+      "mag": 0,
+      "spd": 0,
+      "hp": 0
+    },
+    "summon": {
+      "baseDamage": 0
+    }
+  }
+]

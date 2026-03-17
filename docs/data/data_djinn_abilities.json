@@ -1,0 +1,604 @@
+[
+  {
+    "djinnId": "flint",
+    "djinnName": "Flint",
+    "element": "Venus",
+    "abilities": {
+      "same": {
+        "set": [
+          "flint-stone-fist",
+          "flint-granite-guard"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "flint-earth-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "flint-lava-stone",
+          "flint-magma-shield"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "granite",
+    "djinnName": "Granite",
+    "element": "Venus",
+    "abilities": {
+      "same": {
+        "set": [
+          "granite-earth-wall",
+          "granite-terra-break"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "granite-ground-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "granite-magma-barrier",
+          "granite-volcanic-spike"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "bane",
+    "djinnName": "Bane",
+    "element": "Venus",
+    "abilities": {
+      "same": {
+        "set": [
+          "bane-earthquake",
+          "bane-terra-guard"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "bane-rock-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "bane-lava-fist",
+          "bane-molten-armor"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "forge",
+    "djinnName": "Forge",
+    "element": "Mars",
+    "abilities": {
+      "same": {
+        "set": [
+          "forge-flame-strike",
+          "forge-inferno-blaze"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "forge-ember-wave"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "forge-stone-slam",
+          "forge-granite-shield"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "corona",
+    "djinnName": "Corona",
+    "element": "Mars",
+    "abilities": {
+      "same": {
+        "set": [
+          "corona-scorch",
+          "corona-ember-veil"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "corona-solar-spin"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "corona-earthbreaker",
+          "corona-mountain-wall"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "fury",
+    "djinnName": "Fury",
+    "element": "Mars",
+    "abilities": {
+      "same": {
+        "set": [
+          "fury-heat-rush",
+          "fury-flare-guard"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "fury-wind-flare"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "fury-stone-barrage",
+          "fury-terra-gate"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "fizz",
+    "djinnName": "Fizz",
+    "element": "Mercury",
+    "abilities": {
+      "same": {
+        "set": [
+          "fizz-healing-wave",
+          "fizz-wave-shield"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "fizz-aqua-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "fizz-gale-freeze",
+          "fizz-storm-chill"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "tonic",
+    "djinnName": "Tonic",
+    "element": "Mercury",
+    "abilities": {
+      "same": {
+        "set": [
+          "tonic-frost-bite",
+          "tonic-aqua-veil"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "tonic-soothing-wave"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "tonic-wind-freeze",
+          "tonic-gale-barrier"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "crystal",
+    "djinnName": "Crystal",
+    "element": "Mercury",
+    "abilities": {
+      "same": {
+        "set": [
+          "crystal-crystal-ray",
+          "crystal-aqua-armor"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "crystal-mist-veil"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "crystal-storm-crystal",
+          "crystal-gale-glaze"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "breeze",
+    "djinnName": "Breeze",
+    "element": "Jupiter",
+    "abilities": {
+      "same": {
+        "set": [
+          "breeze-gale-force",
+          "breeze-wind-veil"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "breeze-eddy-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "breeze-ice-burst",
+          "breeze-aero-shield"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "squall",
+    "djinnName": "Squall",
+    "element": "Jupiter",
+    "abilities": {
+      "same": {
+        "set": [
+          "squall-storm-burst",
+          "squall-hurricane-guard"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "squall-cloud-strike"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "squall-wave-blast",
+          "squall-frost-surge"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "storm",
+    "djinnName": "Storm",
+    "element": "Jupiter",
+    "abilities": {
+      "same": {
+        "set": [
+          "storm-chain-gale",
+          "storm-tempest-shield"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "storm-breeze-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "storm-cold-hail",
+          "storm-icy-barrier"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "surge",
+    "djinnName": "Surge",
+    "element": "Mercury",
+    "abilities": {
+      "same": {
+        "set": [
+          "surge-healing-tide",
+          "surge-aqua-barrier"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "surge-aqua-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "surge-steam-blast",
+          "surge-boiling-wave"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "chill",
+    "djinnName": "Chill",
+    "element": "Mercury",
+    "abilities": {
+      "same": {
+        "set": [
+          "chill-absolute-heal",
+          "chill-frost-revival"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "chill-frost-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "chill-frozen-flame",
+          "chill-glacial-fire"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "gust",
+    "djinnName": "Gust",
+    "element": "Jupiter",
+    "abilities": {
+      "same": {
+        "set": [
+          "gust-swift-strike",
+          "gust-wind-slash"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "gust-breeze-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "gust-flame-wind",
+          "gust-ember-gale"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "bolt",
+    "djinnName": "Bolt",
+    "element": "Jupiter",
+    "abilities": {
+      "same": {
+        "set": [
+          "bolt-thunder-slash",
+          "bolt-lightning-strike"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "bolt-spark-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "bolt-plasma-strike",
+          "bolt-fire-lightning"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "tempest",
+    "djinnName": "Tempest",
+    "element": "Jupiter",
+    "abilities": {
+      "same": {
+        "set": [
+          "tempest-hurricane-blade",
+          "tempest-cyclone-slash"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "tempest-gale-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "tempest-fire-tornado",
+          "tempest-inferno-cyclone"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "rockling",
+    "djinnName": "Rockling",
+    "element": "Venus",
+    "abilities": {
+      "same": {
+        "set": [
+          "earth-spike"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "earth-spike"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": []
+      }
+    }
+  },
+  {
+    "djinnId": "ember",
+    "djinnName": "Ember",
+    "element": "Mars",
+    "abilities": {
+      "same": {
+        "set": [
+          "fire-burst"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": []
+      }
+    }
+  },
+  {
+    "djinnId": "nova",
+    "djinnName": "Nova",
+    "element": "Mars",
+    "abilities": {
+      "same": {
+        "set": [
+          "flame-wall",
+          "inferno-slash"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "flint-ground-shield"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": [
+          "granite-magma-barrier",
+          "granite-volcanic-spike"
+        ]
+      }
+    }
+  },
+  {
+    "djinnId": "scorch",
+    "djinnName": "Scorch",
+    "element": "Mars",
+    "abilities": {
+      "same": {
+        "set": [
+          "scorch-inferno",
+          "scorch-lava-burst"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "scorch-heat-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": []
+      }
+    }
+  },
+  {
+    "djinnId": "serac",
+    "djinnName": "Serac",
+    "element": "Venus",
+    "abilities": {
+      "same": {
+        "set": [
+          "serac-stone-wall",
+          "serac-terra-guard"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "serac-earth-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": []
+      }
+    }
+  },
+  {
+    "djinnId": "eclipse",
+    "djinnName": "Eclipse",
+    "element": "Jupiter",
+    "abilities": {
+      "same": {
+        "set": [
+          "eclipse-wind-slash",
+          "eclipse-storm-strike"
+        ],
+        "standby": []
+      },
+      "neutral": {
+        "set": [
+          "eclipse-shadow-pulse"
+        ],
+        "standby": []
+      },
+      "counter": {
+        "set": [],
+        "standby": []
+      }
+    }
+  }
+]

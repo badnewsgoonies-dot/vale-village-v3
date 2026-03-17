@@ -1,0 +1,1387 @@
+[
+  {
+    "unitId": "adept",
+    "unitName": "Adept",
+    "element": "Venus",
+    "abilities": [
+      {
+        "id": "earth-spike-damage",
+        "name": "Earth Spike",
+        "type": "psynergy",
+        "unlockLevel": 1
+      },
+      {
+        "id": "strike",
+        "name": "Strike",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "focus-strike-neutral",
+        "name": "Focus Strike",
+        "type": "physical",
+        "unlockLevel": 2
+      },
+      {
+        "id": "stone-skin",
+        "name": "Stone Skin",
+        "type": "buff",
+        "unlockLevel": 3
+      },
+      {
+        "id": "ice-lance-damage",
+        "name": "Ice Lance",
+        "type": "psynergy",
+        "unlockLevel": 5
+      },
+      {
+        "id": "aqua-heal",
+        "name": "Aqua Heal",
+        "type": "healing",
+        "unlockLevel": 6
+      },
+      {
+        "id": "fortify",
+        "name": "Fortify",
+        "type": "buff",
+        "unlockLevel": 7
+      },
+      {
+        "id": "tremor",
+        "name": "Tremor",
+        "type": "psynergy",
+        "unlockLevel": 8
+      },
+      {
+        "id": "guardian-stance",
+        "name": "Guardian Stance",
+        "type": "buff",
+        "unlockLevel": 9
+      },
+      {
+        "id": "rock-breaker",
+        "name": "Rock Breaker",
+        "type": "physical",
+        "unlockLevel": 10
+      },
+      {
+        "id": "earthquake",
+        "name": "Earthquake",
+        "type": "psynergy",
+        "unlockLevel": 11
+      },
+      {
+        "id": "stone-wall",
+        "name": "Stone Wall",
+        "type": "buff",
+        "unlockLevel": 12
+      },
+      {
+        "id": "unbreakable",
+        "name": "Unbreakable",
+        "type": "buff",
+        "unlockLevel": 13
+      },
+      {
+        "id": "titan-grip",
+        "name": "Titan Grip",
+        "type": "physical",
+        "unlockLevel": 14
+      },
+      {
+        "id": "gaia-shield",
+        "name": "Gaia Shield",
+        "type": "buff",
+        "unlockLevel": 15
+      },
+      {
+        "id": "petrify-strike",
+        "name": "Petrify Strike",
+        "type": "physical",
+        "unlockLevel": 16
+      },
+      {
+        "id": "mountain-endurance",
+        "name": "Mountain's Endurance",
+        "type": "buff",
+        "unlockLevel": 17
+      },
+      {
+        "id": "landslide",
+        "name": "Landslide",
+        "type": "psynergy",
+        "unlockLevel": 18
+      },
+      {
+        "id": "earth-blessing",
+        "name": "Earth's Blessing",
+        "type": "healing",
+        "unlockLevel": 19
+      },
+      {
+        "id": "gaia-rebirth",
+        "name": "Gaia Rebirth",
+        "type": "healing",
+        "unlockLevel": 20
+      }
+    ]
+  },
+  {
+    "unitId": "war-mage",
+    "unitName": "War Mage",
+    "element": "Mars",
+    "abilities": [
+      {
+        "id": "flame-burst-damage",
+        "name": "Flame Burst",
+        "type": "psynergy",
+        "unlockLevel": 1
+      },
+      {
+        "id": "strike",
+        "name": "Strike",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "fire-ward",
+        "name": "Fire Ward",
+        "type": "buff",
+        "unlockLevel": 2
+      },
+      {
+        "id": "gale-force-damage",
+        "name": "Gale Force",
+        "type": "psynergy",
+        "unlockLevel": 3
+      },
+      {
+        "id": "wind-barrier",
+        "name": "Wind Barrier",
+        "type": "buff",
+        "unlockLevel": 4
+      },
+      {
+        "id": "focus-strike-neutral",
+        "name": "Focus Strike",
+        "type": "physical",
+        "unlockLevel": 5
+      },
+      {
+        "id": "ignite",
+        "name": "Ignite",
+        "type": "psynergy",
+        "unlockLevel": 7
+      },
+      {
+        "id": "flame-wall",
+        "name": "Flame Wall",
+        "type": "buff",
+        "unlockLevel": 8
+      },
+      {
+        "id": "inferno-slash",
+        "name": "Inferno Slash",
+        "type": "physical",
+        "unlockLevel": 9
+      },
+      {
+        "id": "blazing-fury",
+        "name": "Blazing Fury",
+        "type": "psynergy",
+        "unlockLevel": 10
+      },
+      {
+        "id": "pyroclasm",
+        "name": "Pyroclasm",
+        "type": "psynergy",
+        "unlockLevel": 11
+      },
+      {
+        "id": "fire-aura",
+        "name": "Fire Aura",
+        "type": "buff",
+        "unlockLevel": 12
+      },
+      {
+        "id": "meteor-strike",
+        "name": "Meteor Strike",
+        "type": "psynergy",
+        "unlockLevel": 13
+      },
+      {
+        "id": "phoenix-flames",
+        "name": "Phoenix Flames",
+        "type": "healing",
+        "unlockLevel": 14
+      },
+      {
+        "id": "magma-burst",
+        "name": "Magma Burst",
+        "type": "psynergy",
+        "unlockLevel": 15
+      },
+      {
+        "id": "flame-shield",
+        "name": "Flame Shield",
+        "type": "buff",
+        "unlockLevel": 16
+      },
+      {
+        "id": "supernova",
+        "name": "Supernova",
+        "type": "psynergy",
+        "unlockLevel": 17
+      },
+      {
+        "id": "infernal-rage",
+        "name": "Infernal Rage",
+        "type": "buff",
+        "unlockLevel": 18
+      },
+      {
+        "id": "dragon-breath",
+        "name": "Dragon Breath",
+        "type": "psynergy",
+        "unlockLevel": 19
+      },
+      {
+        "id": "ragnarok-flames",
+        "name": "Ragnarok Flames",
+        "type": "psynergy",
+        "unlockLevel": 20
+      }
+    ]
+  },
+  {
+    "unitId": "mystic",
+    "unitName": "Mystic",
+    "element": "Mercury",
+    "abilities": [
+      {
+        "id": "ice-lance-damage",
+        "name": "Ice Lance",
+        "type": "psynergy",
+        "unlockLevel": 1
+      },
+      {
+        "id": "strike",
+        "name": "Strike",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "aqua-heal",
+        "name": "Aqua Heal",
+        "type": "healing",
+        "unlockLevel": 2
+      },
+      {
+        "id": "earth-spike-damage",
+        "name": "Earth Spike",
+        "type": "psynergy",
+        "unlockLevel": 3
+      },
+      {
+        "id": "stone-skin",
+        "name": "Stone Skin",
+        "type": "buff",
+        "unlockLevel": 4
+      },
+      {
+        "id": "focus-strike-neutral",
+        "name": "Focus Strike",
+        "type": "physical",
+        "unlockLevel": 5
+      },
+      {
+        "id": "cleanse",
+        "name": "Cleanse",
+        "type": "healing",
+        "unlockLevel": 7
+      },
+      {
+        "id": "frost-wave",
+        "name": "Frost Wave",
+        "type": "psynergy",
+        "unlockLevel": 8
+      },
+      {
+        "id": "regen",
+        "name": "Regen",
+        "type": "healing",
+        "unlockLevel": 9
+      },
+      {
+        "id": "diamond-dust",
+        "name": "Diamond Dust",
+        "type": "psynergy",
+        "unlockLevel": 10
+      },
+      {
+        "id": "mass-regen",
+        "name": "Mass Regen",
+        "type": "healing",
+        "unlockLevel": 11
+      },
+      {
+        "id": "glacial-shield",
+        "name": "Glacial Shield",
+        "type": "buff",
+        "unlockLevel": 12
+      },
+      {
+        "id": "deep-freeze",
+        "name": "Deep Freeze",
+        "type": "psynergy",
+        "unlockLevel": 13
+      },
+      {
+        "id": "sanctuary",
+        "name": "Sanctuary",
+        "type": "buff",
+        "unlockLevel": 14
+      },
+      {
+        "id": "blizzard",
+        "name": "Blizzard",
+        "type": "psynergy",
+        "unlockLevel": 15
+      },
+      {
+        "id": "restoration",
+        "name": "Restoration",
+        "type": "healing",
+        "unlockLevel": 16
+      },
+      {
+        "id": "frozen-tomb",
+        "name": "Frozen Tomb",
+        "type": "psynergy",
+        "unlockLevel": 17
+      },
+      {
+        "id": "aqua-barrier",
+        "name": "Aqua Barrier",
+        "type": "buff",
+        "unlockLevel": 18
+      },
+      {
+        "id": "absolute-zero",
+        "name": "Absolute Zero",
+        "type": "psynergy",
+        "unlockLevel": 19
+      },
+      {
+        "id": "leviathan-grace",
+        "name": "Leviathan's Grace",
+        "type": "healing",
+        "unlockLevel": 20
+      }
+    ]
+  },
+  {
+    "unitId": "ranger",
+    "unitName": "Ranger",
+    "element": "Jupiter",
+    "abilities": [
+      {
+        "id": "gale-force-damage",
+        "name": "Gale Force",
+        "type": "psynergy",
+        "unlockLevel": 1
+      },
+      {
+        "id": "strike",
+        "name": "Strike",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "wind-barrier",
+        "name": "Wind Barrier",
+        "type": "buff",
+        "unlockLevel": 2
+      },
+      {
+        "id": "flame-burst-damage",
+        "name": "Flame Burst",
+        "type": "psynergy",
+        "unlockLevel": 3
+      },
+      {
+        "id": "fire-ward",
+        "name": "Fire Ward",
+        "type": "buff",
+        "unlockLevel": 4
+      },
+      {
+        "id": "focus-strike-neutral",
+        "name": "Focus Strike",
+        "type": "physical",
+        "unlockLevel": 5
+      },
+      {
+        "id": "swift-strike",
+        "name": "Swift Strike",
+        "type": "physical",
+        "unlockLevel": 7
+      },
+      {
+        "id": "shock-bolt",
+        "name": "Shock Bolt",
+        "type": "psynergy",
+        "unlockLevel": 8
+      },
+      {
+        "id": "tempest",
+        "name": "Tempest",
+        "type": "psynergy",
+        "unlockLevel": 9
+      },
+      {
+        "id": "hurricane-slash",
+        "name": "Hurricane Slash",
+        "type": "physical",
+        "unlockLevel": 10
+      },
+      {
+        "id": "plasma-shot",
+        "name": "Plasma Shot",
+        "type": "psynergy",
+        "unlockLevel": 11
+      },
+      {
+        "id": "cyclone",
+        "name": "Cyclone",
+        "type": "psynergy",
+        "unlockLevel": 12
+      },
+      {
+        "id": "thunder-god-fury",
+        "name": "Thunder God's Fury",
+        "type": "physical",
+        "unlockLevel": 13
+      },
+      {
+        "id": "storm-blessing",
+        "name": "Storm Blessing",
+        "type": "buff",
+        "unlockLevel": 14
+      },
+      {
+        "id": "judgment-bolt",
+        "name": "Judgment Bolt",
+        "type": "psynergy",
+        "unlockLevel": 15
+      },
+      {
+        "id": "static-field",
+        "name": "Static Field",
+        "type": "psynergy",
+        "unlockLevel": 16
+      },
+      {
+        "id": "wind-walker",
+        "name": "Wind Walker",
+        "type": "buff",
+        "unlockLevel": 17
+      },
+      {
+        "id": "maelstrom",
+        "name": "Maelstrom",
+        "type": "psynergy",
+        "unlockLevel": 18
+      },
+      {
+        "id": "zeus-wrath",
+        "name": "Zeus's Wrath",
+        "type": "psynergy",
+        "unlockLevel": 19
+      },
+      {
+        "id": "storm-sovereign",
+        "name": "Storm Sovereign",
+        "type": "psynergy",
+        "unlockLevel": 20
+      }
+    ]
+  },
+  {
+    "unitId": "sentinel",
+    "unitName": "Sentinel",
+    "element": "Venus",
+    "abilities": [
+      {
+        "id": "boost-def",
+        "name": "Boost Defense",
+        "type": "buff",
+        "unlockLevel": 1
+      },
+      {
+        "id": "strike",
+        "name": "Strike",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "guard-break",
+        "name": "Guard Break",
+        "type": "physical",
+        "unlockLevel": 2
+      },
+      {
+        "id": "quake",
+        "name": "Quake",
+        "type": "psynergy",
+        "unlockLevel": 3
+      },
+      {
+        "id": "taunt",
+        "name": "Taunt",
+        "type": "debuff",
+        "unlockLevel": 4
+      },
+      {
+        "id": "shield-bash",
+        "name": "Shield Bash",
+        "type": "physical",
+        "unlockLevel": 5
+      },
+      {
+        "id": "iron-wall",
+        "name": "Iron Wall",
+        "type": "buff",
+        "unlockLevel": 6
+      },
+      {
+        "id": "counter-stance",
+        "name": "Counter Stance",
+        "type": "buff",
+        "unlockLevel": 7
+      },
+      {
+        "id": "tremor-strike",
+        "name": "Tremor Strike",
+        "type": "physical",
+        "unlockLevel": 8
+      },
+      {
+        "id": "fortified-guard",
+        "name": "Fortified Guard",
+        "type": "buff",
+        "unlockLevel": 9
+      },
+      {
+        "id": "bulwark",
+        "name": "Bulwark",
+        "type": "buff",
+        "unlockLevel": 10
+      },
+      {
+        "id": "crushing-blow",
+        "name": "Crushing Blow",
+        "type": "physical",
+        "unlockLevel": 11
+      },
+      {
+        "id": "earthen-armor",
+        "name": "Earthen Armor",
+        "type": "buff",
+        "unlockLevel": 12
+      },
+      {
+        "id": "shockwave",
+        "name": "Shockwave",
+        "type": "psynergy",
+        "unlockLevel": 13
+      },
+      {
+        "id": "guardian-resolve",
+        "name": "Guardian's Resolve",
+        "type": "buff",
+        "unlockLevel": 14
+      },
+      {
+        "id": "titan-grip-sentinel",
+        "name": "Titan's Grip",
+        "type": "physical",
+        "unlockLevel": 15
+      },
+      {
+        "id": "stone-fortress",
+        "name": "Stone Fortress",
+        "type": "buff",
+        "unlockLevel": 16
+      },
+      {
+        "id": "avalanche",
+        "name": "Avalanche",
+        "type": "psynergy",
+        "unlockLevel": 17
+      },
+      {
+        "id": "immortal-bulwark",
+        "name": "Immortal Bulwark",
+        "type": "buff",
+        "unlockLevel": 18
+      },
+      {
+        "id": "earth-splitter",
+        "name": "Earth Splitter",
+        "type": "physical",
+        "unlockLevel": 19
+      },
+      {
+        "id": "atlas-stand",
+        "name": "Atlas's Stand",
+        "type": "buff",
+        "unlockLevel": 20
+      }
+    ]
+  },
+  {
+    "unitId": "stormcaller",
+    "unitName": "Stormcaller",
+    "element": "Jupiter",
+    "abilities": [
+      {
+        "id": "gust",
+        "name": "Gust",
+        "type": "psynergy",
+        "unlockLevel": 1
+      },
+      {
+        "id": "strike",
+        "name": "Strike",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "chain-lightning",
+        "name": "Chain Lightning",
+        "type": "psynergy",
+        "unlockLevel": 2
+      },
+      {
+        "id": "blind",
+        "name": "Blind",
+        "type": "debuff",
+        "unlockLevel": 3
+      },
+      {
+        "id": "thunder-clap",
+        "name": "Thunder Clap",
+        "type": "psynergy",
+        "unlockLevel": 4
+      },
+      {
+        "id": "storm-call",
+        "name": "Storm Call",
+        "type": "psynergy",
+        "unlockLevel": 5
+      },
+      {
+        "id": "static-charge",
+        "name": "Static Charge",
+        "type": "buff",
+        "unlockLevel": 6
+      },
+      {
+        "id": "lightning-arc",
+        "name": "Lightning Arc",
+        "type": "psynergy",
+        "unlockLevel": 7
+      },
+      {
+        "id": "shock-pulse",
+        "name": "Shock Pulse",
+        "type": "psynergy",
+        "unlockLevel": 8
+      },
+      {
+        "id": "wind-mastery",
+        "name": "Wind Mastery",
+        "type": "buff",
+        "unlockLevel": 9
+      },
+      {
+        "id": "thunder-storm",
+        "name": "Thunder Storm",
+        "type": "psynergy",
+        "unlockLevel": 10
+      },
+      {
+        "id": "electric-overload",
+        "name": "Electric Overload",
+        "type": "psynergy",
+        "unlockLevel": 11
+      },
+      {
+        "id": "storm-shield",
+        "name": "Storm Shield",
+        "type": "buff",
+        "unlockLevel": 12
+      },
+      {
+        "id": "bolt-barrage",
+        "name": "Bolt Barrage",
+        "type": "psynergy",
+        "unlockLevel": 13
+      },
+      {
+        "id": "hurricane-force",
+        "name": "Hurricane Force",
+        "type": "psynergy",
+        "unlockLevel": 14
+      },
+      {
+        "id": "thor-hammer",
+        "name": "Thor's Hammer",
+        "type": "psynergy",
+        "unlockLevel": 15
+      },
+      {
+        "id": "lightning-sanctuary",
+        "name": "Lightning Sanctuary",
+        "type": "buff",
+        "unlockLevel": 16
+      },
+      {
+        "id": "apocalyptic-storm",
+        "name": "Apocalyptic Storm",
+        "type": "psynergy",
+        "unlockLevel": 17
+      },
+      {
+        "id": "god-thunder",
+        "name": "God Thunder",
+        "type": "psynergy",
+        "unlockLevel": 18
+      },
+      {
+        "id": "world-storm",
+        "name": "World Storm",
+        "type": "psynergy",
+        "unlockLevel": 19
+      },
+      {
+        "id": "tempest-tyrant",
+        "name": "Tempest Tyrant",
+        "type": "psynergy",
+        "unlockLevel": 20
+      }
+    ]
+  },
+  {
+    "unitId": "blaze",
+    "unitName": "Blaze",
+    "element": "Mars",
+    "abilities": [
+      {
+        "id": "heavy-strike",
+        "name": "Heavy Strike",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "strike",
+        "name": "Strike",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "fireball",
+        "name": "Fireball",
+        "type": "psynergy",
+        "unlockLevel": 2
+      },
+      {
+        "id": "burn-touch",
+        "name": "Burn Touch",
+        "type": "psynergy",
+        "unlockLevel": 3
+      },
+      {
+        "id": "flame-blade",
+        "name": "Flame Blade",
+        "type": "physical",
+        "unlockLevel": 4
+      },
+      {
+        "id": "battle-cry",
+        "name": "Battle Cry",
+        "type": "buff",
+        "unlockLevel": 5
+      },
+      {
+        "id": "inferno-strike",
+        "name": "Inferno Strike",
+        "type": "physical",
+        "unlockLevel": 6
+      },
+      {
+        "id": "pyroblast",
+        "name": "Pyroblast",
+        "type": "psynergy",
+        "unlockLevel": 7
+      },
+      {
+        "id": "warrior-flame",
+        "name": "Warrior's Flame",
+        "type": "buff",
+        "unlockLevel": 8
+      },
+      {
+        "id": "molten-slash",
+        "name": "Molten Slash",
+        "type": "physical",
+        "unlockLevel": 9
+      },
+      {
+        "id": "fire-nova",
+        "name": "Fire Nova",
+        "type": "psynergy",
+        "unlockLevel": 10
+      },
+      {
+        "id": "blazing-assault",
+        "name": "Blazing Assault",
+        "type": "physical",
+        "unlockLevel": 11
+      },
+      {
+        "id": "magma-wave",
+        "name": "Magma Wave",
+        "type": "psynergy",
+        "unlockLevel": 12
+      },
+      {
+        "id": "berserker-rage",
+        "name": "Berserker Rage",
+        "type": "buff",
+        "unlockLevel": 13
+      },
+      {
+        "id": "crimson-fury",
+        "name": "Crimson Fury",
+        "type": "physical",
+        "unlockLevel": 14
+      },
+      {
+        "id": "meteor-crash",
+        "name": "Meteor Crash",
+        "type": "psynergy",
+        "unlockLevel": 15
+      },
+      {
+        "id": "phoenix-aura",
+        "name": "Phoenix Aura",
+        "type": "buff",
+        "unlockLevel": 16
+      },
+      {
+        "id": "solar-flare",
+        "name": "Solar Flare",
+        "type": "psynergy",
+        "unlockLevel": 17
+      },
+      {
+        "id": "ultimate-warrior",
+        "name": "Ultimate Warrior",
+        "type": "buff",
+        "unlockLevel": 18
+      },
+      {
+        "id": "inferno-barrage",
+        "name": "Inferno Barrage",
+        "type": "physical",
+        "unlockLevel": 19
+      },
+      {
+        "id": "supernova-strike",
+        "name": "Supernova Strike",
+        "type": "physical",
+        "unlockLevel": 20
+      }
+    ]
+  },
+  {
+    "unitId": "karis",
+    "unitName": "Karis",
+    "element": "Mercury",
+    "abilities": [
+      {
+        "id": "ice-shard",
+        "name": "Ice Shard",
+        "type": "psynergy",
+        "unlockLevel": 1
+      },
+      {
+        "id": "strike",
+        "name": "Strike",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "heal",
+        "name": "Heal",
+        "type": "healing",
+        "unlockLevel": 2
+      },
+      {
+        "id": "freeze-blast",
+        "name": "Freeze Blast",
+        "type": "psynergy",
+        "unlockLevel": 3
+      },
+      {
+        "id": "party-heal",
+        "name": "Party Heal",
+        "type": "healing",
+        "unlockLevel": 4
+      },
+      {
+        "id": "frost-shield",
+        "name": "Frost Shield",
+        "type": "buff",
+        "unlockLevel": 5
+      },
+      {
+        "id": "purify",
+        "name": "Purify",
+        "type": "healing",
+        "unlockLevel": 6
+      },
+      {
+        "id": "ice-spear",
+        "name": "Ice Spear",
+        "type": "psynergy",
+        "unlockLevel": 7
+      },
+      {
+        "id": "scholar-wisdom",
+        "name": "Scholar's Wisdom",
+        "type": "buff",
+        "unlockLevel": 8
+      },
+      {
+        "id": "glacial-wave",
+        "name": "Glacial Wave",
+        "type": "psynergy",
+        "unlockLevel": 9
+      },
+      {
+        "id": "renewal",
+        "name": "Renewal",
+        "type": "healing",
+        "unlockLevel": 10
+      },
+      {
+        "id": "frozen-spikes",
+        "name": "Frozen Spikes",
+        "type": "psynergy",
+        "unlockLevel": 11
+      },
+      {
+        "id": "crystal-barrier",
+        "name": "Crystal Barrier",
+        "type": "buff",
+        "unlockLevel": 12
+      },
+      {
+        "id": "ice-storm",
+        "name": "Ice Storm",
+        "type": "psynergy",
+        "unlockLevel": 13
+      },
+      {
+        "id": "mass-restoration",
+        "name": "Mass Restoration",
+        "type": "healing",
+        "unlockLevel": 14
+      },
+      {
+        "id": "frozen-tomb-karis",
+        "name": "Frozen Tomb",
+        "type": "psynergy",
+        "unlockLevel": 15
+      },
+      {
+        "id": "scholar-sanctuary",
+        "name": "Scholar's Sanctuary",
+        "type": "buff",
+        "unlockLevel": 16
+      },
+      {
+        "id": "blizzard-cascade",
+        "name": "Blizzard Cascade",
+        "type": "psynergy",
+        "unlockLevel": 17
+      },
+      {
+        "id": "divine-renewal",
+        "name": "Divine Renewal",
+        "type": "healing",
+        "unlockLevel": 18
+      },
+      {
+        "id": "absolute-zero-karis",
+        "name": "Absolute Zero",
+        "type": "psynergy",
+        "unlockLevel": 19
+      },
+      {
+        "id": "aqua-resurrection",
+        "name": "Aqua Resurrection",
+        "type": "healing",
+        "unlockLevel": 20
+      }
+    ]
+  },
+  {
+    "unitId": "tyrell",
+    "unitName": "Tyrell",
+    "element": "Mars",
+    "abilities": [
+      {
+        "id": "precise-jab",
+        "name": "Precise Jab",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "strike",
+        "name": "Strike",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "heavy-strike",
+        "name": "Heavy Strike",
+        "type": "physical",
+        "unlockLevel": 2
+      },
+      {
+        "id": "fireball",
+        "name": "Fireball",
+        "type": "psynergy",
+        "unlockLevel": 3
+      },
+      {
+        "id": "burn-touch",
+        "name": "Burn Touch",
+        "type": "psynergy",
+        "unlockLevel": 4
+      },
+      {
+        "id": "rapid-strikes",
+        "name": "Rapid Strikes",
+        "type": "physical",
+        "unlockLevel": 5
+      },
+      {
+        "id": "flame-jab",
+        "name": "Flame Jab",
+        "type": "physical",
+        "unlockLevel": 6
+      },
+      {
+        "id": "assassinate",
+        "name": "Assassinate",
+        "type": "physical",
+        "unlockLevel": 7
+      },
+      {
+        "id": "combat-focus",
+        "name": "Combat Focus",
+        "type": "buff",
+        "unlockLevel": 8
+      },
+      {
+        "id": "flurry",
+        "name": "Flurry",
+        "type": "physical",
+        "unlockLevel": 9
+      },
+      {
+        "id": "inferno-assault",
+        "name": "Inferno Assault",
+        "type": "psynergy",
+        "unlockLevel": 10
+      },
+      {
+        "id": "precision-strike",
+        "name": "Precision Strike",
+        "type": "physical",
+        "unlockLevel": 11
+      },
+      {
+        "id": "blood-rush",
+        "name": "Blood Rush",
+        "type": "buff",
+        "unlockLevel": 12
+      },
+      {
+        "id": "death-strike",
+        "name": "Death Strike",
+        "type": "physical",
+        "unlockLevel": 13
+      },
+      {
+        "id": "flame-tornado",
+        "name": "Flame Tornado",
+        "type": "psynergy",
+        "unlockLevel": 14
+      },
+      {
+        "id": "perfect-form",
+        "name": "Perfect Form",
+        "type": "buff",
+        "unlockLevel": 15
+      },
+      {
+        "id": "obliterate",
+        "name": "Obliterate",
+        "type": "physical",
+        "unlockLevel": 16
+      },
+      {
+        "id": "unstoppable-force",
+        "name": "Unstoppable Force",
+        "type": "physical",
+        "unlockLevel": 17
+      },
+      {
+        "id": "supreme-focus",
+        "name": "Supreme Focus",
+        "type": "buff",
+        "unlockLevel": 18
+      },
+      {
+        "id": "annihilation",
+        "name": "Annihilation",
+        "type": "physical",
+        "unlockLevel": 19
+      },
+      {
+        "id": "one-thousand-cuts",
+        "name": "One Thousand Cuts",
+        "type": "physical",
+        "unlockLevel": 20
+      }
+    ]
+  },
+  {
+    "unitId": "felix",
+    "unitName": "Felix",
+    "element": "Venus",
+    "abilities": [
+      {
+        "id": "guard-break",
+        "name": "Guard Break",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "strike",
+        "name": "Strike",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "heavy-strike",
+        "name": "Heavy Strike",
+        "type": "physical",
+        "unlockLevel": 2
+      },
+      {
+        "id": "quake",
+        "name": "Quake",
+        "type": "psynergy",
+        "unlockLevel": 3
+      },
+      {
+        "id": "boost-def",
+        "name": "Boost Defense",
+        "type": "buff",
+        "unlockLevel": 4
+      },
+      {
+        "id": "earth-strike",
+        "name": "Earth Strike",
+        "type": "physical",
+        "unlockLevel": 5
+      },
+      {
+        "id": "warrior-resolve",
+        "name": "Warrior's Resolve",
+        "type": "buff",
+        "unlockLevel": 6
+      },
+      {
+        "id": "sunder-armor",
+        "name": "Sunder Armor",
+        "type": "physical",
+        "unlockLevel": 7
+      },
+      {
+        "id": "stone-fist",
+        "name": "Stone Fist",
+        "type": "physical",
+        "unlockLevel": 8
+      },
+      {
+        "id": "earth-shaker",
+        "name": "Earth Shaker",
+        "type": "psynergy",
+        "unlockLevel": 9
+      },
+      {
+        "id": "battle-master",
+        "name": "Battle Master",
+        "type": "buff",
+        "unlockLevel": 10
+      },
+      {
+        "id": "crushing-impact",
+        "name": "Crushing Impact",
+        "type": "physical",
+        "unlockLevel": 11
+      },
+      {
+        "id": "mountain-strength",
+        "name": "Mountain's Strength",
+        "type": "buff",
+        "unlockLevel": 12
+      },
+      {
+        "id": "ragnarok-strike",
+        "name": "Ragnarok Strike",
+        "type": "physical",
+        "unlockLevel": 13
+      },
+      {
+        "id": "terra-shield",
+        "name": "Terra Shield",
+        "type": "buff",
+        "unlockLevel": 14
+      },
+      {
+        "id": "grand-impact",
+        "name": "Grand Impact",
+        "type": "physical",
+        "unlockLevel": 15
+      },
+      {
+        "id": "legendary-warrior",
+        "name": "Legendary Warrior",
+        "type": "buff",
+        "unlockLevel": 16
+      },
+      {
+        "id": "titan-fall",
+        "name": "Titan Fall",
+        "type": "physical",
+        "unlockLevel": 17
+      },
+      {
+        "id": "earth-judgment",
+        "name": "Earth's Judgment",
+        "type": "psynergy",
+        "unlockLevel": 18
+      },
+      {
+        "id": "master-aura",
+        "name": "Master's Aura",
+        "type": "buff",
+        "unlockLevel": 19
+      },
+      {
+        "id": "gaia-blade",
+        "name": "Gaia Blade",
+        "type": "physical",
+        "unlockLevel": 20
+      }
+    ]
+  },
+  {
+    "unitId": "tower-champion",
+    "unitName": "Tower Champion",
+    "element": "Venus",
+    "abilities": [
+      {
+        "id": "guard-break",
+        "name": "Guard Break",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "strike",
+        "name": "Strike",
+        "type": "physical",
+        "unlockLevel": 1
+      },
+      {
+        "id": "heavy-strike",
+        "name": "Heavy Strike",
+        "type": "physical",
+        "unlockLevel": 2
+      },
+      {
+        "id": "earth-spike-damage",
+        "name": "Earth Spike",
+        "type": "psynergy",
+        "unlockLevel": 3
+      },
+      {
+        "id": "gaia-shield",
+        "name": "Gaia Shield",
+        "type": "buff",
+        "unlockLevel": 4
+      },
+      {
+        "id": "earthquake",
+        "name": "Earthquake",
+        "type": "psynergy",
+        "unlockLevel": 5
+      },
+      {
+        "id": "ragnarok-strike",
+        "name": "Ragnarok Strike",
+        "type": "physical",
+        "unlockLevel": 7
+      },
+      {
+        "id": "stone-wall",
+        "name": "Stone Wall",
+        "type": "buff",
+        "unlockLevel": 9
+      },
+      {
+        "id": "master-aura",
+        "name": "Master's Aura",
+        "type": "buff",
+        "unlockLevel": 12
+      },
+      {
+        "id": "gaia-blade",
+        "name": "Gaia Blade",
+        "type": "physical",
+        "unlockLevel": 15
+      },
+      {
+        "id": "titan-fall",
+        "name": "Titan Fall",
+        "type": "physical",
+        "unlockLevel": 18
+      },
+      {
+        "id": "earth-judgment",
+        "name": "Earth's Judgment",
+        "type": "psynergy",
+        "unlockLevel": 20
+      }
+    ]
+  }
+]
