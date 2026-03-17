@@ -1,0 +1,20 @@
+# Build
+/target/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Orchestration artifacts (local only)
+/tmp/
+*.lock
+
+# Original zip (extracted)
+ai-orchestration-kit.zip
