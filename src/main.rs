@@ -9,6 +9,7 @@ use domains::cli_runner;
 use domains::data_loader;
 use domains::progression;
 use domains::save;
+use domains::ui;
 use shared::EncounterId;
 
 const SAVE_PATH: &str = "saves/game.ron";
@@ -40,6 +41,14 @@ fn next_encounter(completed: &[EncounterId]) -> Option<&'static str> {
 }
 
 fn main() {
+    // Launch Bevy GUI mode if --gui flag is passed
+    if std::env::args().any(|arg| arg == "--gui") {
+        bevy::app::App::new()
+            .add_plugins(ui::plugin::ValeVillagePlugin)
+            .run();
+        return;
+    }
+
     // Ensure saves/ directory exists
     std::fs::create_dir_all("saves").expect("failed to create saves/ directory");
 
