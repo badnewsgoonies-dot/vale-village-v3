@@ -2,6 +2,7 @@
 //!
 //! Every AbilityDef, UnitDef, EnemyDef, EquipmentDef, DjinnDef, and
 //! EncounterDef in the game comes through this loader. No hardcoded content.
+#![allow(dead_code)]
 
 use std::collections::HashMap;
 use std::path::Path;
