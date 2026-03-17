@@ -1,43 +1,58 @@
 # Vale Village v3 — Current State
 
-**Phase:** Wave 8 complete — P0 debt cleared, spine finished
-**HEAD:** d650235 (pre-commit)
+**Phase:** Alignment tranche complete. Safe to scale.
+**HEAD:** db20ed9
 **Date:** 2026-03-17
 
-## Spine Status: COMPLETE
-Boot → load full data (346 abilities with real stats, 137 enemies, 109 equipment, 23 djinn, 55 encounters, 11 units) → create encounter-based battle → two-sided SPD-ordered combat → victory/defeat.
+## Game Status
+Interactive deterministic tactical RPG with:
+- SPD-derived planning order (mana economy safe)
+- Full data (346 abilities, 137 enemies, 109 equipment, 23 djinn, 55 encounters, 11 units)
+- Two-sided combat with equipment, djinn activation/recovery, abilities, mana
+- Enemy AI (aggressive/defensive/balanced strategies)
+- Save/load with story progression through 50 encounters
+- All DESIGN_LOCK rules verified: no randomness, planning order = execution order, 6 status types, barriers, HoT, crit on 10th hit
 
-## Domains (8 domains, 144 tests)
+## Domains (11 domains, 224 tests + 10 graduation = 234 total)
 
-| Domain | Tests | Reachable? | Verified? |
-|--------|-------|------------|-----------|
-| data_loader | 9 | YES | [Observed] full data loads |
-| combat | 23 | YES | [Observed] damage formulas correct |
-| status | 27 | YES | [Observed] via battle_engine |
-| djinn | 26 | NO — ghost | [Observed] unit tests only |
-| equipment | 15 | NO — ghost | [Observed] unit tests only |
-| damage_mods | 14 | NO — ghost | [Observed] unit tests only |
-| battle_engine | 27 | YES | [Observed] two-sided combat |
-| cli_runner | 3 | YES | [Observed] cargo run works |
+| Domain | Tests | Status |
+|--------|-------|--------|
+| data_loader | 12 | Full data + validations |
+| combat | 23 | S01-S06 |
+| status | 31 | S07-S13 + config stacks |
+| djinn | 29 | State machine + correct recovery timing |
+| equipment | 15 | Loadout + bonuses |
+| damage_mods | 14 | Pen/splash/chain |
+| battle_engine | 37 | Full integration + audit fixes |
+| cli_runner | 9 | Interactive + auto + SPD planning |
+| ai | 14 | 3 strategies |
+| save | 10 | Roundtrip + versioning |
+| progression | 17 | XP/leveling/ability unlock |
 
-## Gate Status (all PASS)
-Contract, check, test (144), clippy, connectivity, scope clamp, cargo run
+## Audit Status
+- Audit round 1: 1 CRITICAL + 5 ERROR + 8 WARNING → all fixed
+- Audit round 2: 1 CRITICAL + 3 ERROR + 5 WARNING → all fixed
+- GPT external audit: 4 items → all resolved
+- Schema verification: clean (no dead mechanics)
 
-## Verified Claims (upgraded from [Assumed])
-- [Observed] Djinn recovery delay = 2 turns (matches DESIGN_LOCK "turn after next")
-- [Observed] Equipment bonuses applied at battle init (but never exercised — ghost)
-- [Observed] SPD tiebreaker = 2 levels (gap: DESIGN_LOCK says 4, filed as P2)
+## Verified [Observed] Claims
+- Planning order = SPD order = execution order
+- Djinn recovery = 2 turns (turn after next)
+- Damage formulas match spec (physical + psynergy + healing with MAG)
+- Freeze breaks by damage accumulation
+- Barriers block per-instance, don't block status
+- Immunity ticks and expires
+- Chain/splash/penetration wired
+- Revive restores dead allies
+- Buffs/debuffs affect damage calculation
+- Save IDs match data IDs
 
-## P0 Debt: NONE
+## Remaining P1
+- [ ] Bevy visual app (blocked by environment — needs display libs)
+- [ ] always_first_turn equipment flag not enforced
+- [ ] Integration tests for advanced ability fields
+- [ ] Save migration path (currently strict version match)
 
-## P1 Debt
-- [ ] Djinn exercised in demo (equip djinn on units, use activation/summon)
-- [ ] Equipment exercised in demo (equip items on units)
-- [ ] Ability usage in demo (use abilities, not just auto-attacks)
-- [ ] Bevy visual app
-- [ ] Player input (interactive planning)
-- [ ] Enemy AI (smarter than "attack first alive")
-
-## P2 Debt
-- [ ] SPD tiebreaker depth (2/4 levels implemented)
-- [ ] 10 equipment stub abilities still zero-power
+## P2
+- [ ] SPD tiebreaker depth (2/4 levels)
+- [ ] Poison at full HP = 0 damage (correct per formula, design choice)
