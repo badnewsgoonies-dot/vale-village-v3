@@ -21,7 +21,7 @@ pub struct EquipmentLoadout {
 }
 
 /// Computed aggregate effects from an equipment loadout.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct EquipmentEffects {
     pub total_stat_bonus: StatBonus,
     pub unlocked_abilities: Vec<AbilityId>,
@@ -29,19 +29,6 @@ pub struct EquipmentEffects {
     pub total_hit_count_bonus: u8,
     pub always_first_turn: bool,
     pub active_set_bonuses: Vec<SetId>,
-}
-
-impl Default for EquipmentEffects {
-    fn default() -> Self {
-        Self {
-            total_stat_bonus: StatBonus::default(),
-            unlocked_abilities: Vec::new(),
-            total_mana_bonus: 0,
-            total_hit_count_bonus: 0,
-            always_first_turn: false,
-            active_set_bonuses: Vec::new(),
-        }
-    }
 }
 
 // ── Errors ───────────────────────────────────────────────────────────
