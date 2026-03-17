@@ -224,20 +224,20 @@ pub fn execute_summon(
 
 /// Tick recovery for all djinn in the slots.
 /// Each tick: 1 djinn recovers — the one with the lowest activation_order
-/// whose recovery_turns_remaining has reached 0.
-/// Djinn with remaining turns > 0 get decremented by 1 first (1-turn delay).
-/// Returns state-change events for any djinn that recovered this tick.
+/// whose recovery_turns_remaining was already 0 at the start of the tick.
+/// After recovery, remaining Recovery djinn with turns > 0 are decremented.
+///
+/// This produces DESIGN_LOCK timing: "1 djinn recovers per turn, starting
+/// the turn after next." With recovery_turns=2 and tick called at end of round:
+///   Activated Turn N  -> recovery_turns_remaining = 2
+///   End of Turn N     -> not 0, decrement to 1 (no recovery)
+///   End of Turn N+1   -> not 0, decrement to 0 (no recovery)
+///   End of Turn N+2   -> is 0, recovers
 pub fn tick_recovery(slots: &mut DjinnSlots, unit_ref: TargetRef) -> Vec<DjinnStateChanged> {
     let mut events = Vec::new();
 
-    // First, decrement recovery turns for all Recovery djinn
-    for djinn in &mut slots.slots {
-        if djinn.state == DjinnState::Recovery && djinn.recovery_turns_remaining > 0 {
-            djinn.recovery_turns_remaining -= 1;
-        }
-    }
-
-    // Find the Recovery djinn with lowest activation_order that is ready (turns == 0)
+    // First, recover the eligible djinn (already at 0 from a previous tick).
+    // Only 1 recovers per tick — the one with the lowest activation_order.
     let candidate_idx = slots
         .slots
         .iter()
@@ -259,6 +259,13 @@ pub fn tick_recovery(slots: &mut DjinnSlots, unit_ref: TargetRef) -> Vec<DjinnSt
             new_state: DjinnState::Good,
             recovery_turns: None,
         });
+    }
+
+    // Then, decrement recovery turns for all remaining Recovery djinn
+    for djinn in &mut slots.slots {
+        if djinn.state == DjinnState::Recovery && djinn.recovery_turns_remaining > 0 {
+            djinn.recovery_turns_remaining -= 1;
+        }
     }
 
     events
@@ -540,17 +547,25 @@ mod tests {
     #[test]
     fn tick_recovery_respects_delay() {
         let mut slots = make_slots_with(&["flint"], Element::Venus);
-        // Activate with recovery_turns=2 (1 turn delay means 2 ticks to recover)
+        // Activate with recovery_turns=2 (matches DESIGN_LOCK: "starting the turn after next")
+        // Activated Turn N -> no recovery Turn N+1 -> no recovery Turn N+2's start -> recovers Turn N+2
         activate_djinn(&mut slots, 0, unit_ref(), 2);
         assert_eq!(slots.slots[0].state, DjinnState::Recovery);
         assert_eq!(slots.slots[0].recovery_turns_remaining, 2);
 
-        // Tick 1: decrement to 1, no recovery yet
+        // Tick 1 (end of activation turn): not at 0 yet, decrement 2->1, no recovery
         let events = tick_recovery(&mut slots, unit_ref());
         assert!(events.is_empty());
         assert_eq!(slots.slots[0].recovery_turns_remaining, 1);
 
-        // Tick 2: decrement to 0, still no recovery this tick (just reached 0)
+        // Tick 2 (end of Turn N+1): not at 0 yet, decrement 1->0, no recovery
+        // DESIGN_LOCK: "Turn 4: Nothing recovers yet."
+        let events = tick_recovery(&mut slots, unit_ref());
+        assert!(events.is_empty());
+        assert_eq!(slots.slots[0].recovery_turns_remaining, 0);
+
+        // Tick 3 (end of Turn N+2): already at 0, recovers!
+        // DESIGN_LOCK: "Turn 5: Djinn 1 → GOOD."
         let events = tick_recovery(&mut slots, unit_ref());
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].new_state, DjinnState::Good);
@@ -560,18 +575,24 @@ mod tests {
     fn tick_recovery_staggered_order() {
         let mut slots = make_slots_with(&["flint", "granite"], Element::Venus);
 
-        // Activate flint first (order 0), then granite (order 1)
+        // Activate flint first (order 0), then granite (order 1), both with 1 recovery turn
         activate_djinn(&mut slots, 0, unit_ref(), 1);
         activate_djinn(&mut slots, 1, unit_ref(), 1);
 
-        // Tick 1: flint recovers first (lower activation_order)
+        // Tick 1: neither is at 0 yet, decrement both 1->0, no recovery
+        let events = tick_recovery(&mut slots, unit_ref());
+        assert!(events.is_empty());
+        assert_eq!(slots.slots[0].recovery_turns_remaining, 0);
+        assert_eq!(slots.slots[1].recovery_turns_remaining, 0);
+
+        // Tick 2: both at 0. Flint recovers first (lower activation_order).
         let events = tick_recovery(&mut slots, unit_ref());
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].djinn_id, DjinnId("flint".into()));
         assert_eq!(slots.slots[0].state, DjinnState::Good);
         assert_eq!(slots.slots[1].state, DjinnState::Recovery);
 
-        // Tick 2: granite recovers (was already at 0 turns, now it's the lowest order)
+        // Tick 3: granite recovers (still at 0, now lowest remaining order)
         let events = tick_recovery(&mut slots, unit_ref());
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].djinn_id, DjinnId("granite".into()));
@@ -584,6 +605,62 @@ mod tests {
         // All Good, nothing to recover
         let events = tick_recovery(&mut slots, unit_ref());
         assert!(events.is_empty());
+    }
+
+    // ── DESIGN_LOCK compliance test ──
+
+    /// Mirrors the exact 3-Djinn Summon Example from DESIGN_LOCK.md §4:
+    ///   Turn 3: Summon fires. All 3 djinn → RECOVERY.
+    ///   Turn 4: Nothing recovers yet.
+    ///   Turn 5: Djinn 1 → GOOD.
+    ///   Turn 6: Djinn 2 → GOOD.
+    ///   Turn 7: Djinn 3 → GOOD.
+    #[test]
+    fn design_lock_3_djinn_summon_example() {
+        let mut slots = make_slots_with(&["djinn1", "djinn2", "djinn3"], Element::Venus);
+
+        // Turn 3: Summon fires with recovery_turns=2 (delay=1 + per_turn=1)
+        let events = execute_summon(&mut slots, &[0, 1, 2], unit_ref(), 2);
+        assert!(events.is_some());
+        assert_eq!(slots.slots[0].state, DjinnState::Recovery);
+        assert_eq!(slots.slots[1].state, DjinnState::Recovery);
+        assert_eq!(slots.slots[2].state, DjinnState::Recovery);
+
+        // End of Turn 3: tick — all at 2, decrement to 1, no recovery
+        let events = tick_recovery(&mut slots, unit_ref());
+        assert!(events.is_empty(), "End of Turn 3: nothing should recover");
+
+        // End of Turn 4: tick — all at 1, decrement to 0, no recovery
+        // DESIGN_LOCK: "Turn 4: Nothing recovers yet."
+        let events = tick_recovery(&mut slots, unit_ref());
+        assert!(events.is_empty(), "Turn 4: Nothing recovers yet (DESIGN_LOCK)");
+
+        // End of Turn 5: all at 0. Djinn 1 recovers (lowest activation_order).
+        // DESIGN_LOCK: "Turn 5: Djinn 1 → GOOD."
+        let events = tick_recovery(&mut slots, unit_ref());
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].djinn_id, DjinnId("djinn1".into()));
+        assert_eq!(events[0].new_state, DjinnState::Good);
+        assert_eq!(slots.slots[0].state, DjinnState::Good);
+        assert_eq!(slots.slots[1].state, DjinnState::Recovery);
+        assert_eq!(slots.slots[2].state, DjinnState::Recovery);
+
+        // End of Turn 6: Djinn 2 → GOOD.
+        let events = tick_recovery(&mut slots, unit_ref());
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].djinn_id, DjinnId("djinn2".into()));
+        assert_eq!(events[0].new_state, DjinnState::Good);
+        assert_eq!(slots.slots[1].state, DjinnState::Good);
+        assert_eq!(slots.slots[2].state, DjinnState::Recovery);
+
+        // End of Turn 7: Djinn 3 → GOOD. All restored.
+        let events = tick_recovery(&mut slots, unit_ref());
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].djinn_id, DjinnId("djinn3".into()));
+        assert_eq!(events[0].new_state, DjinnState::Good);
+        assert_eq!(slots.slots[0].state, DjinnState::Good);
+        assert_eq!(slots.slots[1].state, DjinnState::Good);
+        assert_eq!(slots.slots[2].state, DjinnState::Good);
     }
 
     // ── Ability oscillation test ──
