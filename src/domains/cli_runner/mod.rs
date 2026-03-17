@@ -1483,8 +1483,12 @@ mod tests {
         );
 
         // Recovery turns = djinn_recovery_start_delay + djinn_recovery_per_turn = 1 + 1 = 2
-        // After tick in round 1 end: remaining = 2 - 1 = 1 (no recovery yet)
-        // Round 2: attack, then tick: remaining = 1 - 1 = 0, recovers!
+        // Per DESIGN_LOCK: "starting the turn after next"
+        // Activated round 1 → round 1 end: decrement 2→1 (no recovery)
+        // Round 2 end: decrement 1→0 (no recovery yet — recover-first-then-decrement)
+        // Round 3 end: at 0, recovers!
+
+        // Round 2: attack
         let _ = plan_action(
             &mut battle,
             unit_ref,
@@ -1495,17 +1499,37 @@ mod tests {
                 },
             },
         );
-        let events_r2 = execute_round(&mut battle);
+        execute_round(&mut battle);
 
-        // After round 2, djinn should have recovered to Good
+        // After round 2, djinn should still be in Recovery
+        assert_eq!(
+            battle.player_units[0].djinn_slots.slots[0].state,
+            crate::shared::DjinnState::Recovery,
+            "Djinn should still be in Recovery after round 2"
+        );
+
+        // Round 3: attack
+        let _ = plan_action(
+            &mut battle,
+            unit_ref,
+            BattleAction::Attack {
+                target: TargetRef {
+                    side: Side::Enemy,
+                    index: 0,
+                },
+            },
+        );
+        let events_r3 = execute_round(&mut battle);
+
+        // After round 3, djinn should have recovered to Good
         assert_eq!(
             battle.player_units[0].djinn_slots.slots[0].state,
             crate::shared::DjinnState::Good,
             "Djinn should recover to Good after sufficient ticks"
         );
 
-        // Should have a recovery DjinnChanged event in round 2
-        let has_recovery_event = events_r2.iter().any(|e| match e {
+        // Should have a recovery DjinnChanged event in round 3
+        let has_recovery_event = events_r3.iter().any(|e| match e {
             BattleEvent::DjinnChanged(dc) => dc.new_state == crate::shared::DjinnState::Good,
             _ => false,
         });
