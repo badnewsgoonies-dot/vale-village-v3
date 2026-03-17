@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![allow(dead_code, unused_imports)]
 //! CLI Battle Runner — first player-reachable surface.
 //!
 //! Makes `cargo run` execute an actual battle using the battle_engine,
@@ -10,18 +10,132 @@ use crate::domains::battle_engine::{
 };
 use crate::domains::data_loader::GameData;
 use crate::domains::djinn::DjinnSlots;
-use crate::domains::equipment::{EquipmentEffects, EquipmentLoadout};
+use crate::domains::equipment::{self, EquipmentEffects, EquipmentLoadout};
 use crate::shared::{
-    BattleAction, EncounterId, EnemyId, Side, TargetRef, UnitId,
+    AbilityId, BattleAction, DjinnId, EncounterId, EnemyId, EquipmentId, EquipmentSlot, Side,
+    TargetRef, UnitDef, UnitId,
 };
 
 // ── Public API ──────────────────────────────────────────────────────
+
+/// Build a PlayerUnitData with equipment and djinn equipped.
+///
+/// Attempts to equip the given weapon/armor IDs and djinn ID.
+/// Gracefully skips any item or djinn not found in game_data.
+fn build_player_unit(
+    unit_def: &UnitDef,
+    weapon_id: &str,
+    armor_id: &str,
+    djinn_id_str: &str,
+    game_data: &GameData,
+) -> PlayerUnitData {
+    let mut loadout = EquipmentLoadout::default();
+
+    // Try to equip weapon
+    let weapon_eid = EquipmentId(weapon_id.to_string());
+    if let Some(weapon_def) = game_data.equipment.get(&weapon_eid) {
+        let _ = equipment::equip(
+            &mut loadout,
+            EquipmentSlot::Weapon,
+            weapon_eid,
+            weapon_def,
+            unit_def.element,
+        );
+    }
+
+    // Try to equip armor
+    let armor_eid = EquipmentId(armor_id.to_string());
+    if let Some(armor_def) = game_data.equipment.get(&armor_eid) {
+        let _ = equipment::equip(
+            &mut loadout,
+            EquipmentSlot::Armor,
+            armor_eid,
+            armor_def,
+            unit_def.element,
+        );
+    }
+
+    // Compute equipment effects
+    let eq_effects = equipment::compute_equipment_effects(&loadout, &game_data.equipment);
+
+    // Try to equip djinn
+    let mut djinn_slots = DjinnSlots::new();
+    let djinn_id = DjinnId(djinn_id_str.to_string());
+    if game_data.djinn.contains_key(&djinn_id) {
+        djinn_slots.add(djinn_id);
+    }
+
+    PlayerUnitData {
+        id: unit_def.id.0.clone(),
+        base_stats: unit_def.base_stats,
+        equipment: loadout,
+        djinn_slots,
+        mana_contribution: unit_def.mana_contribution,
+        equipment_effects: eq_effects,
+    }
+}
+
+/// Format equipment and djinn info for a player unit at battle start.
+fn format_unit_gear(
+    unit_id: &str,
+    hp: u16,
+    loadout: &EquipmentLoadout,
+    djinn_slots: &DjinnSlots,
+    game_data: &GameData,
+) -> String {
+    let mut gear_parts: Vec<String> = Vec::new();
+
+    // Equipment name lookup
+    if let Some(ref wid) = loadout.weapon {
+        if let Some(def) = game_data.equipment.get(wid) {
+            gear_parts.push(def.name.clone());
+        }
+    }
+    if let Some(ref aid) = loadout.armor {
+        if let Some(def) = game_data.equipment.get(aid) {
+            gear_parts.push(def.name.clone());
+        }
+    }
+
+    // Djinn info
+    for inst in &djinn_slots.slots {
+        let name = game_data
+            .djinn
+            .get(&inst.djinn_id)
+            .map(|d| d.name.clone())
+            .unwrap_or_else(|| inst.djinn_id.0.clone());
+        gear_parts.push(format!("{}({:?})", name, inst.state));
+    }
+
+    let gear_str = if gear_parts.is_empty() {
+        String::new()
+    } else {
+        format!(" [{}]", gear_parts.join(", "))
+    };
+
+    format!("{} (HP:{}){}", unit_id, hp, gear_str)
+}
+
+/// Pick the first psynergy/mana-costing ability from a unit's ability list
+/// that exists in game_data.abilities and has mana_cost > 0.
+/// Returns None if no such ability is found.
+fn find_first_psynergy_ability(unit_def: &UnitDef, game_data: &GameData) -> Option<AbilityId> {
+    for ap in &unit_def.abilities {
+        if let Some(adef) = game_data.abilities.get(&ap.ability_id) {
+            if adef.mana_cost > 0 {
+                return Some(ap.ability_id.clone());
+            }
+        }
+    }
+    None
+}
 
 /// Run a demo battle using loaded game data.
 ///
 /// - 2 player units: Adept + Blaze
 /// - Enemies loaded from encounter "house-02" (Earth Scout + Earthbound Wolf)
 /// - Auto-play loop: each player unit attacks first alive enemy
+/// - Every 3rd round, first player uses an ability if mana allows
 /// - Enemies attack back: each alive enemy attacks first alive player
 /// - Both sides can win or lose
 /// - Stalemate guard at round 20
@@ -36,24 +150,39 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
         .get(&UnitId("blaze".to_string()))
         .expect("sample data must contain unit 'blaze'");
 
-    let player_data: Vec<PlayerUnitData> = vec![
-        PlayerUnitData {
-            id: adept.id.0.clone(),
-            base_stats: adept.base_stats,
-            equipment: EquipmentLoadout::default(),
-            djinn_slots: DjinnSlots::new(),
-            mana_contribution: adept.mana_contribution,
-            equipment_effects: EquipmentEffects::default(),
-        },
-        PlayerUnitData {
-            id: blaze.id.0.clone(),
-            base_stats: blaze.base_stats,
-            equipment: EquipmentLoadout::default(),
-            djinn_slots: DjinnSlots::new(),
-            mana_contribution: blaze.mana_contribution,
-            equipment_effects: EquipmentEffects::default(),
-        },
-    ];
+    // Build player units with equipment and djinn
+    // Adept (Venus): Bronze Sword + Leather Vest + Flint
+    // Blaze (Mars): Wooden Axe + Leather Vest + Forge
+    let adept_data = build_player_unit(adept, "bronze-sword", "leather-vest", "flint", game_data);
+    let blaze_data = build_player_unit(blaze, "wooden-axe", "leather-vest", "forge", game_data);
+
+    // Pre-compute ability IDs for auto-play usage
+    let adept_ability = find_first_psynergy_ability(adept, game_data);
+    let blaze_ability = find_first_psynergy_ability(blaze, game_data);
+
+    // Stash gear info before moving into battle
+    let adept_hp = (adept_data.base_stats.hp as i32
+        + adept_data.equipment_effects.total_stat_bonus.hp as i32)
+        .max(1) as u16;
+    let adept_gear_info = format_unit_gear(
+        &adept_data.id,
+        adept_hp,
+        &adept_data.equipment,
+        &adept_data.djinn_slots,
+        game_data,
+    );
+    let blaze_hp = (blaze_data.base_stats.hp as i32
+        + blaze_data.equipment_effects.total_stat_bonus.hp as i32)
+        .max(1) as u16;
+    let blaze_gear_info = format_unit_gear(
+        &blaze_data.id,
+        blaze_hp,
+        &blaze_data.equipment,
+        &blaze_data.djinn_slots,
+        game_data,
+    );
+
+    let player_data: Vec<PlayerUnitData> = vec![adept_data, blaze_data];
 
     // Load encounter "house-02", fall back to manual enemy list
     let encounter = game_data
@@ -117,16 +246,15 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
     );
 
     println!("\n=== BATTLE START ===");
-    print!("Party:");
-    for pu in &battle.player_units {
-        print!(" {} (HP:{})", pu.unit.id, pu.unit.stats.hp);
-    }
-    println!();
+    println!("Party: {} + {}", adept_gear_info, blaze_gear_info);
     print!("Enemies:");
     for eu in &battle.enemies {
         print!(" {} (HP:{})", eu.unit.id, eu.unit.stats.hp);
     }
     println!("\n");
+
+    // Collect ability names for printing (indexed by player index)
+    let unit_ability_ids: Vec<Option<AbilityId>> = vec![adept_ability, blaze_ability];
 
     loop {
         // Stalemate guard
@@ -135,7 +263,10 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
             return BattleResult::Defeat;
         }
 
+        let current_round = battle.round;
+
         // Planning phase: each alive player unit attacks first alive enemy
+        // Every 3rd round, first alive player uses an ability instead
         for pi in 0..battle.player_units.len() {
             if !battle.player_units[pi].unit.is_alive {
                 continue;
@@ -154,13 +285,54 @@ pub fn run_demo_battle(game_data: &GameData) -> BattleResult {
                 side: Side::Player,
                 index: pi as u8,
             };
-            let action = BattleAction::Attack {
-                target: TargetRef {
-                    side: Side::Enemy,
-                    index: target_idx as u8,
-                },
+            let enemy_target = TargetRef {
+                side: Side::Enemy,
+                index: target_idx as u8,
             };
-            let _ = plan_action(&mut battle, unit_ref, action);
+
+            // Every 3rd round: try to use an ability for this unit
+            let mut used_ability = false;
+            if current_round % 3 == 0 {
+                if let Some(ref ability_id) = unit_ability_ids.get(pi).and_then(|a| a.as_ref()) {
+                    // Check if the ability exists and mana allows
+                    let can_use = battle
+                        .ability_defs
+                        .get(ability_id)
+                        .map(|adef| battle.mana_pool.current_mana >= adef.mana_cost)
+                        .unwrap_or(false);
+
+                    if can_use {
+                        let ability_name = battle
+                            .ability_defs
+                            .get(ability_id)
+                            .map(|a| a.name.clone())
+                            .unwrap_or_else(|| ability_id.0.clone());
+                        let enemy_name = battle
+                            .enemies
+                            .get(target_idx)
+                            .map(|e| e.unit.id.clone())
+                            .unwrap_or_else(|| format!("Enemy[{}]", target_idx));
+                        println!(
+                            "  >> {} uses {} on {}!",
+                            battle.player_units[pi].unit.id, ability_name, enemy_name
+                        );
+                        let action = BattleAction::UseAbility {
+                            ability_id: (*ability_id).clone(),
+                            targets: vec![enemy_target],
+                        };
+                        if plan_action(&mut battle, unit_ref, action).is_ok() {
+                            used_ability = true;
+                        }
+                    }
+                }
+            }
+
+            if !used_ability {
+                let action = BattleAction::Attack {
+                    target: enemy_target,
+                };
+                let _ = plan_action(&mut battle, unit_ref, action);
+            }
         }
 
         // Enemy planning: each alive enemy attacks first alive player
