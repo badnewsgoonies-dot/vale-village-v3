@@ -1,31 +1,35 @@
-campaign_id: vale-village-v3-rotation-wave-8-workers
+campaign_id: vale-village-v3-wave-9-closeout
 baseline_branch: master
-baseline_commit: 597ca29
-phase: rotation-wave-8-workers
+baseline_commit: 8aae0bf
+phase: wave-9-closeout
 
-active_lanes:
+active_lanes: []
+
+completed_lanes:
 - lane_id: ui-djinn-sprites-scene
-  status: in-progress
+  status: merged
   goal: "Add battle-scene djinn markers and direct sprite-adjacent interaction for the acting unit."
   owned_paths:
   - src/domains/ui/battle_scene.rs
   - src/domains/ui/plugin.rs
   worker_model: gpt-5
-  next_action: "Launch worker 1 from objectives/generated/ui-djinn-sprites-worker-1.md and clamp to battle_scene/plugin scope."
+  next_action: "None. Landed on master and revalidated during Wave 9 closeout."
   validation:
-    compile: pending
-    tests: pending
-  report_path: status/workers/ui-djinn-sprites-scene.md
+    compile: pass
+    tests: pass
 - lane_id: ui-djinn-sprites-feedback
-  status: in-progress
+  status: merged
   goal: "Keep HUD and planning feedback in sync with executed state and playback."
   owned_paths:
   - src/domains/ui/hud.rs
   - src/domains/ui/planning.rs
   - src/domains/ui/animation.rs
   worker_model: gpt-5
-  next_action: "Launch worker 2 from objectives/generated/ui-djinn-sprites-worker-2.md and clamp to hud/planning/animation scope."
+  next_action: "None. Landed on master and revalidated during Wave 9 closeout."
   validation:
-    compile: pending
-    tests: pending
-  report_path: status/workers/ui-djinn-sprites-feedback.md
+    compile: pass
+    tests: pass
+
+session_notes:
+- "Wave 8 UI djinn sprite work is already present on master."
+- "Wave 9 closeout re-ran cargo check, cargo clippy -- -D warnings, and bash scripts/run-gates.sh on 2026-03-18."

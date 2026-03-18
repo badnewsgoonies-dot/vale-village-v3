@@ -1,11 +1,11 @@
 # Vale Village v3 — Current State
 
-**Phase:** Wave 9 — team-wide djinn rule correction
-**HEAD:** a22c999
-**Date:** 2026-03-17
+**Phase:** Wave 9 closeout — team-wide djinn correction
+**HEAD:** 8aae0bf
+**Date:** 2026-03-18
 
 ## Spine Status: IN PROGRESS
-The CLI path loads full data, save state, progression, and deterministic battle execution end-to-end, and the battle model now treats djinn as a shared 3-slot team pool that every player unit can use under the same state transitions.
+The CLI path loads full data, save state, progression, and deterministic battle execution end-to-end, and the battle model now treats djinn as a shared 3-slot team pool that every player unit can use under the same state transitions. GUI battle interaction is present, but hardening and pre-battle flow remain ungraduated.
 
 ## Domains
 
@@ -13,22 +13,22 @@ The CLI path loads full data, save state, progression, and deterministic battle 
 |--------|-----|-------|--------|----------|
 | shared | 460 | 0 | YES | [Observed] Contract frozen in `src/shared/mod.rs` and checksummed in `.contract.sha256` |
 | ai | 581 | 14 | YES | [Observed] Unit tests pass and battle engine imports AI decision logic |
-| battle_engine | 3472 | 48 | YES | [Observed] Core execution path covered by domain tests and graduation tests |
-| cli_runner | 1630 | 6 | YES | [Observed] `src/main.rs` calls demo battle flow through this domain |
+| battle_engine | 3585 | 49 | YES | [Observed] Core execution path covered by domain tests and graduation tests |
+| cli_runner | 1633 | 6 | YES | [Observed] `src/main.rs` calls the CLI battle flow through this domain |
 | combat | 637 | 23 | YES | [Observed] Damage, targeting, crit, mana, and ordering tests pass |
 | damage_mods | 217 | 14 | YES | [Observed] Penetration, splash, and chain logic tested and used by battle engine |
 | data_loader | 546 | 12 | YES | [Observed] Full data load is exercised by `src/main.rs`, UI plugin, and graduation tests |
 | djinn | 735 | 27 | YES | [Observed] State machine, summon, and recovery tests pass |
 | equipment | 414 | 15 | YES | [Observed] Equipment effects are tested and used in demo battle construction |
 | progression | 349 | 17 | YES | [Observed] XP/stat growth tests pass and rewards are applied in `src/main.rs` |
-| save | 414 | 10 | YES | [Observed] Save/load roundtrips pass and campaign state is read/written in `src/main.rs` |
+| save | 417 | 10 | YES | [Observed] Save/load roundtrips pass and campaign state is read/written in `src/main.rs` |
 | status | 1001 | 31 | YES | [Observed] Status, barrier, HoT, buff, and cleanse logic tested and consumed by battle engine |
-| ui | 2775 | 5 | YES | [Observed] Battle scene shows djinn rows beside active units, HUD syncs live state, and execution transitions persist through playback |
+| ui | 2833 | 6 | YES | [Observed] Battle scene shows djinn rows beside active units, HUD syncs live state, and execution transitions persist through playback |
 
 ## Gate Status
 - [x] Contract checksum: OK
 - [x] Compile: `cargo check` OK
-- [x] Tests: 232 passed, 0 failed
+- [x] Tests: 234 passed, 0 failed (`224` unit + `10` graduation)
 - [x] Lint: `cargo clippy -- -D warnings` OK
 - [x] Connectivity: OK
 
@@ -58,10 +58,10 @@ The CLI path loads full data, save state, progression, and deterministic battle 
 - [Observed] The currently acting unit now has a dedicated battle-scene highlight frame, improving round-order readability on the live GUI — `src/domains/ui/battle_scene.rs`
 - [Observed] SaveData now has a team-wide `team_djinn` field with serde default for forward-compatible persistence — `src/domains/save/mod.rs`
 - [Observed] The integrated GUI launches successfully on `DISPLAY=:0` and renders the new scene-side djinn controls — manual launch plus screenshot on 2026-03-17
-- [Observed] The global automated gate set is green after Wave 8 integration — `cargo clippy -- -D warnings`, `cargo test`, `bash scripts/run-gates.sh`
+- [Observed] The global automated gate set is green at Wave 9 closeout — `cargo check`, `cargo clippy -- -D warnings`, `bash scripts/run-gates.sh` on 2026-03-18
 - [Assumed] The current GUI flow is fully understandable and operable by a player without a manual audit — NEEDS VERIFICATION before a GUI shipping decision depends on it
 
 ## Open Questions
 - Does the GUI currently make djinn activation, summon preemption, and recovery order legible enough to count as a shippable interactive battle slice? — blocks GUI milestone
-- How should team-wide djinn be rendered in battle: once for the team, beside the acting unit, or mirrored on all party sprites? — blocks final UI fidelity
+- Should the mirrored per-unit djinn rows remain the final UI, or collapse to a single team-wide presentation once hardening feedback is in? — blocks final UI fidelity
 - Once all downstream tooling has been migrated, should `.memory/STATE.md` be removed entirely instead of mirrored for compatibility? — blocks cleanup only

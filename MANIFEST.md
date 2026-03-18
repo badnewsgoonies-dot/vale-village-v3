@@ -1,6 +1,6 @@
 # Vale Village v3 — Build Manifest
 
-## Current Phase: Wave 9 — team-wide djinn correction
+## Current Phase: Wave 9 closeout — team-wide djinn correction
 
 ## Architecture
 - Language: Rust
