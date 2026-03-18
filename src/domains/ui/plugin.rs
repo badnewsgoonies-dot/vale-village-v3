@@ -9,9 +9,7 @@ use crate::domains::battle_engine::{self, Battle, EnemyUnitData, PlayerUnitData}
 use crate::domains::data_loader::{self, GameData};
 use crate::domains::djinn::DjinnSlots;
 use crate::domains::equipment::{self, EquipmentLoadout};
-use crate::shared::{
-    DjinnId, EncounterId, EquipmentId, EquipmentSlot, UnitDef, UnitId,
-};
+use crate::shared::{DjinnId, EncounterId, EquipmentId, EquipmentSlot, UnitDef, UnitId};
 
 use super::animation;
 use super::battle_scene;
@@ -62,19 +60,26 @@ impl Plugin for ValeVillagePlugin {
         .insert_resource(BattleRes(battle))
         .insert_resource(GameDataRes(game_data))
         .insert_resource(animation::EventQueue::default())
-        .add_systems(Startup, (
-            battle_scene::setup_battle_scene,
-            hud::setup_hud,
-            planning::init_planning,
-            planning::setup_planning_panel,
-        ))
-        .add_systems(Update, (
-            planning::update_planning_ui,
-            planning::handle_planning_clicks,
-            animation::check_for_new_events,
-            animation::play_event_queue,
-            animation::animate_floating_text,
-        ));
+        .add_systems(
+            Startup,
+            (
+                battle_scene::setup_battle_scene,
+                hud::setup_hud,
+                planning::init_planning,
+                planning::setup_planning_panel,
+            ),
+        )
+        .add_systems(
+            Update,
+            (
+                planning::update_planning_ui,
+                planning::handle_planning_clicks,
+                battle_scene::sync_battle_scene_overlay,
+                animation::check_for_new_events,
+                animation::play_event_queue,
+                animation::animate_floating_text,
+            ),
+        );
     }
 }
 
