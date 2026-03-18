@@ -8,7 +8,7 @@ use crate::domains::battle_engine::BattleEvent;
 use crate::shared::{Side, StatusEffectType, TargetRef};
 
 use super::battle_scene::{EnemyUnit, PlayerUnit};
-use super::planning::PlanningState;
+use super::planning::{PlanningMode, PlanningState, PostPlaybackMode};
 
 // ── Components ─────────────────────────────────────────────────────
 
@@ -48,20 +48,38 @@ pub struct EventQueue {
     pub events: Vec<BattleEvent>,
     pub current_index: usize,
     pub event_timer: Timer,
+    pub settle_timer: Option<Timer>,
     pub playing: bool,
+}
+
+#[derive(Clone, Copy)]
+pub struct PlaybackProgress {
+    pub shown: usize,
+    pub total: usize,
+    pub settling: bool,
+}
+
+pub fn playback_progress(queue: &EventQueue) -> PlaybackProgress {
+    PlaybackProgress {
+        shown: queue.current_index.min(queue.events.len()),
+        total: queue.events.len(),
+        settling: queue.settle_timer.is_some(),
+    }
 }
 
 // ── Systems ────────────────────────────────────────────────────────
 
 /// Check if there are new events to play from the planning state.
-pub fn check_for_new_events(
-    mut queue: ResMut<EventQueue>,
-    state: Res<PlanningState>,
-) {
-    if state.is_changed() && !state.last_events.is_empty() && !queue.playing {
+pub fn check_for_new_events(mut queue: ResMut<EventQueue>, state: Res<PlanningState>) {
+    if state.mode == PlanningMode::Executing
+        && !state.last_events.is_empty()
+        && !queue.playing
+        && queue.events.is_empty()
+    {
         queue.events = state.last_events.clone();
         queue.current_index = 0;
         queue.event_timer = Timer::from_seconds(0.6, TimerMode::Repeating);
+        queue.settle_timer = None;
         queue.playing = true;
     }
 }
@@ -71,6 +89,7 @@ pub fn play_event_queue(
     mut commands: Commands,
     time: Res<Time>,
     mut queue: ResMut<EventQueue>,
+    mut state: ResMut<PlanningState>,
     player_q: Query<(&Transform, &PlayerUnit)>,
     enemy_q: Query<(&Transform, &EnemyUnit)>,
 ) {
@@ -78,15 +97,40 @@ pub fn play_event_queue(
         return;
     }
 
-    queue.event_timer.tick(time.delta());
+    if queue.current_index < queue.events.len() {
+        queue.event_timer.tick(time.delta());
 
-    if queue.event_timer.just_finished() && queue.current_index < queue.events.len() {
-        let event = queue.events[queue.current_index].clone();
-        spawn_event_visual(&mut commands, &event, &player_q, &enemy_q);
-        queue.current_index += 1;
+        if queue.event_timer.just_finished() {
+            let event = queue.events[queue.current_index].clone();
+            spawn_event_visual(&mut commands, &event, &player_q, &enemy_q);
+            queue.current_index += 1;
 
-        if queue.current_index >= queue.events.len() {
+            if queue.current_index >= queue.events.len() {
+                queue.settle_timer = Some(Timer::from_seconds(0.8, TimerMode::Once));
+            }
+        }
+        return;
+    }
+
+    if let Some(settle_timer) = queue.settle_timer.as_mut() {
+        settle_timer.tick(time.delta());
+
+        if settle_timer.finished() {
             queue.playing = false;
+            queue.current_index = 0;
+            queue.events.clear();
+            queue.settle_timer = None;
+
+            if state.mode == PlanningMode::Executing {
+                state.mode = match state
+                    .post_playback_mode
+                    .take()
+                    .unwrap_or(PostPlaybackMode::RoundComplete)
+                {
+                    PostPlaybackMode::RoundComplete => PlanningMode::RoundComplete,
+                    PostPlaybackMode::BattleOver => PlanningMode::BattleOver,
+                };
+            }
         }
     }
 }
@@ -150,13 +194,7 @@ fn spawn_event_visual(
 
         BattleEvent::UnitDefeated(defeated) => {
             if let Some(pos) = get_unit_position(defeated.unit, player_q, enemy_q) {
-                spawn_floating_label(
-                    commands,
-                    pos,
-                    "KO",
-                    Color::srgb(0.8, 0.267, 0.267),
-                    22.0,
-                );
+                spawn_floating_label(commands, pos, "KO", Color::srgb(0.8, 0.267, 0.267), 22.0);
             }
         }
 
@@ -181,12 +219,19 @@ fn spawn_event_visual(
 
         BattleEvent::DjinnChanged(djinn_change) => {
             if let Some(pos) = get_unit_position(djinn_change.unit, player_q, enemy_q) {
-                let label = format!("{:?} → {:?}", djinn_change.old_state, djinn_change.new_state);
+                let label = format!(
+                    "{:?} → {:?}",
+                    djinn_change.old_state, djinn_change.new_state
+                );
                 spawn_floating_label(commands, pos, &label, Color::srgb(0.8, 0.8, 0.267), 12.0);
             }
         }
 
-        BattleEvent::EnemyAbilityUsed { actor, ability_name, .. } => {
+        BattleEvent::EnemyAbilityUsed {
+            actor,
+            ability_name,
+            ..
+        } => {
             if let Some(pos) = get_unit_position(*actor, player_q, enemy_q) {
                 spawn_floating_label(
                     commands,
@@ -262,11 +307,23 @@ fn get_unit_position(
 
 fn spawn_floating_number(commands: &mut Commands, pos: Vec3, amount: i32, color: Color, size: f32) {
     let text = format!("{}", amount);
-    spawn_floating_label_at(commands, Vec3::new(pos.x, pos.y + 20.0, 10.0), &text, color, size);
+    spawn_floating_label_at(
+        commands,
+        Vec3::new(pos.x, pos.y + 20.0, 10.0),
+        &text,
+        color,
+        size,
+    );
 }
 
 fn spawn_floating_label(commands: &mut Commands, pos: Vec3, label: &str, color: Color, size: f32) {
-    spawn_floating_label_at(commands, Vec3::new(pos.x, pos.y + 20.0, 10.0), label, color, size);
+    spawn_floating_label_at(
+        commands,
+        Vec3::new(pos.x, pos.y + 20.0, 10.0),
+        label,
+        color,
+        size,
+    );
 }
 
 fn spawn_floating_label_at(
@@ -305,10 +362,10 @@ fn status_label(effect_type: StatusEffectType) -> &'static str {
 
 fn status_color(effect_type: StatusEffectType) -> Color {
     match effect_type {
-        StatusEffectType::Stun => Color::srgb(0.8, 0.8, 0.267),    // yellow
-        StatusEffectType::Null => Color::srgb(0.5, 0.5, 0.5),      // gray
+        StatusEffectType::Stun => Color::srgb(0.8, 0.8, 0.267), // yellow
+        StatusEffectType::Null => Color::srgb(0.5, 0.5, 0.5),   // gray
         StatusEffectType::Incapacitate => Color::srgb(0.8, 0.267, 0.267), // red
-        StatusEffectType::Burn => Color::srgb(0.8, 0.533, 0.267),   // orange
+        StatusEffectType::Burn => Color::srgb(0.8, 0.533, 0.267), // orange
         StatusEffectType::Poison => Color::srgb(0.533, 0.267, 0.8), // purple
         StatusEffectType::Freeze => Color::srgb(0.267, 0.667, 0.8), // light blue
     }

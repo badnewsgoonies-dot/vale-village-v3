@@ -2,10 +2,13 @@
 //! Wave 3: static display from initial battle state.
 #![allow(dead_code)]
 
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
+use crate::domains::battle_engine::Battle;
 use crate::shared::{Element, EnemyId, UnitId};
 
+use super::planning::{PlanningMode, PlanningState};
 use super::plugin::{BattleRes, GameDataRes};
 
 /// Marker for the HUD root node.
@@ -25,11 +28,28 @@ pub struct CritCounterText {
     pub index: usize,
 }
 
+/// Marker for HP text.
+#[derive(Component)]
+pub struct HpText {
+    pub side: HudSide,
+    pub index: usize,
+}
+
 /// Marker for mana circle indicators.
 #[derive(Component)]
 pub struct ManaCircleRow;
 
-#[derive(Clone, Copy)]
+/// Marker for a single mana circle.
+#[derive(Component)]
+pub struct ManaCircle {
+    pub index: usize,
+}
+
+/// Marker for numeric mana readout.
+#[derive(Component)]
+pub struct ManaReadoutText;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum HudSide {
     Player,
     Enemy,
@@ -44,6 +64,41 @@ struct UnitCardSpec<'a> {
     crit_counter: u8,
     index: usize,
     side: HudSide,
+}
+
+type HpTextFilter = (Without<CritCounterText>, Without<ManaReadoutText>);
+type CritTextFilter = (Without<HpText>, Without<ManaReadoutText>);
+type ManaTextFilter = (
+    With<ManaReadoutText>,
+    Without<HpText>,
+    Without<CritCounterText>,
+);
+
+#[derive(SystemParam)]
+pub struct HudSyncQueries<'w, 's> {
+    hp_bars: Query<
+        'w,
+        's,
+        (
+            &'static HpBarFill,
+            &'static mut Node,
+            &'static mut BackgroundColor,
+        ),
+        Without<ManaCircle>,
+    >,
+    hp_text: Query<'w, 's, (&'static HpText, &'static mut Text), HpTextFilter>,
+    crit_text: Query<'w, 's, (&'static CritCounterText, &'static mut Text), CritTextFilter>,
+    mana_circles: Query<
+        'w,
+        's,
+        (
+            &'static ManaCircle,
+            &'static mut Node,
+            &'static mut BackgroundColor,
+        ),
+        Without<HpBarFill>,
+    >,
+    mana_text: Query<'w, 's, &'static mut Text, ManaTextFilter>,
 }
 
 /// Element color helper (same as battle_scene).
@@ -76,12 +131,121 @@ fn lookup_name(id: &str, game_data: &GameDataRes) -> String {
     id.to_string()
 }
 
+fn hp_bar_color(hp_pct: f32) -> Color {
+    if hp_pct > 0.5 {
+        Color::srgb(0.267, 0.8, 0.267)
+    } else if hp_pct > 0.25 {
+        Color::srgb(0.8, 0.8, 0.267)
+    } else {
+        Color::srgb(0.8, 0.267, 0.267)
+    }
+}
+
+fn projected_mana_total(battle: &Battle) -> usize {
+    battle
+        .mana_pool
+        .projected_mana
+        .max(battle.mana_pool.current_mana) as usize
+}
+
+fn mana_display_slots(battle: &Battle) -> usize {
+    battle.mana_pool.max_mana as usize
+        + battle
+            .player_units
+            .iter()
+            .map(|unit| 1 + unit.hit_count_bonus as usize)
+            .sum::<usize>()
+}
+
+fn mana_readout_text(battle: &Battle, state: &PlanningState) -> String {
+    let current = battle.mana_pool.current_mana;
+    let max = battle.mana_pool.max_mana;
+    let projected_delta = battle
+        .mana_pool
+        .projected_mana
+        .saturating_sub(battle.mana_pool.current_mana);
+
+    if projected_delta > 0
+        && matches!(
+            state.mode,
+            PlanningMode::SelectAction
+                | PlanningMode::SelectAbility
+                | PlanningMode::SelectTarget { .. }
+        )
+    {
+        format!("{current}/{max} (+{projected_delta} projected)")
+    } else {
+        format!("{current}/{max}")
+    }
+}
+
+fn mana_circle_color(index: usize, current: usize, projected_total: usize) -> Color {
+    if index < current {
+        Color::srgb(0.267, 0.533, 0.8)
+    } else if index < projected_total {
+        Color::srgb(0.4, 0.8, 0.933)
+    } else {
+        Color::srgb(0.2, 0.2, 0.25)
+    }
+}
+
+fn player_unit(
+    battle: &Battle,
+    side: HudSide,
+    index: usize,
+) -> Option<&crate::domains::battle_engine::BattleUnitFull> {
+    match side {
+        HudSide::Player => battle.player_units.get(index),
+        HudSide::Enemy => battle.enemies.get(index),
+    }
+}
+
+pub fn refresh_hud(battle: &Battle, state: &PlanningState, queries: &mut HudSyncQueries) {
+    for (marker, mut node, mut background) in &mut queries.hp_bars {
+        if let Some(unit) = player_unit(battle, marker.side, marker.index) {
+            let hp_pct = if unit.unit.stats.hp == 0 {
+                0.0
+            } else {
+                unit.unit.current_hp as f32 / unit.unit.stats.hp as f32
+            };
+            node.width = Val::Percent(hp_pct * 100.0);
+            background.0 = hp_bar_color(hp_pct);
+        }
+    }
+
+    for (marker, mut text) in &mut queries.hp_text {
+        if let Some(unit) = player_unit(battle, marker.side, marker.index) {
+            text.0 = format!("{}/{}", unit.unit.current_hp, unit.unit.stats.hp);
+        }
+    }
+
+    for (marker, mut text) in &mut queries.crit_text {
+        if let Some(unit) = battle.player_units.get(marker.index) {
+            text.0 = format!("{}/10", unit.unit.crit_counter);
+        }
+    }
+
+    let current = battle.mana_pool.current_mana as usize;
+    let projected_total = projected_mana_total(battle);
+    let visible_slots = projected_total.max(battle.mana_pool.max_mana as usize);
+
+    for (marker, mut node, mut background) in &mut queries.mana_circles {
+        if marker.index < visible_slots {
+            node.display = Display::Flex;
+            background.0 = mana_circle_color(marker.index, current, projected_total);
+        } else {
+            node.display = Display::None;
+            background.0 = mana_circle_color(marker.index, current, projected_total);
+        }
+    }
+
+    for mut text in &mut queries.mana_text {
+        text.0 = mana_readout_text(battle, state);
+    }
+}
+
 /// Spawn the HUD overlay.
-pub fn setup_hud(
-    mut commands: Commands,
-    battle: Res<BattleRes>,
-    game_data: Res<GameDataRes>,
-) {
+pub fn setup_hud(mut commands: Commands, battle: Res<BattleRes>, game_data: Res<GameDataRes>) {
     let battle = &battle.0;
 
     // Full-screen column layout: main area + bottom HUD
@@ -164,22 +328,28 @@ pub fn setup_hud(
                             ))
                             .with_children(|row| {
                                 let current = battle.mana_pool.current_mana;
-                                let max = battle.mana_pool.max_mana;
-                                for j in 0..max {
-                                    let filled = j < current;
-                                    let color = if filled {
-                                        Color::srgb(0.267, 0.533, 0.8) // #4488cc
-                                    } else {
-                                        Color::srgb(0.2, 0.2, 0.25)
-                                    };
+                                let projected_total = projected_mana_total(battle);
+                                for j in 0..mana_display_slots(battle) {
+                                    let visible_slots =
+                                        projected_total.max(battle.mana_pool.max_mana as usize);
                                     row.spawn((
                                         Node {
                                             width: Val::Px(12.0),
                                             height: Val::Px(12.0),
+                                            display: if j < visible_slots {
+                                                Display::Flex
+                                            } else {
+                                                Display::None
+                                            },
                                             ..default()
                                         },
-                                        BackgroundColor(color),
+                                        BackgroundColor(mana_circle_color(
+                                            j,
+                                            current as usize,
+                                            projected_total,
+                                        )),
                                         BorderRadius::all(Val::Px(6.0)),
+                                        ManaCircle { index: j },
                                     ));
                                 }
                             });
@@ -196,6 +366,7 @@ pub fn setup_hud(
                                 ..default()
                             },
                             TextColor(Color::srgb(0.267, 0.533, 0.8)),
+                            ManaReadoutText,
                         ));
                     });
             });
@@ -266,6 +437,10 @@ fn spawn_unit_card(parent: &mut ChildBuilder, spec: UnitCardSpec<'_>) {
                     ..default()
                 },
                 TextColor(Color::srgb(0.6, 0.6, 0.6)),
+                HpText {
+                    side: spec.side,
+                    index: spec.index,
+                },
             ));
 
             // Crit counter (player units only)
