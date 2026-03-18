@@ -1,17 +1,18 @@
-campaign_id: vale-village-v3-rotation-wave-8
+campaign_id: vale-village-v3-rotation-wave-8-foreman
 baseline_branch: master
-baseline_commit: daad7f5
-phase: rotation-wave-8
+baseline_commit: 0147211
+phase: rotation-wave-8-foreman
 
 active_lanes:
-- lane_id: ui-djinn-sprites
+- lane_id: foreman-ui-djinn-sprites
   status: in-progress
-  goal: "Promote djinn interaction from the planning panel into the battle scene while keeping the current GUI slice playable."
+  goal: "Prepare exact worker objectives for djinn sprite interaction and UI sync without directly editing game code."
   owned_paths:
-  - src/domains/ui/
+  - objectives/
+  - status/foreman/
   worker_model: gpt-5
-  next_action: "Lane launched via scripts/launch-lane.sh; review run log and clamp/gate each verified wave."
+  next_action: "Foreman lane should write worker objective files and stop; no direct source edits allowed."
   validation:
     compile: pending
     tests: pending
-  report_path: status/workers/ui-djinn-sprites.md
+  report_path: status/foreman/ui-djinn-sprites-plan.md
