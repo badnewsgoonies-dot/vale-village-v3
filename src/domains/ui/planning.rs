@@ -155,10 +155,10 @@ pub fn update_planning_ui(
                 let unit_name = &unit.unit.id;
                 let available_abilities =
                     current_player_ability_ids(battle, &game_data.0, unit_idx);
-                let ability_preview = current_player_ability_names(battle, &game_data.0, unit_idx);
                 let djinn_summary = current_djinn_summary(&game_data.0, battle, unit_idx);
-                let djinn_choices = current_good_djinn_choices(&game_data.0, battle, unit_idx);
-                let summon_choices = current_summon_choices(&game_data.0, battle, unit_idx);
+                let ability_preview =
+                    current_player_ability_names(battle, &game_data.0, unit_idx);
+                let preview_text = compact_ability_preview(&ability_preview);
 
                 // Header
                 panel.spawn((
@@ -207,9 +207,9 @@ pub fn update_planning_ui(
                     TextColor(Color::srgb(0.8, 0.8, 0.6)),
                 ));
 
-                if !ability_preview.is_empty() {
+                if let Some(preview_text) = preview_text {
                     panel.spawn((
-                        Text::new(format!("Current kit: {}", ability_preview.join(", "))),
+                        Text::new(preview_text),
                         TextFont {
                             font_size: 11.0,
                             ..default()
@@ -218,62 +218,16 @@ pub fn update_planning_ui(
                     ));
                 }
 
-                if !djinn_choices.is_empty() {
-                    panel.spawn((
-                        Text::new("Djinn menu:"),
-                        TextFont {
-                            font_size: 12.0,
-                            ..default()
-                        },
-                        TextColor(Color::srgb(0.8, 0.8, 0.267)),
-                    ));
-
-                    panel
-                        .spawn(Node {
-                            flex_direction: FlexDirection::Row,
-                            column_gap: Val::Px(8.0),
-                            flex_wrap: FlexWrap::Wrap,
-                            ..default()
-                        })
-                        .with_children(|row| {
-                            for (slot_idx, name) in djinn_choices {
-                                spawn_action_button(
-                                    row,
-                                    &format!("ACTIVATE {}", name),
-                                    ActionChoice::ActivateDjinn(slot_idx, name),
-                                    Color::srgb(0.8, 0.533, 0.267),
-                                );
-                            }
-                        });
-                }
-
-                if !summon_choices.is_empty() {
-                    panel.spawn((
-                        Text::new("Summons execute before all other actions:"),
-                        TextFont {
-                            font_size: 12.0,
-                            ..default()
-                        },
-                        TextColor(Color::srgb(0.8, 0.667, 0.267)),
-                    ));
-
-                    panel
-                        .spawn(Node {
-                            flex_direction: FlexDirection::Row,
-                            column_gap: Val::Px(8.0),
-                            ..default()
-                        })
-                        .with_children(|row| {
-                            for (djinn_indices, tier) in summon_choices {
-                                spawn_action_button(
-                                    row,
-                                    &format!("SUMMON T{}", tier),
-                                    ActionChoice::Summon(djinn_indices, tier),
-                                    Color::srgb(0.8, 0.267, 0.533),
-                                );
-                            }
-                        });
-                }
+                panel.spawn((
+                    Text::new(
+                        "Click the highlighted unit's djinn beside the sprite to activate or summon.",
+                    ),
+                    TextFont {
+                        font_size: 12.0,
+                        ..default()
+                    },
+                    TextColor(Color::srgb(0.8, 0.8, 0.267)),
+                ));
 
                 // Queue status
                 let planned = state.order_pos;
@@ -861,6 +815,27 @@ fn current_player_ability_names(
                 .unwrap_or(ability_id.0)
         })
         .collect()
+}
+
+fn compact_ability_preview(ability_names: &[String]) -> Option<String> {
+    if ability_names.is_empty() {
+        return None;
+    }
+
+    let shown: Vec<&str> = ability_names
+        .iter()
+        .take(4)
+        .map(String::as_str)
+        .collect();
+    let remainder = ability_names.len().saturating_sub(shown.len());
+
+    let text = if remainder > 0 {
+        format!("Current kit: {} +{} more", shown.join(", "), remainder)
+    } else {
+        format!("Current kit: {}", shown.join(", "))
+    };
+
+    Some(text)
 }
 
 fn current_djinn_summary(game_data: &GameData, battle: &Battle, unit_idx: usize) -> String {

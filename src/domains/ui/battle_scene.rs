@@ -102,6 +102,16 @@ fn lookup_name(id: &str, game_data: &GameDataRes) -> String {
     id.to_string()
 }
 
+fn lookup_name_in_data(id: &str, game_data: &GameData) -> String {
+    if let Some(unit_def) = game_data.units.get(&UnitId(id.to_string())) {
+        return unit_def.name.clone();
+    }
+    if let Some(enemy_def) = game_data.enemies.get(&EnemyId(id.to_string())) {
+        return enemy_def.name.clone();
+    }
+    id.to_string()
+}
+
 /// Spawn camera and battle scene from actual Battle state.
 pub fn setup_battle_scene(
     mut commands: Commands,
@@ -291,6 +301,7 @@ fn spawn_player_djinn_row(
         return;
     }
 
+    let unit_name = lookup_name_in_data(&unit.unit.id, game_data);
     let world_y = unit_row_world_y(unit_idx, battle.player_units.len());
     let left = window.width() * 0.5 + PLAYER_X + PLAYER_SPRITE_SIZE.x * 0.5 + MARKER_ROW_X_OFFSET;
     let top = window.height() * 0.5 - world_y - MARKER_ROW_Y_OFFSET;
@@ -323,6 +334,19 @@ fn spawn_player_djinn_row(
             },
         ))
         .with_children(|row| {
+            row.spawn((
+                Text::new(unit_name),
+                TextFont {
+                    font_size: 12.0,
+                    ..default()
+                },
+                TextColor(if is_highlighted {
+                    Color::srgb(0.95, 0.88, 0.45)
+                } else {
+                    Color::srgb(0.7, 0.7, 0.78)
+                }),
+            ));
+
             if is_highlighted {
                 row.spawn((
                     Node {
