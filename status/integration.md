@@ -26,6 +26,6 @@
 ## Final gate status
 - Compile: pass
 - Lint: pass
-- Tests: 234 passed (`224` unit + `10` graduation)
+- Tests: 458 passed (`224` lib + `224` bin + `10` graduation)
 - Connectivity: pass
 - Contract checksum: pass

@@ -1,7 +1,7 @@
 # Vale Village v3 — Current State
 
 **Phase:** Wave 9 closeout — team-wide djinn correction
-**HEAD:** 8aae0bf
+**HEAD:** a367dd9
 **Date:** 2026-03-18
 
 ## Spine Status: IN PROGRESS
@@ -28,7 +28,7 @@ The CLI path loads full data, save state, progression, and deterministic battle 
 ## Gate Status
 - [x] Contract checksum: OK
 - [x] Compile: `cargo check` OK
-- [x] Tests: 234 passed, 0 failed (`224` unit + `10` graduation)
+- [x] Tests: 458 passed, 0 failed (`224` lib + `224` bin + `10` graduation)
 - [x] Lint: `cargo clippy -- -D warnings` OK
 - [x] Connectivity: OK
 
@@ -58,7 +58,7 @@ The CLI path loads full data, save state, progression, and deterministic battle 
 - [Observed] The currently acting unit now has a dedicated battle-scene highlight frame, improving round-order readability on the live GUI — `src/domains/ui/battle_scene.rs`
 - [Observed] SaveData now has a team-wide `team_djinn` field with serde default for forward-compatible persistence — `src/domains/save/mod.rs`
 - [Observed] The integrated GUI launches successfully on `DISPLAY=:0` and renders the new scene-side djinn controls — manual launch plus screenshot on 2026-03-17
-- [Observed] The global automated gate set is green at Wave 9 closeout — `cargo check`, `cargo clippy -- -D warnings`, `bash scripts/run-gates.sh` on 2026-03-18
+- [Observed] The global automated gate set is green on merged `master` — `cargo check`, `cargo clippy -- -D warnings`, `bash scripts/run-gates.sh` on 2026-03-18
 - [Assumed] The current GUI flow is fully understandable and operable by a player without a manual audit — NEEDS VERIFICATION before a GUI shipping decision depends on it
 
 ## Open Questions

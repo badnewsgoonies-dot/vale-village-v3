@@ -1,6 +1,6 @@
 campaign_id: vale-village-v3-wave-9-closeout
 baseline_branch: master
-baseline_commit: 8aae0bf
+baseline_commit: a367dd9
 phase: wave-9-closeout
 
 active_lanes: []
@@ -33,3 +33,4 @@ completed_lanes:
 session_notes:
 - "Wave 8 UI djinn sprite work is already present on master."
 - "Wave 9 closeout re-ran cargo check, cargo clippy -- -D warnings, and bash scripts/run-gates.sh on 2026-03-18."
+- "Merged upstream docs/manual research line into master before final closeout."
