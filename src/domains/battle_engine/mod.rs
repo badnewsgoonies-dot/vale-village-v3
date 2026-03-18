@@ -6,8 +6,8 @@ use std::collections::HashMap;
 
 use crate::shared::{
     AbilityDef, AbilityId, BattleAction, BattlePhase, CombatConfig, DamageDealt, DamageType,
-    DjinnDef, DjinnId, DjinnState, DjinnStateChanged, EnemyDef, HealingDone, ManaPoolChanged,
-    Side, Stats, StatusApplied, StatusEffectType, TargetRef, UnitDefeated,
+    DjinnDef, DjinnId, DjinnState, DjinnStateChanged, EnemyDef, HealingDone, ManaPoolChanged, Side,
+    Stats, StatusApplied, StatusEffectType, TargetRef, UnitDefeated,
 };
 
 use crate::domains::ai::{self, AiSelfView, AiStrategy, AiUnitView};
@@ -132,8 +132,7 @@ pub fn new_battle(
         .map(|pd| {
             let eq_effects = &pd.equipment_effects;
             let stats = Stats {
-                hp: (pd.base_stats.hp as i32 + eq_effects.total_stat_bonus.hp as i32).max(1)
-                    as u16,
+                hp: (pd.base_stats.hp as i32 + eq_effects.total_stat_bonus.hp as i32).max(1) as u16,
                 atk: (pd.base_stats.atk as i32 + eq_effects.total_stat_bonus.atk as i32).max(0)
                     as u16,
                 def: (pd.base_stats.def as i32 + eq_effects.total_stat_bonus.def as i32).max(0)
@@ -143,7 +142,9 @@ pub fn new_battle(
                 spd: (pd.base_stats.spd as i32 + eq_effects.total_stat_bonus.spd as i32).max(0)
                     as u16,
             };
-            let mana = pd.mana_contribution.saturating_add(eq_effects.total_mana_bonus);
+            let mana = pd
+                .mana_contribution
+                .saturating_add(eq_effects.total_mana_bonus);
             total_mana = total_mana.saturating_add(mana);
 
             BattleUnitFull {
@@ -273,7 +274,10 @@ pub fn plan_action(
             // Validate target exists
             get_unit(battle, *target).ok_or(PlanError::InvalidTarget)?;
         }
-        BattleAction::UseAbility { ability_id, targets } => {
+        BattleAction::UseAbility {
+            ability_id,
+            targets,
+        } => {
             if !status::can_use_ability(&unit.status_state.statuses) {
                 return Err(PlanError::UnitCannotAct);
             }
@@ -349,20 +353,14 @@ fn apply_projected_mana_change(battle: &mut Battle, unit_ref: TargetRef, action:
     apply_projected_mana_delta(battle, projected_mana_delta(battle, unit_ref, action));
 }
 
-fn reverse_projected_mana_change(
-    battle: &mut Battle,
-    unit_ref: TargetRef,
-    action: &BattleAction,
-) {
+fn reverse_projected_mana_change(battle: &mut Battle, unit_ref: TargetRef, action: &BattleAction) {
     apply_projected_mana_delta(battle, -projected_mana_delta(battle, unit_ref, action));
 }
 
 fn apply_projected_mana_delta(battle: &mut Battle, delta: i16) {
     if delta >= 0 {
-        battle.mana_pool.projected_mana = battle
-            .mana_pool
-            .projected_mana
-            .saturating_add(delta as u8);
+        battle.mana_pool.projected_mana =
+            battle.mana_pool.projected_mana.saturating_add(delta as u8);
     } else {
         battle.mana_pool.projected_mana = battle
             .mana_pool
@@ -383,10 +381,7 @@ pub fn plan_enemy_actions(battle: &mut Battle) {
             continue;
         }
         // Find first alive player unit
-        let target_idx = battle
-            .player_units
-            .iter()
-            .position(|p| p.unit.is_alive);
+        let target_idx = battle.player_units.iter().position(|p| p.unit.is_alive);
         let target_idx = match target_idx {
             Some(i) => i,
             None => break, // no player units left
@@ -481,7 +476,10 @@ pub fn plan_enemy_actions_with_ai(battle: &mut Battle, strategy: AiStrategy) {
                     battle.planned_actions.push((unit_ref, action));
                 }
             }
-            BattleAction::UseAbility { ability_id, targets } => {
+            BattleAction::UseAbility {
+                ability_id,
+                targets,
+            } => {
                 // Verify ability exists and at least one target is alive
                 if battle.ability_defs.contains_key(ability_id)
                     && targets
@@ -550,7 +548,10 @@ pub fn execute_round(battle: &mut Battle) -> Vec<BattleEvent> {
             BattleAction::Attack { target } => {
                 execute_attack(battle, actor_ref, target, &mut events);
             }
-            BattleAction::UseAbility { ability_id, targets } => {
+            BattleAction::UseAbility {
+                ability_id,
+                targets,
+            } => {
                 execute_ability(battle, actor_ref, &ability_id, &targets, &mut events);
             }
             BattleAction::ActivateDjinn { djinn_index } => {
@@ -596,11 +597,14 @@ fn execute_attack(
     // Get attacker data
     let (attacker_stats, crit_counter, hit_count_bonus, attacker_buff_mods) = {
         let actor = get_unit(battle, actor_ref).unwrap();
-        let buff_mods = status::compute_stat_modifiers(
-            &actor.status_state.buffs,
-            &actor.status_state.debuffs,
-        );
-        (actor.unit.stats, actor.unit.crit_counter, actor.hit_count_bonus, buff_mods)
+        let buff_mods =
+            status::compute_stat_modifiers(&actor.status_state.buffs, &actor.status_state.debuffs);
+        (
+            actor.unit.stats,
+            actor.unit.crit_counter,
+            actor.hit_count_bonus,
+            buff_mods,
+        )
     };
 
     // Check if target is alive
@@ -613,10 +617,8 @@ fn execute_attack(
 
     let (target_stats, target_buff_mods) = {
         let t = get_unit(battle, target_ref).unwrap();
-        let buff_mods = status::compute_stat_modifiers(
-            &t.status_state.buffs,
-            &t.status_state.debuffs,
-        );
+        let buff_mods =
+            status::compute_stat_modifiers(&t.status_state.buffs, &t.status_state.debuffs);
         (t.unit.stats, buff_mods)
     };
     let target_hp = get_unit(battle, target_ref).unwrap().unit.current_hp;
@@ -673,7 +675,10 @@ fn execute_attack(
             battle.mana_pool.generate_mana(hit.mana_generated);
             if hit.mana_generated > 0 {
                 events.push(BattleEvent::ManaChanged(ManaPoolChanged {
-                    old_value: battle.mana_pool.current_mana.saturating_sub(hit.mana_generated),
+                    old_value: battle
+                        .mana_pool
+                        .current_mana
+                        .saturating_sub(hit.mana_generated),
                     new_value: battle.mana_pool.current_mana,
                 }));
             }
@@ -704,7 +709,10 @@ fn execute_attack(
         }));
 
         if hit.is_crit {
-            events.push(BattleEvent::CritTriggered(actor_ref, hit.crit_counter_after));
+            events.push(BattleEvent::CritTriggered(
+                actor_ref,
+                hit.crit_counter_after,
+            ));
         }
 
         new_crit_counter = hit.crit_counter_after;
@@ -761,10 +769,8 @@ fn execute_ability(
 
     let (attacker_stats, attacker_buff_mods) = {
         let actor = get_unit(battle, actor_ref).unwrap();
-        let buff_mods = status::compute_stat_modifiers(
-            &actor.status_state.buffs,
-            &actor.status_state.debuffs,
-        );
+        let buff_mods =
+            status::compute_stat_modifiers(&actor.status_state.buffs, &actor.status_state.debuffs);
         (actor.unit.stats, buff_mods)
     };
     let effective_attacker = Stats {
@@ -812,10 +818,7 @@ fn execute_ability(
             // Apply buff/debuff modifiers to target
             let target_buff_mods = {
                 let t = get_unit(battle, target_ref).unwrap();
-                status::compute_stat_modifiers(
-                    &t.status_state.buffs,
-                    &t.status_state.debuffs,
-                )
+                status::compute_stat_modifiers(&t.status_state.buffs, &t.status_state.debuffs)
             };
             let effective_target_base = Stats {
                 hp: target_stats.hp,
@@ -859,8 +862,7 @@ fn execute_ability(
                 // Apply damage
                 {
                     let target = get_unit_mut(battle, target_ref).unwrap();
-                    target.unit.current_hp =
-                        target.unit.current_hp.saturating_sub(hit.damage);
+                    target.unit.current_hp = target.unit.current_hp.saturating_sub(hit.damage);
                     if target.unit.current_hp == 0 {
                         target.unit.is_alive = false;
                     }
@@ -935,57 +937,17 @@ fn execute_ability(
             // FIX 3: Chain damage — hits all targets on the opposing side
             if ability.chain_damage {
                 let primary_damage = hits.iter().map(|h| h.damage).sum::<u16>();
+                let primary_is_crit = hits.iter().any(|hit| hit.is_crit);
                 if primary_damage > 0 {
-                    // Build list of all alive targets on both sides
-                    let mut all_targets: Vec<TargetRef> = Vec::new();
-                    for i in 0..battle.player_units.len() {
-                        all_targets.push(TargetRef { side: Side::Player, index: i as u8 });
-                    }
-                    for i in 0..battle.enemies.len() {
-                        all_targets.push(TargetRef { side: Side::Enemy, index: i as u8 });
-                    }
-                    let chain_targets =
-                        damage_mods::calculate_chain_targets(actor_ref, &all_targets);
-                    for chain_tr in chain_targets {
-                        // Skip the primary target (already damaged)
-                        if chain_tr == target_ref {
-                            continue;
-                        }
-                        let alive = get_unit(battle, chain_tr)
-                            .map(|u| u.unit.is_alive)
-                            .unwrap_or(false);
-                        if alive {
-                            {
-                                let t = get_unit_mut(battle, chain_tr).unwrap();
-                                t.unit.current_hp =
-                                    t.unit.current_hp.saturating_sub(primary_damage);
-                                if t.unit.current_hp == 0 {
-                                    t.unit.is_alive = false;
-                                }
-                                // Accumulate freeze damage for chain hits
-                                for status in t.status_state.statuses.iter_mut() {
-                                    if status.effect_type == StatusEffectType::Freeze {
-                                        status.freeze_damage_taken += primary_damage;
-                                    }
-                                }
-                            }
-                            events.push(BattleEvent::DamageDealt(DamageDealt {
-                                source: actor_ref,
-                                target: chain_tr,
-                                amount: primary_damage,
-                                damage_type,
-                                is_crit: false,
-                            }));
-                            if get_unit(battle, chain_tr)
-                                .map(|u| !u.unit.is_alive)
-                                .unwrap_or(false)
-                            {
-                                events.push(BattleEvent::UnitDefeated(UnitDefeated {
-                                    unit: chain_tr,
-                                }));
-                            }
-                        }
-                    }
+                    apply_chain_damage(
+                        battle,
+                        actor_ref,
+                        target_ref,
+                        primary_damage,
+                        damage_type,
+                        primary_is_crit,
+                        events,
+                    );
                 }
             }
         }
@@ -1082,8 +1044,8 @@ fn execute_djinn_activate(
     events: &mut Vec<BattleEvent>,
 ) {
     hydrate_team_djinn_slots_from_players(battle);
-    let recovery_turns = battle.config.djinn_recovery_start_delay
-        + battle.config.djinn_recovery_per_turn;
+    let recovery_turns =
+        battle.config.djinn_recovery_start_delay + battle.config.djinn_recovery_per_turn;
     let djinn_def = {
         let djinn_id = match battle.team_djinn_slots.slots.get(djinn_index) {
             Some(djinn) => &djinn.djinn_id,
@@ -1116,6 +1078,62 @@ fn resolve_djinn_activation_damage(
     activation_event: djinn::DjinnActivationEvent,
     events: &mut Vec<BattleEvent>,
 ) {
+    match activation_event.effect_type {
+        Some(djinn::DjinnActivationEffectType::Heal) => {
+            let ally_count = match actor_ref.side {
+                Side::Player => battle.player_units.len(),
+                Side::Enemy => battle.enemies.len(),
+            };
+
+            for index in 0..ally_count {
+                let target_ref = TargetRef {
+                    side: actor_ref.side,
+                    index: index as u8,
+                };
+                let (is_alive, current_hp, max_hp) = {
+                    let unit = get_unit(battle, target_ref).unwrap();
+                    (unit.unit.is_alive, unit.unit.current_hp, unit.unit.stats.hp)
+                };
+                if !is_alive || current_hp >= max_hp {
+                    continue;
+                }
+
+                let heal_amount = max_hp - current_hp;
+                let target = get_unit_mut(battle, target_ref).unwrap();
+                target.unit.current_hp = max_hp;
+                events.push(BattleEvent::HealingDone(HealingDone {
+                    source: actor_ref,
+                    target: target_ref,
+                    amount: heal_amount,
+                }));
+            }
+            return;
+        }
+        Some(djinn::DjinnActivationEffectType::Buff) => {
+            let max_stacks = battle.config.max_buff_stacks as usize;
+            let actor = get_unit_mut(battle, actor_ref).unwrap();
+            status::apply_buff(
+                &mut actor.status_state,
+                &crate::shared::BuffEffect {
+                    stat_modifiers: crate::shared::StatBonus {
+                        atk: 2,
+                        def: 0,
+                        mag: 0,
+                        spd: 0,
+                        hp: 0,
+                    },
+                    duration: 3,
+                    shield_charges: None,
+                    grant_immunity: false,
+                },
+                max_stacks,
+            );
+            return;
+        }
+        Some(djinn::DjinnActivationEffectType::Status) | None => return,
+        Some(djinn::DjinnActivationEffectType::Damage) => {}
+    }
+
     let target_index = match battle.enemies.iter().position(|enemy| enemy.unit.is_alive) {
         Some(index) => index,
         None => return,
@@ -1127,10 +1145,8 @@ fn resolve_djinn_activation_damage(
 
     let (attacker_stats, attacker_buff_mods) = {
         let actor = get_unit(battle, actor_ref).unwrap();
-        let buff_mods = status::compute_stat_modifiers(
-            &actor.status_state.buffs,
-            &actor.status_state.debuffs,
-        );
+        let buff_mods =
+            status::compute_stat_modifiers(&actor.status_state.buffs, &actor.status_state.debuffs);
         (actor.unit.stats, buff_mods)
     };
     let effective_attacker = Stats {
@@ -1200,6 +1216,67 @@ fn resolve_djinn_activation_damage(
     }
 }
 
+fn apply_chain_damage(
+    battle: &mut Battle,
+    actor_ref: TargetRef,
+    primary_target_ref: TargetRef,
+    amount: u16,
+    damage_type: DamageType,
+    is_crit: bool,
+    events: &mut Vec<BattleEvent>,
+) {
+    let mut all_targets: Vec<TargetRef> = Vec::new();
+    for i in 0..battle.player_units.len() {
+        all_targets.push(TargetRef {
+            side: Side::Player,
+            index: i as u8,
+        });
+    }
+    for i in 0..battle.enemies.len() {
+        all_targets.push(TargetRef {
+            side: Side::Enemy,
+            index: i as u8,
+        });
+    }
+
+    let chain_targets = damage_mods::calculate_chain_targets(actor_ref, &all_targets);
+    for chain_tr in chain_targets {
+        if chain_tr == primary_target_ref {
+            continue;
+        }
+        let alive = get_unit(battle, chain_tr)
+            .map(|u| u.unit.is_alive)
+            .unwrap_or(false);
+        if alive {
+            {
+                let t = get_unit_mut(battle, chain_tr).unwrap();
+                t.unit.current_hp = t.unit.current_hp.saturating_sub(amount);
+                if t.unit.current_hp == 0 {
+                    t.unit.is_alive = false;
+                }
+                for status in t.status_state.statuses.iter_mut() {
+                    if status.effect_type == StatusEffectType::Freeze {
+                        status.freeze_damage_taken += amount;
+                    }
+                }
+            }
+            events.push(BattleEvent::DamageDealt(DamageDealt {
+                source: actor_ref,
+                target: chain_tr,
+                amount,
+                damage_type,
+                is_crit,
+            }));
+            if get_unit(battle, chain_tr)
+                .map(|u| !u.unit.is_alive)
+                .unwrap_or(false)
+            {
+                events.push(BattleEvent::UnitDefeated(UnitDefeated { unit: chain_tr }));
+            }
+        }
+    }
+}
+
 fn execute_summon_action(
     battle: &mut Battle,
     actor_ref: TargetRef,
@@ -1207,8 +1284,8 @@ fn execute_summon_action(
     events: &mut Vec<BattleEvent>,
 ) {
     hydrate_team_djinn_slots_from_players(battle);
-    let recovery_turns = battle.config.djinn_recovery_start_delay
-        + battle.config.djinn_recovery_per_turn;
+    let recovery_turns =
+        battle.config.djinn_recovery_start_delay + battle.config.djinn_recovery_per_turn;
     let indices: Vec<usize> = djinn_indices.iter().map(|&i| i as usize).collect();
 
     // Collect djinn IDs before mutating slots (for summon damage lookup)
@@ -1219,9 +1296,12 @@ fn execute_summon_action(
         .collect();
 
     // Transition djinn to Recovery
-    let summon_succeeded = if let Some(djinn_events) =
-        djinn::execute_summon(&mut battle.team_djinn_slots, &indices, actor_ref, recovery_turns)
-    {
+    let summon_succeeded = if let Some(djinn_events) = djinn::execute_summon(
+        &mut battle.team_djinn_slots,
+        &indices,
+        actor_ref,
+        recovery_turns,
+    ) {
         sync_team_djinn_slots_to_players(battle);
         for ev in djinn_events {
             events.push(BattleEvent::DjinnChanged(ev));
@@ -1317,7 +1397,11 @@ fn end_of_round_ticks(battle: &mut Battle, events: &mut Vec<BattleEvent>) {
 }
 
 fn tick_all_units_immunity(battle: &mut Battle) {
-    for unit in battle.player_units.iter_mut().chain(battle.enemies.iter_mut()) {
+    for unit in battle
+        .player_units
+        .iter_mut()
+        .chain(battle.enemies.iter_mut())
+    {
         if !unit.unit.is_alive {
             continue;
         }
@@ -1441,7 +1525,11 @@ fn tick_all_units_hots(battle: &mut Battle, events: &mut Vec<BattleEvent>) {
 }
 
 fn tick_all_units_buffs(battle: &mut Battle) {
-    for unit in battle.player_units.iter_mut().chain(battle.enemies.iter_mut()) {
+    for unit in battle
+        .player_units
+        .iter_mut()
+        .chain(battle.enemies.iter_mut())
+    {
         if !unit.unit.is_alive {
             continue;
         }
@@ -1451,7 +1539,11 @@ fn tick_all_units_buffs(battle: &mut Battle) {
 }
 
 fn tick_all_units_barriers(battle: &mut Battle) {
-    for unit in battle.player_units.iter_mut().chain(battle.enemies.iter_mut()) {
+    for unit in battle
+        .player_units
+        .iter_mut()
+        .chain(battle.enemies.iter_mut())
+    {
         if !unit.unit.is_alive {
             continue;
         }
@@ -1488,8 +1580,9 @@ fn collect_team_djinn_slots(player_data: &[PlayerUnitData]) -> DjinnSlots {
             if let Some(last) = team_slots.slots.last_mut() {
                 *last = inst.clone();
             }
-            team_slots.next_activation_order =
-                team_slots.next_activation_order.max(inst.activation_order.saturating_add(1));
+            team_slots.next_activation_order = team_slots
+                .next_activation_order
+                .max(inst.activation_order.saturating_add(1));
         }
     }
     team_slots
@@ -1669,8 +1762,20 @@ mod tests {
     }
 
     fn setup_basic_battle() -> Battle {
-        let player_stats = Stats { hp: 100, atk: 30, def: 20, mag: 25, spd: 15 };
-        let enemy_stats = Stats { hp: 80, atk: 20, def: 15, mag: 10, spd: 10 };
+        let player_stats = Stats {
+            hp: 100,
+            atk: 30,
+            def: 20,
+            mag: 25,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 80,
+            atk: 20,
+            def: 15,
+            mag: 10,
+            spd: 10,
+        };
 
         let player = make_player("hero", player_stats, 5);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -1679,7 +1784,13 @@ mod tests {
         let mut abilities = HashMap::new();
         abilities.insert(aid, adef);
 
-        new_battle(vec![player], vec![enemy], test_config(), abilities, HashMap::new())
+        new_battle(
+            vec![player],
+            vec![enemy],
+            test_config(),
+            abilities,
+            HashMap::new(),
+        )
     }
 
     // ── Test: new_battle correct mana pool ──────────────────────────
@@ -1716,21 +1827,35 @@ mod tests {
     #[test]
     fn test_plan_attack_succeeds() {
         let mut battle = setup_basic_battle();
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target = TargetRef { side: Side::Enemy, index: 0 };
-        let result = plan_action(
-            &mut battle,
-            actor,
-            BattleAction::Attack { target },
-        );
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
+        let result = plan_action(&mut battle, actor, BattleAction::Attack { target });
         assert!(result.is_ok());
         assert_eq!(battle.planned_actions.len(), 1);
     }
 
     #[test]
     fn test_planned_attack_adds_projected_mana() {
-        let player_stats = Stats { hp: 100, atk: 30, def: 20, mag: 25, spd: 15 };
-        let enemy_stats = Stats { hp: 80, atk: 20, def: 15, mag: 10, spd: 10 };
+        let player_stats = Stats {
+            hp: 100,
+            atk: 30,
+            def: 20,
+            mag: 25,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 80,
+            atk: 20,
+            def: 15,
+            mag: 10,
+            spd: 10,
+        };
 
         let mut player = make_player("hero", player_stats, 5);
         player.equipment_effects.total_hit_count_bonus = 2;
@@ -1744,8 +1869,14 @@ mod tests {
             HashMap::new(),
         );
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target = TargetRef { side: Side::Enemy, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
 
         plan_action(&mut battle, actor, BattleAction::Attack { target }).unwrap();
 
@@ -1755,8 +1886,14 @@ mod tests {
     #[test]
     fn test_planned_attack_undo_reverses_mana() {
         let mut battle = setup_basic_battle();
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target = TargetRef { side: Side::Enemy, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
 
         plan_action(&mut battle, actor, BattleAction::Attack { target }).unwrap();
         assert_eq!(battle.mana_pool.projected_mana, 6);
@@ -1784,8 +1921,14 @@ mod tests {
     #[test]
     fn test_plan_ability_sufficient_mana() {
         let mut battle = setup_basic_battle();
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target = TargetRef { side: Side::Enemy, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
         let result = plan_action(
             &mut battle,
             actor,
@@ -1806,8 +1949,14 @@ mod tests {
         battle.mana_pool.spend_mana(4);
         assert_eq!(battle.mana_pool.current_mana, 1);
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target = TargetRef { side: Side::Enemy, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
         let result = plan_action(
             &mut battle,
             actor,
@@ -1824,22 +1973,28 @@ mod tests {
     #[test]
     fn test_execute_round_auto_attack_damage() {
         let mut battle = setup_basic_battle();
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target = TargetRef { side: Side::Enemy, index: 0 };
-        plan_action(
-            &mut battle,
-            actor,
-            BattleAction::Attack { target },
-        )
-        .unwrap();
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
+        plan_action(&mut battle, actor, BattleAction::Attack { target }).unwrap();
 
         let enemy_hp_before = battle.enemies[0].unit.current_hp;
         let events = execute_round(&mut battle);
 
         let enemy_hp_after = battle.enemies[0].unit.current_hp;
-        assert!(enemy_hp_after < enemy_hp_before, "Enemy should have taken damage");
+        assert!(
+            enemy_hp_after < enemy_hp_before,
+            "Enemy should have taken damage"
+        );
 
-        let has_damage = events.iter().any(|e| matches!(e, BattleEvent::DamageDealt(_)));
+        let has_damage = events
+            .iter()
+            .any(|e| matches!(e, BattleEvent::DamageDealt(_)));
         assert!(has_damage, "Should have a DamageDealt event");
     }
 
@@ -1848,8 +2003,14 @@ mod tests {
     #[test]
     fn test_execute_round_ability_spends_mana() {
         let mut battle = setup_basic_battle();
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target = TargetRef { side: Side::Enemy, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
 
         plan_action(
             &mut battle,
@@ -1878,21 +2039,45 @@ mod tests {
 
     #[test]
     fn test_multi_hit_generates_mana() {
-        let player_stats = Stats { hp: 100, atk: 30, def: 20, mag: 25, spd: 15 };
-        let enemy_stats = Stats { hp: 200, atk: 20, def: 15, mag: 10, spd: 10 };
+        let player_stats = Stats {
+            hp: 100,
+            atk: 30,
+            def: 20,
+            mag: 25,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 200,
+            atk: 20,
+            def: 15,
+            mag: 10,
+            spd: 10,
+        };
 
         let mut player = make_player("hero", player_stats, 5);
         player.equipment_effects.total_hit_count_bonus = 0;
 
         let enemy = make_enemy("troll", enemy_stats);
-        let mut battle = new_battle(vec![player], vec![enemy], test_config(), HashMap::new(), HashMap::new());
+        let mut battle = new_battle(
+            vec![player],
+            vec![enemy],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
 
         // Spend some mana first to track generation
         battle.mana_pool.spend_mana(3);
         let _mana_before = battle.mana_pool.current_mana;
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target = TargetRef { side: Side::Enemy, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
         plan_action(&mut battle, actor, BattleAction::Attack { target }).unwrap();
 
         execute_round(&mut battle);
@@ -1911,15 +2096,24 @@ mod tests {
         // Give the enemy a barrier
         status::apply_barrier(&mut battle.enemies[0].status_state, 1, 5);
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target = TargetRef { side: Side::Enemy, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
         plan_action(&mut battle, actor, BattleAction::Attack { target }).unwrap();
 
         let enemy_hp_before = battle.enemies[0].unit.current_hp;
         let events = execute_round(&mut battle);
 
         let enemy_hp_after = battle.enemies[0].unit.current_hp;
-        assert_eq!(enemy_hp_after, enemy_hp_before, "Barrier should have blocked damage");
+        assert_eq!(
+            enemy_hp_after, enemy_hp_before,
+            "Barrier should have blocked damage"
+        );
 
         let has_barrier = events
             .iter()
@@ -1959,15 +2153,39 @@ mod tests {
 
     #[test]
     fn test_unit_death_from_damage() {
-        let player_stats = Stats { hp: 100, atk: 200, def: 20, mag: 25, spd: 15 };
-        let enemy_stats = Stats { hp: 30, atk: 20, def: 5, mag: 10, spd: 10 };
+        let player_stats = Stats {
+            hp: 100,
+            atk: 200,
+            def: 20,
+            mag: 25,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 30,
+            atk: 20,
+            def: 5,
+            mag: 10,
+            spd: 10,
+        };
 
         let player = make_player("hero", player_stats, 5);
         let enemy = make_enemy("weak_goblin", enemy_stats);
-        let mut battle = new_battle(vec![player], vec![enemy], test_config(), HashMap::new(), HashMap::new());
+        let mut battle = new_battle(
+            vec![player],
+            vec![enemy],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target = TargetRef { side: Side::Enemy, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
         plan_action(&mut battle, actor, BattleAction::Attack { target }).unwrap();
 
         let events = execute_round(&mut battle);
@@ -2026,8 +2244,14 @@ mod tests {
         let mut battle = setup_basic_battle();
         battle.player_units[0].unit.is_alive = false;
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target = TargetRef { side: Side::Enemy, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
         let result = plan_action(&mut battle, actor, BattleAction::Attack { target });
         assert_eq!(result, Err(PlanError::UnitCannotAct));
     }
@@ -2038,10 +2262,15 @@ mod tests {
     fn test_plan_djinn_not_ready() {
         let mut battle = setup_basic_battle();
         // Add a djinn in Recovery state
-        battle.player_units[0].djinn_slots.add(DjinnId("flint".into()));
+        battle.player_units[0]
+            .djinn_slots
+            .add(DjinnId("flint".into()));
         battle.player_units[0].djinn_slots.slots[0].state = DjinnState::Recovery;
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         let result = plan_action(
             &mut battle,
             actor,
@@ -2056,7 +2285,10 @@ mod tests {
     fn test_plan_invalid_djinn_index() {
         let mut battle = setup_basic_battle();
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         let result = plan_action(
             &mut battle,
             actor,
@@ -2131,16 +2363,34 @@ mod tests {
             .iter()
             .any(|event| matches!(event, BattleEvent::DjinnChanged(_))));
         assert_eq!(battle.team_djinn_slots.slots[0].state, DjinnState::Recovery);
-        assert_eq!(battle.player_units[0].djinn_slots.slots[0].state, DjinnState::Recovery);
-        assert_eq!(battle.player_units[1].djinn_slots.slots[0].state, DjinnState::Recovery);
+        assert_eq!(
+            battle.player_units[0].djinn_slots.slots[0].state,
+            DjinnState::Recovery
+        );
+        assert_eq!(
+            battle.player_units[1].djinn_slots.slots[0].state,
+            DjinnState::Recovery
+        );
     }
 
     // ── Test: full scenario plan + execute + check across 2 rounds ──
 
     #[test]
     fn test_full_two_round_scenario() {
-        let player_stats = Stats { hp: 200, atk: 40, def: 20, mag: 30, spd: 15 };
-        let enemy_stats = Stats { hp: 50, atk: 15, def: 10, mag: 10, spd: 8 };
+        let player_stats = Stats {
+            hp: 200,
+            atk: 40,
+            def: 20,
+            mag: 30,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 50,
+            atk: 15,
+            def: 10,
+            mag: 10,
+            spd: 8,
+        };
 
         let player = make_player("hero", player_stats, 5);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -2149,11 +2399,23 @@ mod tests {
         let mut abilities = HashMap::new();
         abilities.insert(aid, adef);
 
-        let mut battle = new_battle(vec![player], vec![enemy], test_config(), abilities, HashMap::new());
+        let mut battle = new_battle(
+            vec![player],
+            vec![enemy],
+            test_config(),
+            abilities,
+            HashMap::new(),
+        );
 
         // Round 1: auto-attack
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target = TargetRef { side: Side::Enemy, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
         plan_action(&mut battle, actor, BattleAction::Attack { target }).unwrap();
 
         assert_eq!(battle.round, 1);
@@ -2203,9 +2465,18 @@ mod tests {
     #[test]
     fn test_get_unit() {
         let battle = setup_basic_battle();
-        let player_ref = TargetRef { side: Side::Player, index: 0 };
-        let enemy_ref = TargetRef { side: Side::Enemy, index: 0 };
-        let invalid_ref = TargetRef { side: Side::Player, index: 99 };
+        let player_ref = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let enemy_ref = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
+        let invalid_ref = TargetRef {
+            side: Side::Player,
+            index: 99,
+        };
 
         assert!(get_unit(&battle, player_ref).is_some());
         assert!(get_unit(&battle, enemy_ref).is_some());
@@ -2216,12 +2487,24 @@ mod tests {
 
     #[test]
     fn test_multi_player_mana_pool() {
-        let stats = Stats { hp: 100, atk: 20, def: 15, mag: 10, spd: 10 };
+        let stats = Stats {
+            hp: 100,
+            atk: 20,
+            def: 15,
+            mag: 10,
+            spd: 10,
+        };
         let p1 = make_player("hero1", stats, 3);
         let p2 = make_player("hero2", stats, 4);
         let enemy = make_enemy("goblin", stats);
 
-        let battle = new_battle(vec![p1, p2], vec![enemy], test_config(), HashMap::new(), HashMap::new());
+        let battle = new_battle(
+            vec![p1, p2],
+            vec![enemy],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
         assert_eq!(battle.mana_pool.max_mana, 7);
         assert_eq!(battle.mana_pool.current_mana, 7);
     }
@@ -2230,8 +2513,20 @@ mod tests {
 
     #[test]
     fn test_djinn_activation_deals_damage() {
-        let player_stats = Stats { hp: 100, atk: 30, def: 20, mag: 25, spd: 15 };
-        let enemy_stats = Stats { hp: 80, atk: 20, def: 15, mag: 10, spd: 10 };
+        let player_stats = Stats {
+            hp: 100,
+            atk: 30,
+            def: 20,
+            mag: 25,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 80,
+            atk: 20,
+            def: 15,
+            mag: 10,
+            spd: 10,
+        };
 
         let player = make_player("hero", player_stats, 5);
         let first_enemy = make_enemy("fallen-goblin", enemy_stats);
@@ -2251,7 +2546,10 @@ mod tests {
         battle.enemies[0].unit.is_alive = false;
         battle.enemies[0].unit.current_hp = 0;
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         plan_action(
             &mut battle,
             actor,
@@ -2278,7 +2576,11 @@ mod tests {
             .collect();
         assert!(
             damage_events.iter().any(|damage| {
-                damage.target == TargetRef { side: Side::Enemy, index: 1 }
+                damage.target
+                    == TargetRef {
+                        side: Side::Enemy,
+                        index: 1,
+                    }
                     && damage.amount == expected_damage
                     && damage.damage_type == DamageType::Psynergy
             }),
@@ -2293,7 +2595,10 @@ mod tests {
         battle.djinn_defs.insert(djinn_id.clone(), djinn_def);
         battle.player_units[0].djinn_slots.add(djinn_id);
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         plan_action(
             &mut battle,
             actor,
@@ -2315,24 +2620,247 @@ mod tests {
         assert!(has_djinn_change, "Should have DjinnChanged event");
     }
 
+    #[test]
+    fn test_djinn_activation_heal_restores_caster_team() {
+        let player_stats = Stats {
+            hp: 100,
+            atk: 30,
+            def: 20,
+            mag: 25,
+            spd: 15,
+        };
+        let ally_stats = Stats {
+            hp: 90,
+            atk: 18,
+            def: 14,
+            mag: 12,
+            spd: 11,
+        };
+        let enemy_stats = Stats {
+            hp: 80,
+            atk: 20,
+            def: 15,
+            mag: 10,
+            spd: 10,
+        };
+
+        let player = make_player("hero", player_stats, 5);
+        let ally = make_player("ally", ally_stats, 3);
+        let enemy = make_enemy("goblin", enemy_stats);
+
+        let djinn_id = DjinnId("mist".into());
+        let empty_ability_set = crate::shared::DjinnAbilitySet {
+            good_abilities: vec![],
+            recovery_abilities: vec![],
+        };
+        let djinn_def = DjinnDef {
+            id: djinn_id.clone(),
+            name: "Mist".to_string(),
+            element: Element::Mercury,
+            tier: 1,
+            stat_bonus: crate::shared::StatBonus::default(),
+            summon_effect: Some(crate::shared::SummonEffect {
+                damage: 0,
+                buff: None,
+                status: None,
+                heal: Some(18),
+            }),
+            ability_pairs: crate::shared::DjinnAbilityPairs {
+                same: empty_ability_set.clone(),
+                counter: empty_ability_set.clone(),
+                neutral: empty_ability_set,
+            },
+        };
+        let mut djinn_defs = HashMap::new();
+        djinn_defs.insert(djinn_id.clone(), djinn_def);
+
+        let mut battle = new_battle(
+            vec![player, ally],
+            vec![enemy],
+            test_config(),
+            HashMap::new(),
+            djinn_defs,
+        );
+        battle.player_units[0].djinn_slots.add(djinn_id);
+        battle.player_units[0].unit.current_hp = 55;
+        battle.player_units[1].unit.current_hp = 40;
+
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        plan_action(
+            &mut battle,
+            actor,
+            BattleAction::ActivateDjinn { djinn_index: 0 },
+        )
+        .unwrap();
+
+        let events = execute_round(&mut battle);
+
+        assert_eq!(
+            battle.player_units[0].unit.current_hp,
+            battle.player_units[0].unit.stats.hp
+        );
+        assert_eq!(
+            battle.player_units[1].unit.current_hp,
+            battle.player_units[1].unit.stats.hp
+        );
+        assert!(
+            events.iter().any(|event| matches!(
+                event,
+                BattleEvent::HealingDone(HealingDone {
+                    source,
+                    target,
+                    amount: 45,
+                }) if *source == actor && *target == actor
+            )),
+            "Activation should heal the caster back to full HP"
+        );
+        assert!(
+            events.iter().any(|event| matches!(
+                event,
+                BattleEvent::HealingDone(HealingDone {
+                    source,
+                    target,
+                    amount: 50,
+                }) if *source == actor
+                    && *target == TargetRef {
+                        side: Side::Player,
+                        index: 1,
+                    }
+            )),
+            "Activation should heal allies on the caster's side"
+        );
+    }
+
+    #[test]
+    fn test_djinn_activation_buff_applies_atk_to_caster() {
+        let player_stats = Stats {
+            hp: 100,
+            atk: 30,
+            def: 20,
+            mag: 25,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 80,
+            atk: 20,
+            def: 15,
+            mag: 10,
+            spd: 10,
+        };
+
+        let player = make_player("hero", player_stats, 5);
+        let enemy = make_enemy("goblin", enemy_stats);
+
+        let djinn_id = DjinnId("forge".into());
+        let empty_ability_set = crate::shared::DjinnAbilitySet {
+            good_abilities: vec![],
+            recovery_abilities: vec![],
+        };
+        let djinn_def = DjinnDef {
+            id: djinn_id.clone(),
+            name: "Forge".to_string(),
+            element: Element::Mars,
+            tier: 1,
+            stat_bonus: crate::shared::StatBonus::default(),
+            summon_effect: Some(crate::shared::SummonEffect {
+                damage: 0,
+                buff: Some(crate::shared::BuffEffect {
+                    stat_modifiers: crate::shared::StatBonus {
+                        atk: 5,
+                        def: 0,
+                        mag: 0,
+                        spd: 0,
+                        hp: 0,
+                    },
+                    duration: 2,
+                    shield_charges: None,
+                    grant_immunity: false,
+                }),
+                status: None,
+                heal: None,
+            }),
+            ability_pairs: crate::shared::DjinnAbilityPairs {
+                same: empty_ability_set.clone(),
+                counter: empty_ability_set.clone(),
+                neutral: empty_ability_set,
+            },
+        };
+        let mut djinn_defs = HashMap::new();
+        djinn_defs.insert(djinn_id.clone(), djinn_def);
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![enemy],
+            test_config(),
+            HashMap::new(),
+            djinn_defs,
+        );
+        battle.player_units[0].djinn_slots.add(djinn_id);
+
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        plan_action(
+            &mut battle,
+            actor,
+            BattleAction::ActivateDjinn { djinn_index: 0 },
+        )
+        .unwrap();
+
+        execute_round(&mut battle);
+
+        let buff_mods = status::compute_stat_modifiers(
+            &battle.player_units[0].status_state.buffs,
+            &battle.player_units[0].status_state.debuffs,
+        );
+        assert_eq!(buff_mods.atk, 2, "Activation buff should grant ATK +2");
+        assert_eq!(battle.player_units[0].status_state.buffs.len(), 1);
+    }
+
     // ── Test: plan_enemy_actions plans correctly ────────────────────
 
     #[test]
     fn test_plan_enemy_actions_targets_first_alive_player() {
-        let player_stats = Stats { hp: 100, atk: 20, def: 15, mag: 10, spd: 10 };
-        let enemy_stats = Stats { hp: 80, atk: 25, def: 10, mag: 10, spd: 12 };
+        let player_stats = Stats {
+            hp: 100,
+            atk: 20,
+            def: 15,
+            mag: 10,
+            spd: 10,
+        };
+        let enemy_stats = Stats {
+            hp: 80,
+            atk: 25,
+            def: 10,
+            mag: 10,
+            spd: 12,
+        };
 
         let p1 = make_player("hero1", player_stats, 3);
         let p2 = make_player("hero2", player_stats, 3);
         let e1 = make_enemy("goblin-a", enemy_stats);
         let e2 = make_enemy("goblin-b", enemy_stats);
 
-        let mut battle = new_battle(vec![p1, p2], vec![e1, e2], test_config(), HashMap::new(), HashMap::new());
+        let mut battle = new_battle(
+            vec![p1, p2],
+            vec![e1, e2],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
 
         plan_enemy_actions(&mut battle);
 
         // Both enemies should have planned an attack on player index 0
-        assert_eq!(battle.planned_actions.len(), 2, "Both enemies should plan actions");
+        assert_eq!(
+            battle.planned_actions.len(),
+            2,
+            "Both enemies should plan actions"
+        );
         for (actor_ref, action) in &battle.planned_actions {
             assert_eq!(actor_ref.side, Side::Enemy, "Actor should be enemy");
             match action {
@@ -2349,32 +2877,63 @@ mod tests {
 
     #[test]
     fn test_plan_enemy_actions_skips_dead_enemies() {
-        let stats = Stats { hp: 100, atk: 20, def: 15, mag: 10, spd: 10 };
+        let stats = Stats {
+            hp: 100,
+            atk: 20,
+            def: 15,
+            mag: 10,
+            spd: 10,
+        };
         let p1 = make_player("hero", stats, 3);
         let e1 = make_enemy("dead-goblin", stats);
         let e2 = make_enemy("live-goblin", stats);
 
-        let mut battle = new_battle(vec![p1], vec![e1, e2], test_config(), HashMap::new(), HashMap::new());
+        let mut battle = new_battle(
+            vec![p1],
+            vec![e1, e2],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
         // Kill first enemy
         battle.enemies[0].unit.is_alive = false;
         battle.enemies[0].unit.current_hp = 0;
 
         plan_enemy_actions(&mut battle);
 
-        assert_eq!(battle.planned_actions.len(), 1, "Only alive enemy should plan");
-        assert_eq!(battle.planned_actions[0].0.index, 1, "Second enemy should be the actor");
+        assert_eq!(
+            battle.planned_actions.len(),
+            1,
+            "Only alive enemy should plan"
+        );
+        assert_eq!(
+            battle.planned_actions[0].0.index, 1,
+            "Second enemy should be the actor"
+        );
     }
 
     // ── Test: plan_enemy_actions targets second player if first dead ─
 
     #[test]
     fn test_plan_enemy_actions_targets_second_player_if_first_dead() {
-        let stats = Stats { hp: 100, atk: 20, def: 15, mag: 10, spd: 10 };
+        let stats = Stats {
+            hp: 100,
+            atk: 20,
+            def: 15,
+            mag: 10,
+            spd: 10,
+        };
         let p1 = make_player("dead-hero", stats, 3);
         let p2 = make_player("alive-hero", stats, 3);
         let e1 = make_enemy("goblin", stats);
 
-        let mut battle = new_battle(vec![p1, p2], vec![e1], test_config(), HashMap::new(), HashMap::new());
+        let mut battle = new_battle(
+            vec![p1, p2],
+            vec![e1],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
         // Kill first player
         battle.player_units[0].unit.is_alive = false;
         battle.player_units[0].unit.current_hp = 0;
@@ -2394,13 +2953,31 @@ mod tests {
 
     #[test]
     fn test_enemy_deals_damage_to_player() {
-        let player_stats = Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 8 };
-        let enemy_stats = Stats { hp: 80, atk: 30, def: 10, mag: 10, spd: 12 };
+        let player_stats = Stats {
+            hp: 100,
+            atk: 20,
+            def: 10,
+            mag: 10,
+            spd: 8,
+        };
+        let enemy_stats = Stats {
+            hp: 80,
+            atk: 30,
+            def: 10,
+            mag: 10,
+            spd: 12,
+        };
 
         let p1 = make_player("hero", player_stats, 3);
         let e1 = make_enemy("strong-goblin", enemy_stats);
 
-        let mut battle = new_battle(vec![p1], vec![e1], test_config(), HashMap::new(), HashMap::new());
+        let mut battle = new_battle(
+            vec![p1],
+            vec![e1],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
 
         // Only plan enemy action (no player action)
         plan_enemy_actions(&mut battle);
@@ -2431,21 +3008,47 @@ mod tests {
     #[test]
     fn test_player_death_leads_to_defeat() {
         // Give enemy massive ATK so it kills the player in one round
-        let player_stats = Stats { hp: 30, atk: 5, def: 2, mag: 5, spd: 5 };
-        let enemy_stats = Stats { hp: 500, atk: 200, def: 50, mag: 10, spd: 20 };
+        let player_stats = Stats {
+            hp: 30,
+            atk: 5,
+            def: 2,
+            mag: 5,
+            spd: 5,
+        };
+        let enemy_stats = Stats {
+            hp: 500,
+            atk: 200,
+            def: 50,
+            mag: 10,
+            spd: 20,
+        };
 
         let p1 = make_player("fragile-hero", player_stats, 1);
         let e1 = make_enemy("boss-goblin", enemy_stats);
 
-        let mut battle = new_battle(vec![p1], vec![e1], test_config(), HashMap::new(), HashMap::new());
+        let mut battle = new_battle(
+            vec![p1],
+            vec![e1],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
 
         // Plan both sides
-        let player_ref = TargetRef { side: Side::Player, index: 0 };
-        let enemy_target = TargetRef { side: Side::Enemy, index: 0 };
+        let player_ref = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let enemy_target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
         let _ = plan_action(
             &mut battle,
             player_ref,
-            BattleAction::Attack { target: enemy_target },
+            BattleAction::Attack {
+                target: enemy_target,
+            },
         );
         plan_enemy_actions(&mut battle);
 
@@ -2476,17 +3079,41 @@ mod tests {
 
     #[test]
     fn test_two_sided_combat_round() {
-        let player_stats = Stats { hp: 200, atk: 25, def: 15, mag: 10, spd: 15 };
-        let enemy_stats = Stats { hp: 150, atk: 20, def: 12, mag: 10, spd: 10 };
+        let player_stats = Stats {
+            hp: 200,
+            atk: 25,
+            def: 15,
+            mag: 10,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 150,
+            atk: 20,
+            def: 12,
+            mag: 10,
+            spd: 10,
+        };
 
         let p1 = make_player("hero", player_stats, 3);
         let e1 = make_enemy("goblin", enemy_stats);
 
-        let mut battle = new_battle(vec![p1], vec![e1], test_config(), HashMap::new(), HashMap::new());
+        let mut battle = new_battle(
+            vec![p1],
+            vec![e1],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
 
         // Plan player attack
-        let player_ref = TargetRef { side: Side::Player, index: 0 };
-        let enemy_ref = TargetRef { side: Side::Enemy, index: 0 };
+        let player_ref = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let enemy_ref = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
         plan_action(
             &mut battle,
             player_ref,
@@ -2519,8 +3146,20 @@ mod tests {
 
     #[test]
     fn test_ai_enemy_uses_ability_when_mana_available() {
-        let player_stats = Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 10 };
-        let enemy_stats = Stats { hp: 80, atk: 25, def: 10, mag: 15, spd: 12 };
+        let player_stats = Stats {
+            hp: 100,
+            atk: 20,
+            def: 10,
+            mag: 10,
+            spd: 10,
+        };
+        let enemy_stats = Stats {
+            hp: 80,
+            atk: 25,
+            def: 10,
+            mag: 15,
+            spd: 12,
+        };
 
         let player = make_player("hero", player_stats, 5);
         let mut enemy_data = make_enemy("smart-goblin", enemy_stats);
@@ -2531,7 +3170,13 @@ mod tests {
         let mut abilities = HashMap::new();
         abilities.insert(aid, adef);
 
-        let mut battle = new_battle(vec![player], vec![enemy_data], test_config(), abilities, HashMap::new());
+        let mut battle = new_battle(
+            vec![player],
+            vec![enemy_data],
+            test_config(),
+            abilities,
+            HashMap::new(),
+        );
 
         // Verify the enemy has ability_ids populated
         assert_eq!(battle.enemies[0].ability_ids.len(), 1);
@@ -2543,7 +3188,10 @@ mod tests {
         // The enemy should have planned a UseAbility action (not just Attack)
         assert_eq!(battle.planned_actions.len(), 1);
         match &battle.planned_actions[0].1 {
-            BattleAction::UseAbility { ability_id, targets } => {
+            BattleAction::UseAbility {
+                ability_id,
+                targets,
+            } => {
                 assert_eq!(ability_id.0, "fire-bolt", "Enemy should use fire-bolt");
                 assert!(!targets.is_empty(), "Should have at least one target");
                 assert_eq!(targets[0].side, Side::Player, "Target should be a player");
@@ -2572,14 +3220,32 @@ mod tests {
 
     #[test]
     fn test_ai_enemy_targets_lowest_hp_player_when_aggressive() {
-        let player_stats = Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 10 };
-        let enemy_stats = Stats { hp: 80, atk: 25, def: 10, mag: 10, spd: 12 };
+        let player_stats = Stats {
+            hp: 100,
+            atk: 20,
+            def: 10,
+            mag: 10,
+            spd: 10,
+        };
+        let enemy_stats = Stats {
+            hp: 80,
+            atk: 25,
+            def: 10,
+            mag: 10,
+            spd: 12,
+        };
 
         let p1 = make_player("hero-a", player_stats, 3);
         let p2 = make_player("hero-b", player_stats, 3);
         let enemy = make_enemy("aggressive-goblin", enemy_stats);
 
-        let mut battle = new_battle(vec![p1, p2], vec![enemy], test_config(), HashMap::new(), HashMap::new());
+        let mut battle = new_battle(
+            vec![p1, p2],
+            vec![enemy],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
 
         // Damage player 1 so it has lower HP
         battle.player_units[1].unit.current_hp = 20;
@@ -2603,14 +3269,32 @@ mod tests {
 
     #[test]
     fn test_ai_fallback_to_basic_attack_when_no_abilities() {
-        let player_stats = Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 10 };
-        let enemy_stats = Stats { hp: 80, atk: 25, def: 10, mag: 10, spd: 12 };
+        let player_stats = Stats {
+            hp: 100,
+            atk: 20,
+            def: 10,
+            mag: 10,
+            spd: 10,
+        };
+        let enemy_stats = Stats {
+            hp: 80,
+            atk: 25,
+            def: 10,
+            mag: 10,
+            spd: 12,
+        };
 
         let player = make_player("hero", player_stats, 5);
         let enemy = make_enemy("dumb-goblin", enemy_stats);
         // Enemy has no abilities (empty list from make_enemy)
 
-        let mut battle = new_battle(vec![player], vec![enemy], test_config(), HashMap::new(), HashMap::new());
+        let mut battle = new_battle(
+            vec![player],
+            vec![enemy],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
 
         assert!(
             battle.enemies[0].ability_ids.is_empty(),
@@ -2640,9 +3324,27 @@ mod tests {
         // Set up: 2 players with different SPD, slower one planned first.
         // Under the old SPD-sort the faster unit would execute first.
         // Under the fix, the planning order is preserved.
-        let slow_stats = Stats { hp: 200, atk: 30, def: 20, mag: 10, spd: 5 };
-        let fast_stats = Stats { hp: 200, atk: 30, def: 20, mag: 10, spd: 50 };
-        let enemy_stats = Stats { hp: 500, atk: 10, def: 5, mag: 5, spd: 1 };
+        let slow_stats = Stats {
+            hp: 200,
+            atk: 30,
+            def: 20,
+            mag: 10,
+            spd: 5,
+        };
+        let fast_stats = Stats {
+            hp: 200,
+            atk: 30,
+            def: 20,
+            mag: 10,
+            spd: 50,
+        };
+        let enemy_stats = Stats {
+            hp: 500,
+            atk: 10,
+            def: 5,
+            mag: 5,
+            spd: 1,
+        };
 
         let p1 = make_player("slow-hero", slow_stats, 3);
         let p2 = make_player("fast-hero", fast_stats, 3);
@@ -2656,13 +3358,32 @@ mod tests {
             HashMap::new(),
         );
 
-        let slow_ref = TargetRef { side: Side::Player, index: 0 };
-        let fast_ref = TargetRef { side: Side::Player, index: 1 };
-        let enemy_ref = TargetRef { side: Side::Enemy, index: 0 };
+        let slow_ref = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let fast_ref = TargetRef {
+            side: Side::Player,
+            index: 1,
+        };
+        let enemy_ref = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
 
         // Plan slow hero FIRST, then fast hero
-        plan_action(&mut battle, slow_ref, BattleAction::Attack { target: enemy_ref }).unwrap();
-        plan_action(&mut battle, fast_ref, BattleAction::Attack { target: enemy_ref }).unwrap();
+        plan_action(
+            &mut battle,
+            slow_ref,
+            BattleAction::Attack { target: enemy_ref },
+        )
+        .unwrap();
+        plan_action(
+            &mut battle,
+            fast_ref,
+            BattleAction::Attack { target: enemy_ref },
+        )
+        .unwrap();
 
         let events = execute_round(&mut battle);
 
@@ -2670,9 +3391,7 @@ mod tests {
         let damage_sources: Vec<TargetRef> = events
             .iter()
             .filter_map(|e| match e {
-                BattleEvent::DamageDealt(dd) if dd.source.side == Side::Player => {
-                    Some(dd.source)
-                }
+                BattleEvent::DamageDealt(dd) if dd.source.side == Side::Player => Some(dd.source),
                 _ => None,
             })
             .collect();
@@ -2693,8 +3412,20 @@ mod tests {
 
     #[test]
     fn test_freeze_broken_by_damage() {
-        let player_stats = Stats { hp: 200, atk: 50, def: 20, mag: 10, spd: 15 };
-        let enemy_stats = Stats { hp: 300, atk: 10, def: 5, mag: 5, spd: 5 };
+        let player_stats = Stats {
+            hp: 200,
+            atk: 50,
+            def: 20,
+            mag: 10,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 300,
+            atk: 10,
+            def: 5,
+            mag: 5,
+            spd: 5,
+        };
 
         let player = make_player("hero", player_stats, 5);
         let enemy = make_enemy("frozen-goblin", enemy_stats);
@@ -2725,8 +3456,14 @@ mod tests {
         );
 
         // Plan an attack that will deal damage
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target = TargetRef { side: Side::Enemy, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
         plan_action(&mut battle, actor, BattleAction::Attack { target }).unwrap();
 
         execute_round(&mut battle);
@@ -2751,8 +3488,20 @@ mod tests {
 
     #[test]
     fn test_chain_damage_hits_all_enemies() {
-        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 40, spd: 15 };
-        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+        let player_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 20,
+            mag: 40,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 5,
+            mag: 5,
+            spd: 5,
+        };
 
         let player = make_player("hero", player_stats, 10);
         let e1 = make_enemy("goblin-a", enemy_stats);
@@ -2797,9 +3546,15 @@ mod tests {
             HashMap::new(),
         );
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         // Target only the first enemy
-        let primary_target = TargetRef { side: Side::Enemy, index: 0 };
+        let primary_target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
         plan_action(
             &mut battle,
             actor,
@@ -2832,12 +3587,93 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_chain_hit_preserves_crit_flag() {
+        let player_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 20,
+            mag: 40,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 5,
+            mag: 5,
+            spd: 5,
+        };
+
+        let player = make_player("hero", player_stats, 10);
+        let e1 = make_enemy("goblin-a", enemy_stats);
+        let e2 = make_enemy("goblin-b", enemy_stats);
+        let e3 = make_enemy("goblin-c", enemy_stats);
+
+        let mut battle = new_battle(
+            vec![player],
+            vec![e1, e2, e3],
+            test_config(),
+            HashMap::new(),
+            HashMap::new(),
+        );
+
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let primary_target = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
+        let mut events = Vec::new();
+
+        apply_chain_damage(
+            &mut battle,
+            actor,
+            primary_target,
+            25,
+            DamageType::Psynergy,
+            true,
+            &mut events,
+        );
+
+        let chain_damage_events: Vec<&DamageDealt> = events
+            .iter()
+            .filter_map(|event| match event {
+                BattleEvent::DamageDealt(damage)
+                    if damage.target.side == Side::Enemy && damage.target.index != 0 =>
+                {
+                    Some(damage)
+                }
+                _ => None,
+            })
+            .collect();
+
+        assert_eq!(chain_damage_events.len(), 2, "Chain should hit both secondary enemies");
+        assert!(
+            chain_damage_events.iter().all(|damage| damage.is_crit),
+            "Chain hit events should preserve the primary crit flag",
+        );
+    }
+
     // ── FIX 4 Test: Immunity blocks status ──────────────────────────
 
     #[test]
     fn test_immunity_blocks_status() {
-        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 30, spd: 15 };
-        let enemy_stats = Stats { hp: 200, atk: 20, def: 5, mag: 5, spd: 5 };
+        let player_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 20,
+            mag: 30,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 200,
+            atk: 20,
+            def: 5,
+            mag: 5,
+            spd: 5,
+        };
 
         let player = make_player("hero", player_stats, 10);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -2886,7 +3722,10 @@ mod tests {
         );
 
         // Use ward on self
-        let actor = TargetRef { side: Side::Player, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         plan_action(
             &mut battle,
             actor,
@@ -2913,11 +3752,7 @@ mod tests {
             freeze_threshold: None,
         };
         let imm = battle.player_units[0].status_state.immunity.clone();
-        let applied = status::apply_status(
-            &mut battle.player_units[0].status_state,
-            &burn,
-            &imm,
-        );
+        let applied = status::apply_status(&mut battle.player_units[0].status_state, &burn, &imm);
         assert!(!applied, "Status should be blocked by immunity");
         assert!(
             battle.player_units[0].status_state.statuses.is_empty(),
@@ -2929,8 +3764,20 @@ mod tests {
 
     #[test]
     fn test_cleanse_removes_statuses() {
-        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 30, spd: 15 };
-        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+        let player_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 20,
+            mag: 30,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 5,
+            mag: 5,
+            spd: 5,
+        };
 
         let player = make_player("hero", player_stats, 10);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -2994,7 +3841,10 @@ mod tests {
         assert_eq!(battle.player_units[0].status_state.statuses.len(), 2);
 
         // Use cleanse on self
-        let actor = TargetRef { side: Side::Player, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         plan_action(
             &mut battle,
             actor,
@@ -3017,8 +3867,20 @@ mod tests {
 
     #[test]
     fn test_revive_dead_ally() {
-        let player_stats = Stats { hp: 100, atk: 10, def: 20, mag: 30, spd: 15 };
-        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+        let player_stats = Stats {
+            hp: 100,
+            atk: 10,
+            def: 20,
+            mag: 30,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 5,
+            mag: 5,
+            spd: 5,
+        };
 
         let p1 = make_player("healer", player_stats, 10);
         let p2 = make_player("dead-ally", player_stats, 0);
@@ -3068,9 +3930,15 @@ mod tests {
         battle.player_units[1].unit.current_hp = 0;
 
         // Use revive
-        let actor = TargetRef { side: Side::Player, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         // Target the dead ally (the ability is healing category, targeting the ally)
-        let dead_ally = TargetRef { side: Side::Player, index: 1 };
+        let dead_ally = TargetRef {
+            side: Side::Player,
+            index: 1,
+        };
         plan_action(
             &mut battle,
             actor,
@@ -3096,9 +3964,7 @@ mod tests {
 
         // Should have a HealingDone event for the revive
         let has_revive_heal = events.iter().any(|e| match e {
-            BattleEvent::HealingDone(hd) => {
-                hd.target.side == Side::Player && hd.target.index == 1
-            }
+            BattleEvent::HealingDone(hd) => hd.target.side == Side::Player && hd.target.index == 1,
             _ => false,
         });
         assert!(has_revive_heal, "Should have HealingDone event for revive");
@@ -3108,8 +3974,20 @@ mod tests {
 
     #[test]
     fn test_healing_includes_mag_stat() {
-        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 30, spd: 15 };
-        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+        let player_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 20,
+            mag: 30,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 5,
+            mag: 5,
+            spd: 5,
+        };
 
         let player = make_player("healer", player_stats, 10);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -3156,7 +4034,10 @@ mod tests {
         // Damage the player to make healing visible
         battle.player_units[0].unit.current_hp = 100;
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         plan_action(
             &mut battle,
             actor,
@@ -3194,8 +4075,20 @@ mod tests {
 
     #[test]
     fn test_barrier_ability_without_duration_uses_default() {
-        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 30, spd: 15 };
-        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+        let player_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 20,
+            mag: 30,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 5,
+            mag: 5,
+            spd: 5,
+        };
 
         let player = make_player("hero", player_stats, 10);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -3239,7 +4132,10 @@ mod tests {
             HashMap::new(),
         );
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         plan_action(
             &mut battle,
             actor,
@@ -3260,13 +4156,11 @@ mod tests {
             "Barrier should exist"
         );
         assert_eq!(
-            battle.player_units[0].status_state.barriers[0].charges,
-            2,
+            battle.player_units[0].status_state.barriers[0].charges, 2,
             "Barrier should have 2 charges"
         );
         assert_eq!(
-            battle.player_units[0].status_state.barriers[0].remaining_turns,
-            2,
+            battle.player_units[0].status_state.barriers[0].remaining_turns, 2,
             "Barrier should have 2 remaining turns (default 3 minus 1 tick)"
         );
     }
@@ -3275,8 +4169,20 @@ mod tests {
 
     #[test]
     fn test_immunity_expires_after_duration() {
-        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 30, spd: 15 };
-        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+        let player_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 20,
+            mag: 30,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 5,
+            mag: 5,
+            spd: 5,
+        };
 
         let player = make_player("hero", player_stats, 10);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -3320,8 +4226,20 @@ mod tests {
 
     #[test]
     fn test_buffs_affect_damage_calculation() {
-        let player_stats = Stats { hp: 200, atk: 30, def: 20, mag: 10, spd: 15 };
-        let enemy_stats = Stats { hp: 300, atk: 10, def: 15, mag: 10, spd: 5 };
+        let player_stats = Stats {
+            hp: 200,
+            atk: 30,
+            def: 20,
+            mag: 10,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 300,
+            atk: 10,
+            def: 15,
+            mag: 10,
+            spd: 5,
+        };
 
         let player = make_player("hero", player_stats, 10);
         let e1 = make_enemy("goblin-a", enemy_stats);
@@ -3336,27 +4254,38 @@ mod tests {
         );
 
         // Attack without buffs — measure baseline damage
-        let actor = TargetRef { side: Side::Player, index: 0 };
-        let target1 = TargetRef { side: Side::Enemy, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let target1 = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
         plan_action(&mut battle, actor, BattleAction::Attack { target: target1 }).unwrap();
         execute_round(&mut battle);
         let damage_without_buff = 300u16.saturating_sub(battle.enemies[0].unit.current_hp);
 
         // Now apply a strong ATK buff to the player
         let atk_buff = crate::shared::BuffEffect {
-            stat_modifiers: crate::shared::StatBonus { atk: 20, def: 0, mag: 0, spd: 0, hp: 0 },
+            stat_modifiers: crate::shared::StatBonus {
+                atk: 20,
+                def: 0,
+                mag: 0,
+                spd: 0,
+                hp: 0,
+            },
             duration: 5,
             shield_charges: None,
             grant_immunity: false,
         };
-        status::apply_buff(
-            &mut battle.player_units[0].status_state,
-            &atk_buff,
-            3,
-        );
+        status::apply_buff(&mut battle.player_units[0].status_state, &atk_buff, 3);
 
         // Attack second enemy with buff active
-        let target2 = TargetRef { side: Side::Enemy, index: 1 };
+        let target2 = TargetRef {
+            side: Side::Enemy,
+            index: 1,
+        };
         plan_action(&mut battle, actor, BattleAction::Attack { target: target2 }).unwrap();
         execute_round(&mut battle);
         let damage_with_buff = 300u16.saturating_sub(battle.enemies[1].unit.current_hp);
@@ -3373,7 +4302,13 @@ mod tests {
 
     #[test]
     fn test_enemy_xp_gold_used_in_rewards() {
-        let player_stats = Stats { hp: 200, atk: 200, def: 20, mag: 10, spd: 15 };
+        let player_stats = Stats {
+            hp: 200,
+            atk: 200,
+            def: 20,
+            mag: 10,
+            spd: 15,
+        };
 
         let player = make_player("hero", player_stats, 5);
 
@@ -3384,7 +4319,13 @@ mod tests {
                 name: "Weak A".to_string(),
                 element: Element::Venus,
                 level: 1,
-                stats: Stats { hp: 10, atk: 1, def: 1, mag: 1, spd: 1 },
+                stats: Stats {
+                    hp: 10,
+                    atk: 1,
+                    def: 1,
+                    mag: 1,
+                    spd: 1,
+                },
                 xp: 25,
                 gold: 15,
                 abilities: vec![],
@@ -3396,7 +4337,13 @@ mod tests {
                 name: "Weak B".to_string(),
                 element: Element::Mars,
                 level: 1,
-                stats: Stats { hp: 10, atk: 1, def: 1, mag: 1, spd: 1 },
+                stats: Stats {
+                    hp: 10,
+                    atk: 1,
+                    def: 1,
+                    mag: 1,
+                    spd: 1,
+                },
                 xp: 40,
                 gold: 20,
                 abilities: vec![],
@@ -3431,8 +4378,20 @@ mod tests {
 
     #[test]
     fn test_summon_damage_respects_barriers() {
-        let player_stats = Stats { hp: 200, atk: 10, def: 20, mag: 30, spd: 15 };
-        let enemy_stats = Stats { hp: 200, atk: 10, def: 5, mag: 5, spd: 5 };
+        let player_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 20,
+            mag: 30,
+            spd: 15,
+        };
+        let enemy_stats = Stats {
+            hp: 200,
+            atk: 10,
+            def: 5,
+            mag: 5,
+            spd: 5,
+        };
 
         let player = make_player("hero", player_stats, 10);
         let e1 = make_enemy("barrier-goblin", enemy_stats);
@@ -3479,11 +4438,16 @@ mod tests {
         // Give first enemy a barrier
         status::apply_barrier(&mut battle.enemies[0].status_state, 1, 5);
 
-        let actor = TargetRef { side: Side::Player, index: 0 };
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         plan_action(
             &mut battle,
             actor,
-            BattleAction::Summon { djinn_indices: vec![0] },
+            BattleAction::Summon {
+                djinn_indices: vec![0],
+            },
         )
         .unwrap();
 
@@ -3519,29 +4483,111 @@ mod tests {
         // Expected order: 1 (18), 2 (13), 0 (10)
         let battle = new_battle(
             vec![
-                make_player("slow", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 10 }, 1),
-                make_player("fast", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 18 }, 1),
-                make_player("mid", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 13 }, 1),
+                make_player(
+                    "slow",
+                    Stats {
+                        hp: 100,
+                        atk: 20,
+                        def: 10,
+                        mag: 10,
+                        spd: 10,
+                    },
+                    1,
+                ),
+                make_player(
+                    "fast",
+                    Stats {
+                        hp: 100,
+                        atk: 20,
+                        def: 10,
+                        mag: 10,
+                        spd: 18,
+                    },
+                    1,
+                ),
+                make_player(
+                    "mid",
+                    Stats {
+                        hp: 100,
+                        atk: 20,
+                        def: 10,
+                        mag: 10,
+                        spd: 13,
+                    },
+                    1,
+                ),
             ],
-            vec![make_enemy("foe", Stats { hp: 80, atk: 15, def: 8, mag: 5, spd: 10 })],
+            vec![make_enemy(
+                "foe",
+                Stats {
+                    hp: 80,
+                    atk: 15,
+                    def: 8,
+                    mag: 5,
+                    spd: 10,
+                },
+            )],
             test_config(),
             HashMap::new(),
             HashMap::new(),
         );
 
         let order = get_planning_order(&battle);
-        assert_eq!(order, vec![1, 2, 0], "Planning order should be fastest-first by effective SPD");
+        assert_eq!(
+            order,
+            vec![1, 2, 0],
+            "Planning order should be fastest-first by effective SPD"
+        );
     }
 
     #[test]
     fn test_planning_order_skips_dead() {
         let mut battle = new_battle(
             vec![
-                make_player("alive_slow", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 5 }, 1),
-                make_player("dead_fast", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 20 }, 1),
-                make_player("alive_fast", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 15 }, 1),
+                make_player(
+                    "alive_slow",
+                    Stats {
+                        hp: 100,
+                        atk: 20,
+                        def: 10,
+                        mag: 10,
+                        spd: 5,
+                    },
+                    1,
+                ),
+                make_player(
+                    "dead_fast",
+                    Stats {
+                        hp: 100,
+                        atk: 20,
+                        def: 10,
+                        mag: 10,
+                        spd: 20,
+                    },
+                    1,
+                ),
+                make_player(
+                    "alive_fast",
+                    Stats {
+                        hp: 100,
+                        atk: 20,
+                        def: 10,
+                        mag: 10,
+                        spd: 15,
+                    },
+                    1,
+                ),
             ],
-            vec![make_enemy("foe", Stats { hp: 80, atk: 15, def: 8, mag: 5, spd: 10 })],
+            vec![make_enemy(
+                "foe",
+                Stats {
+                    hp: 80,
+                    atk: 15,
+                    def: 8,
+                    mag: 5,
+                    spd: 10,
+                },
+            )],
             test_config(),
             HashMap::new(),
             HashMap::new(),
@@ -3564,11 +4610,50 @@ mod tests {
         // If base SPD also ties, lower index wins — tested by unit 2.
         let mut battle = new_battle(
             vec![
-                make_player("low_base", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 10 }, 1),
-                make_player("high_base", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 15 }, 1),
-                make_player("also_15", Stats { hp: 100, atk: 20, def: 10, mag: 10, spd: 15 }, 1),
+                make_player(
+                    "low_base",
+                    Stats {
+                        hp: 100,
+                        atk: 20,
+                        def: 10,
+                        mag: 10,
+                        spd: 10,
+                    },
+                    1,
+                ),
+                make_player(
+                    "high_base",
+                    Stats {
+                        hp: 100,
+                        atk: 20,
+                        def: 10,
+                        mag: 10,
+                        spd: 15,
+                    },
+                    1,
+                ),
+                make_player(
+                    "also_15",
+                    Stats {
+                        hp: 100,
+                        atk: 20,
+                        def: 10,
+                        mag: 10,
+                        spd: 15,
+                    },
+                    1,
+                ),
             ],
-            vec![make_enemy("foe", Stats { hp: 80, atk: 15, def: 8, mag: 5, spd: 10 })],
+            vec![make_enemy(
+                "foe",
+                Stats {
+                    hp: 80,
+                    atk: 15,
+                    def: 8,
+                    mag: 5,
+                    spd: 10,
+                },
+            )],
             test_config(),
             HashMap::new(),
             HashMap::new(),
@@ -3580,6 +4665,10 @@ mod tests {
         let order = get_planning_order(&battle);
         // Unit 1 and 2 both have base SPD 15, effective 15 — unit 1 wins by lower index.
         // Unit 0 has base SPD 10, effective 15 — comes last among the three.
-        assert_eq!(order, vec![1, 2, 0], "Tiebreaker: higher base SPD first, then lower index");
+        assert_eq!(
+            order,
+            vec![1, 2, 0],
+            "Tiebreaker: higher base SPD first, then lower index"
+        );
     }
 }
