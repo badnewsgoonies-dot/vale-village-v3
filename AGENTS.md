@@ -4,7 +4,7 @@ Read these before acting:
 1. STATE.md
 2. MANIFEST.md
 3. docs/spec.md
-4. docs/AI_ORCHESTRATION_PLAYBOOK.md
+4. docs/MANUAL.md
 5. src/shared/mod.rs
 
 Core rules:

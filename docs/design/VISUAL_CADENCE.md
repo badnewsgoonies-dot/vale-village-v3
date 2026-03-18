@@ -135,3 +135,72 @@
 - Wave 7: Pre-battle screen — team select, equipment, djinn assignment
 - Wave 8: Out-of-battle screens — shop, character details, abilities page
 - Wave 9: Polish — transitions, particle effects, element theming
+
+---
+
+## Wave 6: Djinn Interaction
+
+**Goal:** Click a djinn indicator on a party unit → djinn menu opens → player can activate a djinn (immediate effect + enters RECOVERY) or select a summon as the unit's action for this round. Live display of djinn state (GOOD/RECOVERY + turns remaining). Granted abilities update when djinn state changes.
+
+**Exact scope:**
+- Create `src/domains/ui/djinn_menu.rs` — djinn interaction panel
+- Add `DjinnMenu` mode to `PlanningMode` enum in planning.rs
+- Add djinn indicator sprites on each party unit (small colored circles per equipped djinn)
+- Click djinn indicator → opens djinn menu panel
+
+**Djinn indicator on party units:**
+- Per party unit, show up to 3 small circles (12px diameter) aligned horizontally below the unit sprite
+- GOOD djinn: element color (Venus=#8B7355, Mars=#CC4444, Mercury=#4488CC, Jupiter=#CCCC44), full opacity
+- RECOVERY djinn: same color at 30% opacity, small "R" overlay, turns remaining as tiny number
+- Empty slot: #333333 circle, dashed outline
+
+**Djinn menu panel (opens on click):**
+- Position: centered on screen, 400×300px, background #0d0d1a, border 2px #4488cc
+- Header: "DJINN — [Unit Name]" (18px bold white)
+- For each of 3 djinn slots, show row:
+  - Djinn name (14px, element-colored)
+  - State badge: "GOOD" (#44cc44) or "RECOVERY (N turns)" (#cc4444)
+  - Element icon (16px colored circle)
+  - "Activate" button (only if GOOD): 80×28px, #cc8844, text "ACTIVATE"
+- Summon section (bottom of panel):
+  - Header: "SUMMONS" (14px, #cc8844)
+  - For each available summon tier (from djinn::get_available_summons):
+    - Tier name + power + djinn cost
+    - "SUMMON" button: 100×32px, #cc44cc
+  - Greyed out if not enough GOOD djinn
+- "CLOSE" button: 80×28px, #666666, top-right corner
+
+**Interaction flow:**
+1. During PlanningMode::SelectAction, player clicks a djinn indicator on current unit
+2. PlanningMode transitions to DjinnMenu
+3. Player can:
+   a. Click "ACTIVATE" on a GOOD djinn → calls djinn::activate_djinn → immediate effect fires → djinn enters RECOVERY → menu updates → returns to SelectAction (djinn activation is NOT the unit's action, it's a free action)
+   b. Click "SUMMON" → unit's action becomes Summon(tier, indices) → planning advances to next unit
+   c. Click "CLOSE" → returns to SelectAction
+
+**State changes visible:**
+- When djinn activates: indicator changes from full opacity to 30% + "R" overlay
+- Granted abilities list in ability submenu updates immediately (abilities swap per DESIGN_LOCK §4)
+- Mana display updates if djinn stat bonus changes mana contribution
+
+**Does NOT:**
+- Handle djinn equipment/assignment (Wave 7 — pre-battle screen)
+- Play djinn activation animation beyond the indicator change (future polish)
+- Modify the shared contract
+- Modify any existing domain except planning.rs (add DjinnMenu mode) and battle_scene.rs (add djinn indicators)
+
+**Values:**
+- Djinn indicator offset from unit sprite: y = -44px (below unit)
+- Menu z-layer: 100 (above all battle elements)
+- Activate button hover: lighten 20%
+- RECOVERY countdown font: 8px, white, centered on indicator circle
+
+**Gate:** `cargo check && cargo test && shasum -a 256 -c .contract.sha256`
+
+**Harden checklist:**
+- [ ] Can click a djinn on each party unit?
+- [ ] Does ACTIVATE change djinn state visually (GOOD → RECOVERY)?
+- [ ] Does ability list in SelectAbility reflect the state change?
+- [ ] Can select a summon as the unit's action?
+- [ ] Does closing the menu return to action selection without side effects?
+- [ ] Recovery countdown visible and accurate?
