@@ -17,8 +17,8 @@ const PLAYER_X: f32 = -200.0;
 const ENEMY_X: f32 = 200.0;
 const UNIT_SPACING_Y: f32 = 80.0;
 const PLAYER_SPRITE_SIZE: Vec2 = Vec2::new(48.0, 64.0);
-const MARKER_ROW_X_OFFSET: f32 = 42.0;
-const MARKER_ROW_Y_OFFSET: f32 = 18.0;
+const MARKER_ROW_X_OFFSET: f32 = -235.0;
+const MARKER_ROW_Y_OFFSET: f32 = 12.0;
 
 /// Marker for player unit entities.
 #[derive(Component)]
@@ -43,6 +43,12 @@ pub struct BattleSceneOverlayRoot;
 /// Marker row metadata for one player's djinn display.
 #[derive(Component)]
 pub struct PlayerDjinnMarkerRow {
+    pub unit_index: usize,
+}
+
+/// Visual frame behind the currently acting unit.
+#[derive(Component)]
+pub struct ActiveUnitFrame {
     pub unit_index: usize,
 }
 
@@ -202,43 +208,16 @@ pub fn setup_battle_scene(
         ));
     }
 
-    // Mana pool indicator (top center)
-    let mana_text = format!(
-        "Mana: {}/{}",
-        battle.mana_pool.current_mana, battle.mana_pool.max_mana
-    );
+    // Compact battle state heading. Detailed mana already lives in the HUD.
+    let heading_text = format!("Round {} • {:?}", battle.round, battle.phase);
     commands.spawn((
-        Text2d::new(mana_text),
-        TextFont {
-            font_size: 18.0,
-            ..default()
-        },
-        TextColor(Color::srgb(0.27, 0.53, 0.80)),
-        Transform::from_xyz(0.0, 320.0, 1.0),
-    ));
-
-    // Round indicator
-    let round_text = format!("Round {}", battle.round);
-    commands.spawn((
-        Text2d::new(round_text),
+        Text2d::new(heading_text),
         TextFont {
             font_size: 16.0,
             ..default()
         },
         TextColor(Color::srgb(0.6, 0.6, 0.6)),
-        Transform::from_xyz(0.0, 295.0, 1.0),
-    ));
-
-    // Phase indicator
-    let phase_text = format!("Phase: {:?}", battle.phase);
-    commands.spawn((
-        Text2d::new(phase_text),
-        TextFont {
-            font_size: 14.0,
-            ..default()
-        },
-        TextColor(Color::srgb(0.5, 0.5, 0.5)),
-        Transform::from_xyz(0.0, 275.0, 1.0),
+        Transform::from_xyz(0.0, 300.0, 1.0),
     ));
 }
 
@@ -271,6 +250,10 @@ pub fn sync_battle_scene_overlay(
     let interactive_unit = interactive_unit_index(battle, &state);
 
     commands.entity(overlay_root).with_children(|overlay| {
+        if let Some(unit_idx) = highlighted_unit {
+            spawn_active_unit_frame(overlay, window, battle, unit_idx);
+        }
+
         for unit_idx in 0..battle.player_units.len() {
             spawn_player_djinn_row(
                 overlay,
@@ -283,6 +266,44 @@ pub fn sync_battle_scene_overlay(
             );
         }
     });
+}
+
+fn spawn_active_unit_frame(
+    parent: &mut ChildBuilder,
+    window: &Window,
+    battle: &Battle,
+    unit_idx: usize,
+) {
+    let world_y = unit_row_world_y(unit_idx, battle.player_units.len());
+    let left = window.width() * 0.5 + PLAYER_X - PLAYER_SPRITE_SIZE.x * 0.5 - 10.0;
+    let top = window.height() * 0.5 - world_y - PLAYER_SPRITE_SIZE.y * 0.5 - 10.0;
+
+    parent
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                left: Val::Px(left),
+                top: Val::Px(top),
+                width: Val::Px(PLAYER_SPRITE_SIZE.x + 20.0),
+                height: Val::Px(PLAYER_SPRITE_SIZE.y + 20.0),
+                padding: UiRect::all(Val::Px(4.0)),
+                ..default()
+            },
+            BackgroundColor(Color::srgba(0.95, 0.88, 0.45, 0.14)),
+            BorderRadius::all(Val::Px(14.0)),
+            ActiveUnitFrame { unit_index: unit_idx },
+        ))
+        .with_children(|frame| {
+            frame.spawn((
+                Node {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    ..default()
+                },
+                BackgroundColor(Color::srgba(0.95, 0.88, 0.45, 0.18)),
+                BorderRadius::all(Val::Px(10.0)),
+            ));
+        });
 }
 
 fn spawn_player_djinn_row(
@@ -303,7 +324,7 @@ fn spawn_player_djinn_row(
 
     let unit_name = lookup_name_in_data(&unit.unit.id, game_data);
     let world_y = unit_row_world_y(unit_idx, battle.player_units.len());
-    let left = window.width() * 0.5 + PLAYER_X + PLAYER_SPRITE_SIZE.x * 0.5 + MARKER_ROW_X_OFFSET;
+    let left = window.width() * 0.5 + PLAYER_X + MARKER_ROW_X_OFFSET;
     let top = window.height() * 0.5 - world_y - MARKER_ROW_Y_OFFSET;
     let summon_choices = if is_interactive {
         current_summon_choices(game_data, battle, unit_idx)
@@ -319,14 +340,17 @@ fn spawn_player_djinn_row(
                 top: Val::Px(top),
                 flex_direction: FlexDirection::Row,
                 align_items: AlignItems::Center,
-                column_gap: Val::Px(8.0),
-                padding: UiRect::axes(Val::Px(10.0), Val::Px(6.0)),
+                column_gap: Val::Px(if is_highlighted { 8.0 } else { 6.0 }),
+                padding: UiRect::axes(
+                    Val::Px(if is_highlighted { 10.0 } else { 8.0 }),
+                    Val::Px(if is_highlighted { 6.0 } else { 4.0 }),
+                ),
                 ..default()
             },
             BackgroundColor(if is_highlighted {
                 Color::srgba(0.16, 0.18, 0.25, 0.92)
             } else {
-                Color::srgba(0.08, 0.10, 0.16, 0.72)
+                Color::srgba(0.08, 0.10, 0.16, 0.58)
             }),
             BorderRadius::all(Val::Px(8.0)),
             PlayerDjinnMarkerRow {
@@ -334,18 +358,16 @@ fn spawn_player_djinn_row(
             },
         ))
         .with_children(|row| {
-            row.spawn((
-                Text::new(unit_name),
-                TextFont {
-                    font_size: 12.0,
-                    ..default()
-                },
-                TextColor(if is_highlighted {
-                    Color::srgb(0.95, 0.88, 0.45)
-                } else {
-                    Color::srgb(0.7, 0.7, 0.78)
-                }),
-            ));
+            if is_highlighted {
+                row.spawn((
+                    Text::new(unit_name),
+                    TextFont {
+                        font_size: 12.0,
+                        ..default()
+                    },
+                    TextColor(Color::srgb(0.95, 0.88, 0.45)),
+                ));
+            }
 
             if is_highlighted {
                 row.spawn((
@@ -419,7 +441,7 @@ fn spawn_scene_action_button(
     let mut entity = parent.spawn((
         Button,
         Node {
-            padding: UiRect::axes(Val::Px(12.0), Val::Px(6.0)),
+            padding: UiRect::axes(Val::Px(10.0), Val::Px(5.0)),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             ..default()
@@ -437,7 +459,7 @@ fn spawn_scene_action_button(
         button.spawn((
             Text::new(label.to_string()),
             TextFont {
-                font_size: 12.0,
+                font_size: 11.0,
                 ..default()
             },
             TextColor(Color::WHITE),
@@ -455,7 +477,7 @@ fn spawn_djinn_marker_tag(
     parent
         .spawn((
             Node {
-                padding: UiRect::axes(Val::Px(12.0), Val::Px(6.0)),
+                padding: UiRect::axes(Val::Px(8.0), Val::Px(4.0)),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 ..default()
@@ -471,7 +493,7 @@ fn spawn_djinn_marker_tag(
             marker.spawn((
                 Text::new(label.to_string()),
                 TextFont {
-                    font_size: 12.0,
+                    font_size: 10.0,
                     ..default()
                 },
                 TextColor(Color::WHITE),
