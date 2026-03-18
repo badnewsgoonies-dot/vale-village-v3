@@ -414,4 +414,29 @@ mod tests {
 
         let _ = fs::remove_dir_all(&dir);
     }
+
+    #[test]
+    fn team_djinn_roundtrip() {
+        let dir = test_dir("team_djinn");
+        let path = dir.join("save.ron");
+
+        let mut data = create_new_game();
+        data.team_djinn = vec![
+            SavedDjinn {
+                djinn_id: DjinnId("flint".into()),
+                state: DjinnState::Good,
+            },
+            SavedDjinn {
+                djinn_id: DjinnId("forge".into()),
+                state: DjinnState::Recovery,
+            },
+        ];
+
+        save_game(&data, &path).expect("save should succeed");
+        let loaded = load_game(&path).expect("load should succeed");
+
+        assert_eq!(loaded.team_djinn, data.team_djinn);
+
+        let _ = fs::remove_dir_all(&dir);
+    }
 }

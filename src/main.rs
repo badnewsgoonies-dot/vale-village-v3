@@ -10,7 +10,7 @@ use domains::data_loader;
 use domains::progression;
 use domains::save;
 use domains::ui;
-use shared::EncounterId;
+use shared::{DjinnId, DjinnState, EncounterId};
 
 const SAVE_PATH: &str = "saves/game.ron";
 
@@ -38,6 +38,29 @@ fn next_encounter(completed: &[EncounterId]) -> Option<&'static str> {
         }
     }
     None
+}
+
+fn load_encounter_id(save_data: &save::SaveData) -> Option<String> {
+    save_data
+        .current_encounter_id
+        .as_ref()
+        .map(|encounter_id| encounter_id.0.clone())
+        .or_else(|| next_encounter(&save_data.completed_encounters).map(str::to_owned))
+}
+
+fn persist_djinn_reward(save_data: &mut save::SaveData, djinn_id: &DjinnId) {
+    if save_data
+        .team_djinn
+        .iter()
+        .any(|saved_djinn| saved_djinn.djinn_id == *djinn_id)
+    {
+        return;
+    }
+
+    save_data.team_djinn.push(save::SavedDjinn {
+        djinn_id: djinn_id.clone(),
+        state: DjinnState::Good,
+    });
 }
 
 fn main() {
@@ -99,7 +122,7 @@ fn main() {
     };
 
     // Determine the next encounter in the story sequence
-    let encounter_id = match next_encounter(&save_data.completed_encounters) {
+    let encounter_id = match load_encounter_id(&save_data) {
         Some(id) => id,
         None => {
             println!("All encounters completed! You've beaten the game!");
@@ -108,13 +131,16 @@ fn main() {
     };
 
     // Show encounter info
-    if let Some(enc) = game_data.encounters.get(&EncounterId(encounter_id.into())) {
+    if let Some(enc) = game_data
+        .encounters
+        .get(&EncounterId(encounter_id.clone().into()))
+    {
         println!("\n>> Next encounter: {} ({})", enc.name, encounter_id);
     } else {
         println!("\n>> Next encounter: {}", encounter_id);
     }
 
-    let result = cli_runner::run_demo_battle(&game_data, encounter_id);
+    let result = cli_runner::run_demo_battle(&game_data, &encounter_id);
     match result {
         BattleResult::Victory { xp, gold } => {
             println!("\nVICTORY! +{xp} XP, +{gold} gold");
@@ -180,13 +206,18 @@ fn main() {
             }
 
             // Mark encounter completed (avoid duplicates)
-            let enc_id = EncounterId(encounter_id.into());
+            let enc_id = EncounterId(encounter_id.clone().into());
             if !save_data.completed_encounters.contains(&enc_id) {
                 save_data.completed_encounters.push(enc_id);
             }
+            save_data.current_encounter_id = next_encounter(&save_data.completed_encounters)
+                .map(|next_id| EncounterId(next_id.into()));
 
             // Show encounter-specific rewards
-            if let Some(enc) = game_data.encounters.get(&EncounterId(encounter_id.into())) {
+            if let Some(enc) = game_data
+                .encounters
+                .get(&EncounterId(encounter_id.clone().into()))
+            {
                 // Recruitment
                 if let Some(ref recruit_id) = enc.recruit {
                     let recruit_name = game_data
@@ -228,6 +259,7 @@ fn main() {
                         .map(|d| d.name.as_str())
                         .unwrap_or(&djinn_id.0);
                     println!("  Djinn acquired: {}!", djinn_name);
+                    persist_djinn_reward(&mut save_data, djinn_id);
                 }
 
                 // Equipment rewards
@@ -251,5 +283,23 @@ fn main() {
             }
         }
         BattleResult::Defeat => println!("\nDEFEAT."),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_djinn_reward_persisted_to_save() {
+        let mut save_data = save::create_new_game();
+        let djinn_id = DjinnId("flint".into());
+
+        persist_djinn_reward(&mut save_data, &djinn_id);
+        persist_djinn_reward(&mut save_data, &djinn_id);
+
+        assert_eq!(save_data.team_djinn.len(), 1);
+        assert_eq!(save_data.team_djinn[0].djinn_id, djinn_id);
+        assert_eq!(save_data.team_djinn[0].state, DjinnState::Good);
     }
 }

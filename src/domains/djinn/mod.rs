@@ -4,7 +4,7 @@
 
 use crate::shared::{
     AbilityId, DjinnCompatibility, DjinnDef, DjinnId, DjinnState, DjinnStateChanged, Element,
-    StatBonus, TargetRef,
+    StatBonus, SummonEffect, TargetRef,
 };
 
 // ── Structs ─────────────────────────────────────────────────────────
@@ -65,9 +65,18 @@ pub struct SummonTier {
 
 /// Immediate effect payload emitted when a djinn is activated.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DjinnActivationEffectType {
+    Damage,
+    Buff,
+    Heal,
+    Status,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DjinnActivationEvent {
     pub element: Element,
     pub base_damage: u16,
+    pub effect_type: Option<DjinnActivationEffectType>,
 }
 
 // ── Functions ────────────────────────────────────────────────────────
@@ -142,6 +151,8 @@ pub fn activate_djinn(
     djinn.activation_order = slots.next_activation_order;
     slots.next_activation_order += 1;
 
+    let summon_effect = djinn_def.summon_effect.as_ref();
+
     Some((
         DjinnStateChanged {
             djinn_id: djinn.djinn_id.clone(),
@@ -152,12 +163,26 @@ pub fn activate_djinn(
         },
         DjinnActivationEvent {
             element: djinn_def.element,
-            base_damage: djinn_def
-                .summon_effect
-                .as_ref()
-                .map_or(0, |summon_effect| summon_effect.damage),
+            base_damage: summon_effect.map_or(0, |effect| effect.damage),
+            effect_type: summon_effect.and_then(DjinnActivationEffectType::from_summon_effect),
         },
     ))
+}
+
+impl DjinnActivationEffectType {
+    fn from_summon_effect(effect: &SummonEffect) -> Option<Self> {
+        if effect.damage > 0 {
+            Some(Self::Damage)
+        } else if effect.buff.is_some() {
+            Some(Self::Buff)
+        } else if effect.heal.is_some() {
+            Some(Self::Heal)
+        } else if effect.status.is_some() {
+            Some(Self::Status)
+        } else {
+            None
+        }
+    }
 }
 
 /// Compute the total stat bonus from all Good-state djinn in the slots.
@@ -336,6 +361,16 @@ mod tests {
         }
     }
 
+    fn make_djinn_def_with_summon_effect(
+        id: &str,
+        element: Element,
+        summon_effect: SummonEffect,
+    ) -> DjinnDef {
+        let mut def = make_djinn_def(id, element);
+        def.summon_effect = Some(summon_effect);
+        def
+    }
+
     fn make_slots_with(ids: &[&str], element: Element) -> DjinnSlots {
         let mut slots = DjinnSlots::new();
         for id in ids {
@@ -458,7 +493,53 @@ mod tests {
         assert_eq!(ev.recovery_turns, Some(2));
         assert_eq!(activation.element, Element::Venus);
         assert_eq!(activation.base_damage, 0);
+        assert_eq!(activation.effect_type, None);
         assert_eq!(slots.slots[0].state, DjinnState::Recovery);
+    }
+
+    #[test]
+    fn test_activation_damage_event() {
+        let mut slots = make_slots_with(&["flint"], Element::Venus);
+        let def = make_djinn_def_with_summon_effect(
+            "flint",
+            Element::Venus,
+            SummonEffect {
+                damage: 27,
+                buff: None,
+                status: None,
+                heal: None,
+            },
+        );
+
+        let (_, activation) = activate_djinn(&mut slots, 0, unit_ref(), 2, &def).unwrap();
+
+        assert_eq!(activation.element, Element::Venus);
+        assert_eq!(activation.base_damage, 27);
+        assert_eq!(
+            activation.effect_type,
+            Some(DjinnActivationEffectType::Damage)
+        );
+    }
+
+    #[test]
+    fn test_activation_heal_event() {
+        let mut slots = make_slots_with(&["mist"], Element::Mercury);
+        let def = make_djinn_def_with_summon_effect(
+            "mist",
+            Element::Mercury,
+            SummonEffect {
+                damage: 0,
+                buff: None,
+                status: None,
+                heal: Some(18),
+            },
+        );
+
+        let (_, activation) = activate_djinn(&mut slots, 0, unit_ref(), 2, &def).unwrap();
+
+        assert_eq!(activation.element, Element::Mercury);
+        assert_eq!(activation.base_damage, 0);
+        assert_eq!(activation.effect_type, Some(DjinnActivationEffectType::Heal));
     }
 
     #[test]
