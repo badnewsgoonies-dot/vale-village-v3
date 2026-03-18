@@ -1,18 +1,31 @@
-campaign_id: vale-village-v3-rotation-wave-8-foreman
+campaign_id: vale-village-v3-rotation-wave-8-workers
 baseline_branch: master
-baseline_commit: 0147211
-phase: rotation-wave-8-foreman
+baseline_commit: 597ca29
+phase: rotation-wave-8-workers
 
 active_lanes:
-- lane_id: foreman-ui-djinn-sprites
+- lane_id: ui-djinn-sprites-scene
   status: in-progress
-  goal: "Prepare exact worker objectives for djinn sprite interaction and UI sync without directly editing game code."
+  goal: "Add battle-scene djinn markers and direct sprite-adjacent interaction for the acting unit."
   owned_paths:
-  - objectives/
-  - status/foreman/
+  - src/domains/ui/battle_scene.rs
+  - src/domains/ui/plugin.rs
   worker_model: gpt-5
-  next_action: "Foreman lane should write worker objective files and stop; no direct source edits allowed."
+  next_action: "Launch worker 1 from objectives/generated/ui-djinn-sprites-worker-1.md and clamp to battle_scene/plugin scope."
   validation:
     compile: pending
     tests: pending
-  report_path: status/foreman/ui-djinn-sprites-plan.md
+  report_path: status/workers/ui-djinn-sprites-scene.md
+- lane_id: ui-djinn-sprites-feedback
+  status: in-progress
+  goal: "Keep HUD and planning feedback in sync with executed state and playback."
+  owned_paths:
+  - src/domains/ui/hud.rs
+  - src/domains/ui/planning.rs
+  - src/domains/ui/animation.rs
+  worker_model: gpt-5
+  next_action: "Launch worker 2 from objectives/generated/ui-djinn-sprites-worker-2.md and clamp to hud/planning/animation scope."
+  validation:
+    compile: pending
+    tests: pending
+  report_path: status/workers/ui-djinn-sprites-feedback.md
