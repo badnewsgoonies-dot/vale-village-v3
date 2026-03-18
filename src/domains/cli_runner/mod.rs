@@ -7,6 +7,7 @@
 use std::io::{self, Write};
 
 use crate::domains::ai::AiStrategy;
+use crate::domains::battle_engine;
 use crate::domains::battle_engine::{
     check_battle_end, execute_round, get_planning_order, new_battle, plan_action,
     plan_enemy_actions_with_ai, Battle, BattleEvent, BattleResult, EnemyUnitData, PlanError,
@@ -23,15 +24,13 @@ use crate::shared::{
 
 // ── Public API ──────────────────────────────────────────────────────
 
-/// Build a PlayerUnitData with equipment and djinn equipped.
+/// Build a PlayerUnitData with equipment equipped.
 ///
-/// Attempts to equip the given weapon/armor IDs and djinn ID.
-/// Gracefully skips any item or djinn not found in game_data.
+/// Djinn are attached to the shared team pool separately.
 fn build_player_unit(
     unit_def: &UnitDef,
     weapon_id: &str,
     armor_id: &str,
-    djinn_id_str: &str,
     game_data: &GameData,
 ) -> PlayerUnitData {
     let mut loadout = EquipmentLoadout::default();
@@ -63,21 +62,25 @@ fn build_player_unit(
     // Compute equipment effects
     let eq_effects = equipment::compute_equipment_effects(&loadout, &game_data.equipment);
 
-    // Try to equip djinn
-    let mut djinn_slots = DjinnSlots::new();
-    let djinn_id = DjinnId(djinn_id_str.to_string());
-    if game_data.djinn.contains_key(&djinn_id) {
-        djinn_slots.add(djinn_id);
-    }
-
     PlayerUnitData {
         id: unit_def.id.0.clone(),
         base_stats: unit_def.base_stats,
         equipment: loadout,
-        djinn_slots,
+        djinn_slots: DjinnSlots::new(),
         mana_contribution: unit_def.mana_contribution,
         equipment_effects: eq_effects,
     }
+}
+
+fn build_team_djinn_slots(ids: &[&str], game_data: &GameData) -> DjinnSlots {
+    let mut team_slots = DjinnSlots::new();
+    for &djinn_id_str in ids {
+        let djinn_id = DjinnId(djinn_id_str.to_string());
+        if game_data.djinn.contains_key(&djinn_id) {
+            team_slots.add(djinn_id);
+        }
+    }
+    team_slots
 }
 
 /// Format equipment and djinn info for a player unit at battle start.
@@ -781,11 +784,10 @@ pub fn run_demo_battle(game_data: &GameData, encounter_id: &str) -> BattleResult
         .get(&UnitId("blaze".to_string()))
         .expect("sample data must contain unit 'blaze'");
 
-    // Build player units with equipment and djinn
-    // Adept (Venus): Bronze Sword + Leather Vest + Flint
-    // Blaze (Mars): Wooden Axe + Leather Vest + Forge
-    let adept_data = build_player_unit(adept, "bronze-sword", "leather-vest", "flint", game_data);
-    let blaze_data = build_player_unit(blaze, "wooden-axe", "leather-vest", "forge", game_data);
+    // Build player units with equipment; djinn are equipped to the team pool below.
+    let adept_data = build_player_unit(adept, "bronze-sword", "leather-vest", game_data);
+    let blaze_data = build_player_unit(blaze, "wooden-axe", "leather-vest", game_data);
+    let team_djinn_slots = build_team_djinn_slots(&["flint", "forge"], game_data);
 
     // Pre-compute ability IDs for auto-play usage
     let adept_ability = find_first_psynergy_ability(adept, game_data);
@@ -799,7 +801,7 @@ pub fn run_demo_battle(game_data: &GameData, encounter_id: &str) -> BattleResult
         &adept_data.id,
         adept_hp,
         &adept_data.equipment,
-        &adept_data.djinn_slots,
+        &team_djinn_slots,
         game_data,
     );
     let blaze_hp = (blaze_data.base_stats.hp as i32
@@ -809,7 +811,7 @@ pub fn run_demo_battle(game_data: &GameData, encounter_id: &str) -> BattleResult
         &blaze_data.id,
         blaze_hp,
         &blaze_data.equipment,
-        &blaze_data.djinn_slots,
+        &team_djinn_slots,
         game_data,
     );
 
@@ -878,6 +880,7 @@ pub fn run_demo_battle(game_data: &GameData, encounter_id: &str) -> BattleResult
         ability_defs,
         djinn_defs,
     );
+    battle_engine::set_team_djinn_slots(&mut battle, team_djinn_slots);
 
     println!("\n=== BATTLE START ===");
     println!("Party: {} + {}", adept_gear_info, blaze_gear_info);

@@ -210,6 +210,11 @@ pub fn new_battle(
     }
 }
 
+pub fn set_team_djinn_slots(battle: &mut Battle, team_djinn_slots: DjinnSlots) {
+    battle.team_djinn_slots = team_djinn_slots;
+    sync_team_djinn_slots_to_players(battle);
+}
+
 // ── get_planning_order ──────────────────────────────────────────────
 
 /// Returns player unit indices sorted by effective SPD descending (fastest first).

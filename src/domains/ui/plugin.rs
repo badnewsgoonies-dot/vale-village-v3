@@ -83,12 +83,11 @@ impl Plugin for ValeVillagePlugin {
     }
 }
 
-/// Build a PlayerUnitData with optional equipment and djinn.
+/// Build a PlayerUnitData with optional equipment.
 fn build_player_unit(
     unit_def: &UnitDef,
     weapon_id: &str,
     armor_id: &str,
-    djinn_id_str: &str,
     game_data: &GameData,
 ) -> PlayerUnitData {
     let mut loadout = EquipmentLoadout::default();
@@ -119,21 +118,25 @@ fn build_player_unit(
 
     let eq_effects = equipment::compute_equipment_effects(&loadout, &game_data.equipment);
 
-    // Try to equip djinn
-    let mut djinn_slots = DjinnSlots::new();
-    let djinn_id = DjinnId(djinn_id_str.to_string());
-    if game_data.djinn.contains_key(&djinn_id) {
-        djinn_slots.add(djinn_id);
-    }
-
     PlayerUnitData {
         id: unit_def.id.0.clone(),
         base_stats: unit_def.base_stats,
         equipment: loadout,
-        djinn_slots,
+        djinn_slots: DjinnSlots::new(),
         mana_contribution: unit_def.mana_contribution,
         equipment_effects: eq_effects,
     }
+}
+
+fn build_team_djinn_slots(ids: &[&str], game_data: &GameData) -> DjinnSlots {
+    let mut team_slots = DjinnSlots::new();
+    for &djinn_id_str in ids {
+        let djinn_id = DjinnId(djinn_id_str.to_string());
+        if game_data.djinn.contains_key(&djinn_id) {
+            team_slots.add(djinn_id);
+        }
+    }
+    team_slots
 }
 
 /// Create a Battle from game data for the given encounter.
@@ -147,8 +150,9 @@ fn build_demo_battle(game_data: &GameData, encounter_id: &str) -> Battle {
         .get(&UnitId("blaze".to_string()))
         .expect("game data must contain unit 'blaze'");
 
-    let adept_data = build_player_unit(adept, "bronze-sword", "leather-vest", "flint", game_data);
-    let blaze_data = build_player_unit(blaze, "wooden-axe", "leather-vest", "forge", game_data);
+    let adept_data = build_player_unit(adept, "bronze-sword", "leather-vest", game_data);
+    let blaze_data = build_player_unit(blaze, "wooden-axe", "leather-vest", game_data);
+    let team_djinn_slots = build_team_djinn_slots(&["flint", "forge"], game_data);
 
     let enc_id = EncounterId(encounter_id.to_string());
     let encounter = game_data
@@ -170,11 +174,13 @@ fn build_demo_battle(game_data: &GameData, encounter_id: &str) -> Battle {
         })
         .collect();
 
-    battle_engine::new_battle(
+    let mut battle = battle_engine::new_battle(
         vec![adept_data, blaze_data],
         enemy_data,
         game_data.config.clone(),
         game_data.abilities.clone(),
         game_data.djinn.clone(),
-    )
+    );
+    battle_engine::set_team_djinn_slots(&mut battle, team_djinn_slots);
+    battle
 }
