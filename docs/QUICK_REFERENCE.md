@@ -2,7 +2,7 @@
 
 Print this. Tape it to your monitor. Check it before every dispatch.
 
------
+---
 
 ## The Loop
 
@@ -29,11 +29,11 @@ git add -A && git commit -m '[type]: [desc]'        # 4. Commit
 ## Trust Order (top = highest)
 
 1. Fresh code + tests + runtime
-1. [Observed] artifacts with source_refs
-1. STATE.md
-1. Specs on disk
-1. Research findings
-1. Conversation ← **LOWEST**
+2. [Observed] artifacts with source_refs
+3. STATE.md
+4. Specs on disk
+5. Research findings
+6. Conversation ← **LOWEST**
 
 ## Evidence Tags
 
@@ -55,17 +55,17 @@ git add -A && git commit -m '[type]: [desc]'        # 4. Commit
 
 ## Key Numbers
 
-|What                                |Value             |
-|------------------------------------|------------------|
-|Prompt-only scope enforcement       |0/20              |
-|Mechanical scope enforcement        |20/20             |
-|Poisoning defense with evidence tags|96% (24/25)       |
-|Poisoning without evidence tags     |0% (50/50 adopted)|
-|Exact-value prompts ship rate       |100%              |
-|Vague-goal prompts ship rate        |0%                |
-|New file creation success           |~50%              |
-|Editing existing files success      |~90%              |
-|Parallel workers stable             |2-3 max           |
+| What | Value |
+|------|-------|
+| Prompt-only scope enforcement | 0/20 |
+| Mechanical scope enforcement | 20/20 |
+| Poisoning defense with evidence tags | 96% (24/25) |
+| Poisoning without evidence tags | 0% (50/50 adopted) |
+| Exact-value prompts ship rate | 100% |
+| Vague-goal prompts ship rate | 0% |
+| New file creation success | ~50% |
+| Editing existing files success | ~90% |
+| Parallel workers stable | 2-3 max |
 
 ## Dispatch Commands
 

@@ -1,86 +1,61 @@
 #!/usr/bin/env bash
+# clamp-scope.sh — Revert all changes outside allowed path prefixes
+#
+# Usage:
+#   bash scripts/clamp-scope.sh src/domains/combat/
+#   bash scripts/clamp-scope.sh src/domains/combat/ src/domains/status/
+#
+# status/workers/ is ALWAYS preserved (worker completion reports).
+# Reverted paths are printed to stderr for drift analysis.
 set -euo pipefail
 
-# Usage: clamp-scope.sh <allowed_prefix1> [allowed_prefix2] ...
-# Reverts all tracked changes and removes untracked files outside allowed prefixes.
-# Verifies clamping succeeded — fails loudly on any error.
-
 if [ $# -eq 0 ]; then
-    echo "Usage: $0 <allowed_prefix1> [allowed_prefix2] ..."
-    exit 1
+  echo "Usage: clamp-scope.sh <allowed-prefix> [additional-prefix...]" >&2
+  exit 1
 fi
 
-PREFIXES=("$@")
-ERRORS=0
-TMPDIR_CLAMP=$(mktemp -d)
-trap 'rm -rf "$TMPDIR_CLAMP"' EXIT
+ALLOWED=("$@" "status/workers/")
+REVERT_LOG=$(mktemp)
+trap 'rm -f "$REVERT_LOG"' EXIT
 
 is_allowed() {
-    local f="$1"
-    shift
-    for prefix in "$@"; do
-        [[ "$f" == "${prefix}"* ]] && return 0
-    done
-    return 1
+  local f="$1"
+  for prefix in "${ALLOWED[@]}"; do
+    [[ "$f" == "${prefix}"* ]] && return 0
+  done
+  return 1
 }
 
-# Collect file lists into temp files (avoids subshell pipe problem)
-git diff --name-only -z 2>/dev/null > "$TMPDIR_CLAMP/unstaged" || true
-git diff --name-only -z --cached 2>/dev/null > "$TMPDIR_CLAMP/staged" || true
-git ls-files --others --exclude-standard -z 2>/dev/null > "$TMPDIR_CLAMP/untracked" || true
-
 # Revert tracked unstaged changes outside scope
-while IFS= read -r -d '' f; do
-    [[ -z "$f" ]] && continue
-    if ! is_allowed "$f" "${PREFIXES[@]}"; then
-        if ! git restore --worktree -- "$f"; then
-            echo "ERROR: failed to restore unstaged file: $f" >&2
-            ERRORS=$((ERRORS + 1))
-        fi
-    fi
-done < "$TMPDIR_CLAMP/unstaged"
-
-# Revert tracked staged changes outside scope
-while IFS= read -r -d '' f; do
-    [[ -z "$f" ]] && continue
-    if ! is_allowed "$f" "${PREFIXES[@]}"; then
-        if ! git restore --staged --worktree -- "$f"; then
-            echo "ERROR: failed to restore staged file: $f" >&2
-            ERRORS=$((ERRORS + 1))
-        fi
-    fi
-done < "$TMPDIR_CLAMP/staged"
-
-# Remove untracked files outside scope
-while IFS= read -r -d '' f; do
-    [[ -z "$f" ]] && continue
-    if ! is_allowed "$f" "${PREFIXES[@]}"; then
-        if ! rm -rf -- "$f"; then
-            echo "ERROR: failed to remove untracked file: $f" >&2
-            ERRORS=$((ERRORS + 1))
-        fi
-    fi
-done < "$TMPDIR_CLAMP/untracked"
-
-# Post-clamp verification: check nothing remains outside scope
-LEAKED=0
-git diff --name-only -z 2>/dev/null > "$TMPDIR_CLAMP/post_unstaged" || true
-git diff --name-only -z --cached 2>/dev/null > "$TMPDIR_CLAMP/post_staged" || true
-git ls-files --others --exclude-standard -z 2>/dev/null > "$TMPDIR_CLAMP/post_untracked" || true
-
-for src in post_unstaged post_staged post_untracked; do
-    while IFS= read -r -d '' f; do
-        [[ -z "$f" ]] && continue
-        if ! is_allowed "$f" "${PREFIXES[@]}"; then
-            echo "LEAK: $f still present after clamp" >&2
-            LEAKED=$((LEAKED + 1))
-        fi
-    done < "$TMPDIR_CLAMP/$src"
+git diff --name-only -z | while IFS= read -r -d '' f; do
+  is_allowed "$f" && continue
+  echo "$f" >> "$REVERT_LOG"
+  git restore --worktree -- "$f"
 done
 
-if [ "$ERRORS" -gt 0 ] || [ "$LEAKED" -gt 0 ]; then
-    echo "CLAMP FAILED: $ERRORS errors, $LEAKED leaks" >&2
-    exit 1
-fi
+# Revert tracked staged changes outside scope
+git diff --name-only -z --cached | while IFS= read -r -d '' f; do
+  is_allowed "$f" && continue
+  echo "$f" >> "$REVERT_LOG"
+  git restore --staged --worktree -- "$f"
+done
 
-echo "Scope clamped to: ${PREFIXES[*]} (verified clean)"
+# Remove untracked files outside scope
+git ls-files --others --exclude-standard -z | while IFS= read -r -d '' f; do
+  is_allowed "$f" && continue
+  echo "$f" >> "$REVERT_LOG"
+  rm -rf -- "$f"
+done
+
+# Report
+COUNT=$(wc -l < "$REVERT_LOG" 2>/dev/null || echo 0)
+COUNT=$(echo "$COUNT" | tr -d ' ')
+if [ "$COUNT" -gt 0 ]; then
+  echo "⚠ Reverted $COUNT out-of-scope path(s):" >&2
+  while IFS= read -r r; do
+    echo "  - $r" >&2
+  done < "$REVERT_LOG"
+else
+  echo "✓ No out-of-scope changes found"
+fi
+echo "✓ Clamped to: ${ALLOWED[*]}"

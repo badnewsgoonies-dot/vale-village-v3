@@ -1,49 +1,52 @@
 # Vale Village v3 — Current State
 
-**Phase:** Visual Wave 5 complete — ready for Wave 6 (djinn interaction)
-**HEAD:** 8fcddbb
+**Phase:** Wave 9 complete — Engine verified, ready for visual layer
+**HEAD:** cb955bd
 **Date:** 2026-03-17
 
-## Build Status
-12,115 LOC | 227+ tests | 53 commits
+## Engine Status: VERIFIED & AUDITED
+Headless combat engine complete. 3 independent Codex auditors confirmed all
+DESIGN_LOCK rules implemented correctly. Both audit gaps (djinn activation
+effect, projected attack mana) patched and tested.
 
-### Headless Engine: VERIFIED
-- All DESIGN_LOCK rules confirmed by 3 independent auditors
-- 217 unit tests + 10 graduation tests, all green (last verified at cb955bd)
-- Contract checksum passes
+10,740 LOC | 227 tests | 47 commits | All gates green
 
-### Visual Layer: 5 WAVES COMPLETE (unverified in container)
-Bevy compile requires GPU headers — cannot gate-check from Claude container.
-Must verify on local machine with `cargo run -- --gui`.
+## Domains (12 source files)
 
-| Wave | Feature | LOC | Status |
-|------|---------|-----|--------|
-| 1 | Bevy bootstrap, camera, placeholder sprites | ~170 | Committed |
-| 2 | Data-driven battle scene, element colors, name labels | ~177 | Committed |
-| 3 | HUD: HP bars, mana circles, crit counters | ~279 | Committed |
-| 4 | Planning phase: action/target selection, live mana | ~414 | Committed |
-| 5 | Animation: floating damage, status icons, event playback | ~316 | Committed |
+| Domain | LOC | Tests | Wired | Verified |
+|--------|-----|-------|-------|----------|
+| shared (contract) | 460 | — | all | [Observed] checksum passes |
+| data_loader | 546 | 9 | main | [Observed] full data loads |
+| combat | 637 | 23 | battle_engine | [Observed] formulas correct |
+| status | 1001 | 27 | battle_engine | [Observed] 6 types, zero randomness |
+| djinn | 707 | 26 | battle_engine, cli | [Observed] activate, recover, swap |
+| equipment | 414 | 15 | battle_engine, cli | [Observed] equip, bonuses, validation |
+| damage_mods | 217 | 14 | battle_engine | [Observed] pen, splash, chain |
+| battle_engine | 2650 | 45 | main via cli | [Observed] full round lifecycle |
+| cli_runner | 1615 | 3 | main | [Observed] cargo run works |
+| ai | 581 | — | battle_engine | [Observed] 3 strategies |
+| progression | 349 | — | main | [Observed] XP, leveling |
+| save | 414 | — | main | [Observed] RON roundtrip |
 
-### UI Module (src/domains/ui/)
-- plugin.rs (170 lines) — Bevy plugin, window, camera, demo battle setup
-- battle_scene.rs (177 lines) — spawn units/enemies with element colors
-- hud.rs (279 lines) — HP bars, mana circles, crit counter badges
-- planning.rs (414 lines) — action selection state machine, target picking
-- animation.rs (316 lines) — event queue playback, floating numbers, status icons
+## Gates: ALL GREEN
+- [x] Contract checksum: OK
+- [x] cargo check: clean
+- [x] cargo test: 227 passed, 0 failed
+- [x] Connectivity: all domains import shared
 
-## P0 Debt: NONE (engine)
-- [x] Djinn activation immediate effect — FIXED
-- [x] Projected mana from planned ATTACKs — FIXED
+## P0 Debt: CLEAR
 
-## P1 Debt
-- [ ] VERIFY: Visual waves 1-5 compile and render on local machine
-- [ ] Wave 6: Djinn interaction (click sprite → menu → activate/summon)
-- [ ] Wave 7: Pre-battle screen (team select + equipment + djinn assignment)
-- [ ] Wave 8: Out-of-battle screens (shop, character details, abilities)
+## P1 Debt (visual layer)
+- [ ] Bevy rendering (sprites, UI, battle screen)
+- [ ] Interactive planning UI
+- [ ] Pre-battle screen
+- [ ] Sprite pipeline (GIF→PNG atlas)
 
 ## P2 Debt
-- [ ] Feature-gate Bevy (allow headless build without GPU)
 - [ ] SPD tiebreaker 4-level (2 implemented)
 - [ ] Same-element 2+2 ability count enforcement
-- [ ] Sprite pipeline (GIF → PNG atlas)
-- [ ] Sound system
+- [ ] 10 equipment stub abilities zero-power
+
+## Research Data on Disk
+- docs/research/POISONING_DEFENSE_MULTI_REPO.md — 125 trials, 5 models, 2 codebases
+- docs/research/FINDINGS_PLAIN_ENGLISH.md — accessible summary of all findings
