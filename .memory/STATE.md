@@ -1,11 +1,11 @@
 # Vale Village v3 — Current State
 
-**Phase:** Visual layer hardening and state migration
-**HEAD:** daad7f5
+**Phase:** Wave 8 integrated — GUI djinn scene interaction and feedback sync
+**HEAD:** 5ad1879
 **Date:** 2026-03-17
 
 ## Spine Status: IN PROGRESS
-The CLI path loads full data, save state, progression, and deterministic battle execution end-to-end, and the Bevy build now exposes a planning-panel djinn menu, summon tiers, current ability kit, and battle event playback on the GUI surface.
+The CLI path loads full data, save state, progression, and deterministic battle execution end-to-end, and the Bevy battle UI now supports sprite-adjacent djinn controls, synced HUD feedback, and execution/playback state transitions on the live GUI surface.
 
 ## Domains
 
@@ -23,21 +23,21 @@ The CLI path loads full data, save state, progression, and deterministic battle 
 | progression | 349 | 17 | YES | [Observed] XP/stat growth tests pass and rewards are applied in `src/main.rs` |
 | save | 414 | 10 | YES | [Observed] Save/load roundtrips pass and campaign state is read/written in `src/main.rs` |
 | status | 1001 | 31 | YES | [Observed] Status, barrier, HoT, buff, and cleanse logic tested and consumed by battle engine |
-| ui | 1761 | 3 | YES | [Observed] Planning panel now surfaces djinn/summon actions and current ability kit; plugin wires event playback |
+| ui | 2775 | 5 | YES | [Observed] Battle scene shows djinn rows beside active units, HUD syncs live state, and execution transitions persist through playback |
 
 ## Gate Status
 - [x] Contract checksum: OK
 - [x] Compile: `cargo check` OK
-- [x] Tests: 230 passed, 0 failed
+- [x] Tests: 232 passed, 0 failed
 - [x] Lint: `cargo clippy -- -D warnings` OK
 - [x] Connectivity: OK
 
 ## P0 Debt (blocks shipping)
-- [ ] Interactive harden pass for the new GUI djinn/summon flow and recovery/ability-swap visibility — [Assumed] until manually verified on the live surface
+- [ ] Final interactive harden pass for click-through djinn activation/summon behavior and recovery legibility — [Assumed] until manually exercised on the live surface
 
 ## P1 Debt (blocks next milestone)
 - [ ] Pre-battle team/equipment/djinn assignment surface is not implemented
-- [ ] Djinn actions are surfaced through the planning panel, but direct djinn-sprite interaction from the battle scene is still not implemented
+- [ ] Top-center battle text duplicates HUD information and could be reduced or restyled
 - [ ] `verify-state-claims.sh` is still absent, so persistent claim verification is only partially automated
 
 ## P2 Debt (nice to fix)
@@ -48,10 +48,10 @@ The CLI path loads full data, save state, progression, and deterministic battle 
 ## Verified Claims
 - [Observed] The shared contract remains frozen and matches `.contract.sha256` — `src/shared/mod.rs`, `.contract.sha256`
 - [Observed] The CLI spine loads data, save state, progression, and battle execution from the main binary — `src/main.rs`
-- [Observed] The GUI planning surface now shows current djinn state, current ability kit, djinn activation buttons, and summon tier buttons — `src/domains/ui/planning.rs`
-- [Observed] Battle event playback systems are wired into `ValeVillagePlugin` and consume `BattleEvent`s from the planning state — `src/domains/ui/plugin.rs`, `src/domains/ui/animation.rs`
-- [Observed] The global automated gate set is green after the GUI planning wave — `cargo clippy -- -D warnings`, `cargo test`, `bash scripts/run-gates.sh`
-- [Observed] A launch probe with `timeout 8 cargo run -- --gui` produced no startup error before timeout, but it did not constitute a manual harden pass
+- [Observed] The battle scene now renders djinn rows beside player sprites and supports scene-side activation/summon affordances — `src/domains/ui/battle_scene.rs`, `src/domains/ui/plugin.rs`
+- [Observed] The planning/HUD layer now stays in `Executing` through playback and refreshes HP, mana, crit, and round summary from live state — `src/domains/ui/planning.rs`, `src/domains/ui/hud.rs`, `src/domains/ui/animation.rs`
+- [Observed] The integrated GUI launches successfully on `DISPLAY=:0` and renders the new scene-side djinn controls — manual launch plus screenshot on 2026-03-17
+- [Observed] The global automated gate set is green after Wave 8 integration — `cargo clippy -- -D warnings`, `cargo test`, `bash scripts/run-gates.sh`
 - [Assumed] The current GUI flow is fully understandable and operable by a player without a manual audit — NEEDS VERIFICATION before a GUI shipping decision depends on it
 
 ## Open Questions
