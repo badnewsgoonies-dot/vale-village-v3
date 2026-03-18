@@ -54,10 +54,10 @@ HOOK
 chmod +x "$HOOKS_DIR/pre-push"
 echo "  ✓ pre-push hook installed (full gate suite)"
 
-# Post-checkout hook: warns about STATE.md staleness after branch switch
+# Post-checkout hook: warns when STATE.md's verified commit is off-branch after checkout
 cat > "$HOOKS_DIR/post-checkout" << 'HOOK'
 #!/bin/bash
-# Post-checkout hook: STATE.md freshness + checkpoint availability
+# Post-checkout hook: STATE.md ancestry + checkpoint availability
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
 # Only run on branch switches (flag=1), not file checkouts (flag=0)
@@ -77,10 +77,9 @@ elif [[ -f "$REPO_ROOT/.memory/STATE.md" ]]; then
 fi
 
 if [[ -n "$STATE_FILE" ]]; then
-    state_head=$(grep -oP '\*\*HEAD:\*\*\s*\K\w+' "$STATE_FILE" 2>/dev/null || echo "")
-    if [[ -n "$state_head" && "$state_head" != "$new_head"* && "$new_head" != "$state_head"* ]]; then
-        drift=$(git rev-list --count "${state_head}..HEAD" 2>/dev/null || echo "?")
-        echo "⚠ STATE.md HEAD ($state_head) doesn't match checkout ($new_head), drift: $drift commits" >&2
+    state_head=$(grep -oP '\*\*(?:Verified Commit|HEAD):\*\*\s*\K\w+' "$STATE_FILE" 2>/dev/null || echo "")
+    if [[ -n "$state_head" ]] && ! git merge-base --is-ancestor "$state_head" HEAD 2>/dev/null; then
+        echo "⚠ STATE.md Verified Commit ($state_head) is not an ancestor of checkout ($new_head)" >&2
     fi
 fi
 
@@ -95,7 +94,7 @@ fi
 exit 0
 HOOK
 chmod +x "$HOOKS_DIR/post-checkout"
-echo "  ✓ post-checkout hook installed (STATE.md freshness + checkpoint notice)"
+echo "  ✓ post-checkout hook installed (STATE.md ancestry + checkpoint notice)"
 
 echo ""
 echo "Hooks installed to: $HOOKS_DIR"

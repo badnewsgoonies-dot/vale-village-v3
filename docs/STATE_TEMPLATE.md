@@ -8,12 +8,15 @@
 ## STATE.md
 
 > Current truth. Updated at the end of every session and every wave.
+> `Verified Commit` records the commit the snapshot was checked against.
+> It does not need to equal the commit that writes the state file, but it must
+> remain an ancestor of the current branch head.
 
 ```markdown
 # [Project] — Current State
 
 **Phase:** [current phase and wave number]
-**HEAD:** [git short hash]
+**Verified Commit:** [git short hash at the last verified state snapshot]
 **Date:** [ISO date]
 
 ## Spine Status: [NOT STARTED / IN PROGRESS / COMPLETE]

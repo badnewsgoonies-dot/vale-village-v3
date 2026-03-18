@@ -1,7 +1,7 @@
 # Vale Village v3 — Current State
 
 **Phase:** Wave 9 closeout — team-wide djinn correction
-**HEAD:** a367dd9
+**Verified Commit:** 7dd7e0e
 **Date:** 2026-03-18
 
 ## Spine Status: IN PROGRESS

@@ -31,6 +31,11 @@ resolve_state_file() {
   fi
 }
 
+extract_state_commit() {
+  local state_file="$1"
+  grep -oP '\*\*(?:Verified Commit|HEAD):\*\*\s*\K[a-f0-9]+' "$state_file" 2>/dev/null || true
+}
+
 echo "== Contract integrity =="
 if [ -f "$CHECKSUM_FILE" ]; then
   if shasum -a 256 -c "$CHECKSUM_FILE"; then
@@ -93,25 +98,24 @@ else
 fi
 
 echo ""
-echo "== STATE.md freshness =="
+echo "== STATE.md baseline =="
 STATE_FILE="$(resolve_state_file || true)"
 if [ -n "$STATE_FILE" ]; then
   CURRENT_HEAD=$(git rev-parse --short HEAD)
-  STATE_HEAD=$(grep -oP '\*\*HEAD:\*\*\s*\K[a-f0-9]+' "$STATE_FILE" 2>/dev/null || echo "MISSING")
+  STATE_HEAD="$(extract_state_commit "$STATE_FILE")"
 
-  if [ "$STATE_HEAD" = "MISSING" ]; then
-    echo "⚠ STATE.md has no HEAD reference"
+  if [ -z "$STATE_HEAD" ]; then
+    echo "⚠ STATE.md has no Verified Commit reference"
     STATE_STALE=1
   elif git merge-base --is-ancestor "$STATE_HEAD" HEAD 2>/dev/null; then
-    COMMITS_BEHIND=$(git rev-list --count "${STATE_HEAD}..HEAD" 2>/dev/null || echo "?")
-    if [ "$COMMITS_BEHIND" = "0" ]; then
-      echo "✓ STATE.md references current HEAD"
+    COMMITS_AHEAD=$(git rev-list --count "${STATE_HEAD}..HEAD" 2>/dev/null || echo "?")
+    if [ "$COMMITS_AHEAD" = "0" ]; then
+      echo "✓ STATE.md baseline matches current HEAD"
     else
-      echo "⚠ STATE.md is $COMMITS_BEHIND commit(s) behind HEAD ($CURRENT_HEAD)"
-      STATE_STALE=1
+      echo "✓ STATE.md baseline commit $STATE_HEAD is an ancestor of current HEAD ($CURRENT_HEAD, +$COMMITS_AHEAD commit(s))"
     fi
   else
-    echo "⚠ STATE.md HEAD ($STATE_HEAD) is not an ancestor of current HEAD ($CURRENT_HEAD)"
+    echo "⚠ STATE.md Verified Commit ($STATE_HEAD) is not an ancestor of current HEAD ($CURRENT_HEAD)"
     STATE_STALE=1
   fi
 else

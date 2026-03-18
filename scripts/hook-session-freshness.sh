@@ -1,7 +1,7 @@
 #!/bin/bash
-# SessionStart hook: STATE.md freshness check
-# Compares STATE.md HEAD reference with actual HEAD.
-# Warns about stale numerics, confirms structural facts likely valid.
+# SessionStart hook: STATE.md ancestry check
+# Confirms the recorded verified commit is still on the current branch.
+# The recorded commit does not need to equal HEAD; it only needs to remain an ancestor.
 # Non-blocking (exit 0) — informational only.
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -15,6 +15,11 @@ resolve_state_file() {
   else
     return 1
   fi
+}
+
+extract_state_commit() {
+  local state_file="$1"
+  grep -oP '\*\*(?:Verified Commit|HEAD):\*\*\s*\K[a-f0-9]+' "$state_file" 2>/dev/null || true
 }
 
 # Run once per session — use repo-specific lock
@@ -31,42 +36,26 @@ if [[ -z "$STATE_FILE" ]]; then
   exit 0
 fi
 
-state_head=$(grep -oP '\*\*HEAD:\*\*\s*\K\w+' "$STATE_FILE" 2>/dev/null || echo "")
+state_head="$(extract_state_commit "$STATE_FILE")"
 actual_head=$(git rev-parse --short HEAD 2>/dev/null || echo "")
 
 if [[ -z "$state_head" || -z "$actual_head" ]]; then
   exit 0
 fi
 
-# Check if state_head is a prefix of actual_head or vice versa
-if [[ "$actual_head" == "$state_head"* || "$state_head" == "$actual_head"* ]]; then
-  exit 0
-fi
-
-# Compute drift
-drift=$(git rev-list --count "${state_head}..HEAD" 2>/dev/null || echo "?")
-
-if [[ "$drift" == "0" || "$drift" == "?" ]]; then
+# A recorded verified commit remains valid as long as it is an ancestor of HEAD.
+if git merge-base --is-ancestor "$state_head" HEAD 2>/dev/null; then
   exit 0
 fi
 
 echo "════════════════════════════════════════" >&2
-echo "  STATE.md FRESHNESS CHECK" >&2
+echo "  STATE.md ANCESTRY CHECK" >&2
 echo "════════════════════════════════════════" >&2
-echo "  STATE HEAD: ${state_head}" >&2
+echo "  STATE VERIFIED COMMIT: ${state_head}" >&2
 echo "  Actual HEAD: ${actual_head}" >&2
-echo "  Drift: ${drift} commit(s) behind" >&2
+echo "  The recorded state commit is not an ancestor of the current checkout." >&2
 echo "" >&2
-
-if [[ "$drift" -le 3 ]]; then
-  echo "  LOW DRIFT: Structural + numeric claims likely valid." >&2
-elif [[ "$drift" -le 7 ]]; then
-  echo "  MODERATE DRIFT: Structural claims valid. Numerics suspect." >&2
-  echo "  Verify: test count, HEAD, producer counts against code." >&2
-else
-  echo "  HIGH DRIFT: Structural claims probably valid. Numerics stale." >&2
-  echo "  Strongly recommend: update .memory/STATE.md before proceeding." >&2
-fi
+echo "  Update STATE.md if you want the recorded baseline to follow this branch." >&2
 
 # Run full claim verification if available (subsumes the old test-count check)
 if [[ -f scripts/verify-state-claims.sh ]]; then
@@ -78,7 +67,7 @@ if [[ -f scripts/verify-state-claims.sh ]]; then
     echo "$CLAIM_OUTPUT" | grep '✗' >&2
   fi
 else
-  # Fallback: check test count specifically (known high-drift numeric)
+  # Fallback: check test count specifically when claim verification is unavailable.
   state_tests=$(grep -oP 'Gate 3.*?:\s*\K\d+(?=\s+headless)' "$STATE_FILE" 2>/dev/null || echo "")
   if [[ -n "$state_tests" && -f tests/headless.rs ]]; then
     actual_tests=$(grep -c '#\[test\]' tests/headless.rs 2>/dev/null || echo "?")
