@@ -1,7 +1,7 @@
 # Vale Village v3 — Current State
 
 **Phase:** Wave 8 integrated — GUI djinn scene interaction and feedback sync
-**HEAD:** 5ad1879
+**HEAD:** a22c999
 **Date:** 2026-03-17
 
 ## Spine Status: IN PROGRESS
@@ -50,6 +50,7 @@ The CLI path loads full data, save state, progression, and deterministic battle 
 - [Observed] The CLI spine loads data, save state, progression, and battle execution from the main binary — `src/main.rs`
 - [Observed] The battle scene now renders djinn rows beside player sprites and supports scene-side activation/summon affordances — `src/domains/ui/battle_scene.rs`, `src/domains/ui/plugin.rs`
 - [Observed] The planning/HUD layer now stays in `Executing` through playback and refreshes HP, mana, crit, and round summary from live state — `src/domains/ui/planning.rs`, `src/domains/ui/hud.rs`, `src/domains/ui/animation.rs`
+- [Observed] The currently acting unit now has a dedicated battle-scene highlight frame, improving round-order readability on the live GUI — `src/domains/ui/battle_scene.rs`
 - [Observed] The integrated GUI launches successfully on `DISPLAY=:0` and renders the new scene-side djinn controls — manual launch plus screenshot on 2026-03-17
 - [Observed] The global automated gate set is green after Wave 8 integration — `cargo clippy -- -D warnings`, `cargo test`, `bash scripts/run-gates.sh`
 - [Assumed] The current GUI flow is fully understandable and operable by a player without a manual audit — NEEDS VERIFICATION before a GUI shipping decision depends on it
