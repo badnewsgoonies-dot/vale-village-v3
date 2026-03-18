@@ -1,11 +1,11 @@
 # Vale Village v3 — Current State
 
-**Phase:** Wave 8 integrated — GUI djinn scene interaction and feedback sync
+**Phase:** Wave 9 — team-wide djinn rule correction
 **HEAD:** a22c999
 **Date:** 2026-03-17
 
 ## Spine Status: IN PROGRESS
-The CLI path loads full data, save state, progression, and deterministic battle execution end-to-end, and the Bevy battle UI now supports sprite-adjacent djinn controls, synced HUD feedback, and execution/playback state transitions on the live GUI surface.
+The CLI path loads full data, save state, progression, and deterministic battle execution end-to-end, and the battle model now treats djinn as a shared 3-slot team pool that every player unit can use under the same state transitions.
 
 ## Domains
 
@@ -33,10 +33,12 @@ The CLI path loads full data, save state, progression, and deterministic battle 
 - [x] Connectivity: OK
 
 ## P0 Debt (blocks shipping)
-- [ ] Final interactive harden pass for click-through djinn activation/summon behavior and recovery legibility — [Assumed] until manually exercised on the live surface
+- [ ] Final interactive harden pass for click-through team-djinn activation/summon behavior and recovery legibility — [Assumed] until manually exercised on the live surface
 
 ## P1 Debt (blocks next milestone)
 - [ ] Pre-battle team/equipment/djinn assignment surface is not implemented
+- [ ] Battle setup helpers still *feed* djinn through per-unit inputs, then merge them into the shared pool at battle creation — [Observed]
+- [ ] Save/load now has `team_djinn`, but battle startup does not yet consume it from a true pre-battle flow — [Observed]
 - [ ] Top-center battle text duplicates HUD information and could be reduced or restyled
 - [ ] `verify-state-claims.sh` is still absent, so persistent claim verification is only partially automated
 
@@ -48,14 +50,18 @@ The CLI path loads full data, save state, progression, and deterministic battle 
 ## Verified Claims
 - [Observed] The shared contract remains frozen and matches `.contract.sha256` — `src/shared/mod.rs`, `.contract.sha256`
 - [Observed] The CLI spine loads data, save state, progression, and battle execution from the main binary — `src/main.rs`
+- [Observed] `Battle` now carries authoritative `team_djinn_slots`, and activation/summon/recovery operate on that shared pool — `src/domains/battle_engine/mod.rs`
+- [Observed] Player units receive mirrored djinn state from the shared team pool so UI surfaces stay in sync — `src/domains/battle_engine/mod.rs`
+- [Observed] Regression tests now cover team-wide activation by any player and team-wide granted abilities from another member's equipped djinn — `src/domains/battle_engine/mod.rs`, `src/domains/ui/planning.rs`
 - [Observed] The battle scene now renders djinn rows beside player sprites and supports scene-side activation/summon affordances — `src/domains/ui/battle_scene.rs`, `src/domains/ui/plugin.rs`
 - [Observed] The planning/HUD layer now stays in `Executing` through playback and refreshes HP, mana, crit, and round summary from live state — `src/domains/ui/planning.rs`, `src/domains/ui/hud.rs`, `src/domains/ui/animation.rs`
 - [Observed] The currently acting unit now has a dedicated battle-scene highlight frame, improving round-order readability on the live GUI — `src/domains/ui/battle_scene.rs`
+- [Observed] SaveData now has a team-wide `team_djinn` field with serde default for forward-compatible persistence — `src/domains/save/mod.rs`
 - [Observed] The integrated GUI launches successfully on `DISPLAY=:0` and renders the new scene-side djinn controls — manual launch plus screenshot on 2026-03-17
 - [Observed] The global automated gate set is green after Wave 8 integration — `cargo clippy -- -D warnings`, `cargo test`, `bash scripts/run-gates.sh`
 - [Assumed] The current GUI flow is fully understandable and operable by a player without a manual audit — NEEDS VERIFICATION before a GUI shipping decision depends on it
 
 ## Open Questions
 - Does the GUI currently make djinn activation, summon preemption, and recovery order legible enough to count as a shippable interactive battle slice? — blocks GUI milestone
-- Should direct djinn interaction move from planning-panel buttons to battle-scene sprites to match the spec more literally? — blocks final UI fidelity
+- How should team-wide djinn be rendered in battle: once for the team, beside the acting unit, or mirrored on all party sprites? — blocks final UI fidelity
 - Once all downstream tooling has been migrated, should `.memory/STATE.md` be removed entirely instead of mirrored for compatibility? — blocks cleanup only

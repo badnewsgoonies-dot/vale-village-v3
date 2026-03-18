@@ -59,6 +59,8 @@ pub struct SaveData {
     pub current_encounter_id: Option<EncounterId>,
     pub completed_encounters: Vec<EncounterId>,
     pub inventory: Vec<EquipmentId>,
+    #[serde(default)]
+    pub team_djinn: Vec<SavedDjinn>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -168,6 +170,7 @@ pub fn create_new_game() -> SaveData {
         current_encounter_id: None,
         completed_encounters: vec![],
         inventory: vec![],
+        team_djinn: vec![],
     }
 }
 

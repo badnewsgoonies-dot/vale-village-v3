@@ -1072,6 +1072,36 @@ mod tests {
     }
 
     #[test]
+    fn current_player_ability_ids_include_team_wide_djinn_from_other_member() {
+        let game_data = load_full_game_data();
+        let adept = build_player_unit("adept", "flint", &game_data);
+        let blaze = build_player_unit("blaze", "", &game_data);
+        let encounter = game_data
+            .encounters
+            .get(&EncounterId("house-01".to_string()))
+            .expect("house-01 encounter should exist");
+        let enemy_def = game_data
+            .enemies
+            .get(&encounter.enemies[0].enemy_id)
+            .expect("encounter enemy should exist")
+            .clone();
+
+        let battle = new_battle(
+            vec![adept, blaze],
+            vec![EnemyUnitData { enemy_def }],
+            game_data.config.clone(),
+            game_data.abilities.clone(),
+            game_data.djinn.clone(),
+        );
+
+        let ability_ids = current_player_ability_ids(&battle, &game_data, 1);
+
+        assert!(ability_ids
+            .iter()
+            .any(|ability_id| ability_id.0 == "flint-earth-pulse"));
+    }
+
+    #[test]
     fn advance_after_success_enters_executing_until_playback_finishes() {
         let game_data = load_full_game_data();
         let mut battle_res = BattleRes(build_test_battle(&game_data));

@@ -1,6 +1,6 @@
 # Vale Village v3 — Build Manifest
 
-## Current Phase: Wave 8 integrated, hardening continues
+## Current Phase: Wave 9 — team-wide djinn correction
 
 ## Architecture
 - Language: Rust
@@ -46,16 +46,19 @@
 - Wave 6: Root-state migration, script alignment, and lint hardening — complete
 - Wave 7: GUI djinn menu, summon planning, and event playback wiring — complete
 - Wave 8: battle-scene djinn interaction plus HUD/execution sync — complete
+- Wave 9: team-wide djinn pool semantics in battle model and persistence schema — complete
 
 ## Key Decisions
 - Root `STATE.md` is now the canonical state artifact; `.memory/STATE.md` is mirrored only for compatibility with older tooling — [Observed]
 - Shared gameplay shapes stay frozen in `src/shared/mod.rs`; tuning values remain in data/config — [Observed]
 - Mechanical scope clamping preserves `status/workers/` by default — [Observed]
 - Combat remains deterministic with no randomness or element-based damage modifiers — [Observed]
-- Battle-scene djinn interaction is now the primary GUI affordance; the planning panel provides compact supporting context — [Observed]
+- Djinn are team-wide equips with exactly 3 shared team slots, not per-unit equipment — [Observed]
+- Any acting unit may activate or summon from the shared team djinn pool; summons still execute before speed order — [Observed]
 
 ## Blockers
 - Manual click-through harden pass for djinn activation, summon timing, and recovery readability still blocks an interactive shipping claim — owner: orchestrator
 - Pre-battle composition surface blocks the next UX milestone — owner: worker
+- Battle setup and save/load still need to consume the team-wide djinn model end-to-end from a true pre-battle flow — owner: worker
 - Top-center battle labels still duplicate bottom-HUD information and may need a cleanup pass — owner: worker
 - `verify-state-claims.sh` is missing, so claim verification is not fully automated yet — owner: orchestrator

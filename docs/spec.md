@@ -144,15 +144,21 @@ Healing:  basePower + MAG                   floor 1
 
 **Two states: GOOD and RECOVERY.**
 
+**Ownership model:** Djinn are equipped to the team, not to individual units.
+There are exactly 3 team djinn slots total.
+Every equipped djinn affects every party member at once under the same
+compatibility rules, evaluated against each unit's element.
+
 | State | Stat Bonus | Abilities | Can Activate |
 |-------|-----------|-----------|-------------|
 | **GOOD** | Yes | Set A | Yes → fires effect + enters RECOVERY |
 | **RECOVERY** | No | Set B | No |
 
 ### Activation
-1. Djinn is GOOD → player activates via djinn menu
+1. A team djinn is GOOD → the acting unit may activate it via the djinn menu
 2. Immediate effect fires (damage, buff, heal, etc.)
-3. Djinn enters RECOVERY → stat bonus gone, abilities swap to Set B
+3. That djinn enters RECOVERY for the whole team
+4. Stat bonus is lost for the whole team, and granted abilities swap to Set B for every unit
 
 ### Recovery timing
 - **1 djinn recovers per turn, starting the turn after next**
@@ -178,11 +184,16 @@ Turn 7: Djinn 3 → GOOD.
 
 Counter pairs: Venus ↔ Jupiter, Mars ↔ Mercury.
 
+Each equipped team djinn is evaluated separately against each unit's element:
+- a Venus unit and a Mars unit can receive different granted abilities from the same team-equipped djinn
+- when a djinn changes state, that state change affects every unit's granted kit immediately
+
 ### Summons
 - Accessed via djinn menu, not action bar
 - Summons execute BEFORE all other actions
 - Tier 1: 1 Good djinn. Tier 2: 2. Tier 3: 3.
 - Any unit can summon from the team's Good djinn pool.
+- Summon costs are paid from the shared team-equipped djinn pool, not from per-unit ownership.
 
 ---
 

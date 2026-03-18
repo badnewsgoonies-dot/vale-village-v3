@@ -44,6 +44,7 @@ pub struct Battle {
     pub phase: BattlePhase,
     pub player_units: Vec<BattleUnitFull>,
     pub enemies: Vec<BattleUnitFull>,
+    pub team_djinn_slots: DjinnSlots,
     pub mana_pool: ManaPool,
     pub planned_actions: Vec<(TargetRef, BattleAction)>,
     pub log: Vec<BattleEvent>,
@@ -124,6 +125,7 @@ pub fn new_battle(
     djinn_defs: HashMap<DjinnId, DjinnDef>,
 ) -> Battle {
     let mut total_mana: u8 = 0;
+    let team_djinn_slots = collect_team_djinn_slots(&player_data);
 
     let player_units: Vec<BattleUnitFull> = player_data
         .into_iter()
@@ -154,7 +156,7 @@ pub fn new_battle(
                     equipment_speed_bonus: eq_effects.total_stat_bonus.spd,
                 },
                 status_state: UnitStatusState::new(),
-                djinn_slots: pd.djinn_slots,
+                djinn_slots: team_djinn_slots.clone(),
                 equipment: pd.equipment,
                 mana_contribution: mana,
                 ability_ids: Vec::new(),
@@ -198,6 +200,7 @@ pub fn new_battle(
         phase: BattlePhase::Planning,
         player_units,
         enemies,
+        team_djinn_slots,
         mana_pool: ManaPool::new(total_mana),
         planned_actions: Vec::new(),
         log: Vec::new(),
@@ -246,6 +249,7 @@ pub fn plan_action(
     unit_ref: TargetRef,
     action: BattleAction,
 ) -> Result<(), PlanError> {
+    hydrate_team_djinn_slots_from_players(battle);
     let unit = get_unit(battle, unit_ref).ok_or(PlanError::InvalidTarget)?;
 
     if !unit.unit.is_alive {
@@ -282,7 +286,7 @@ pub fn plan_action(
         }
         BattleAction::ActivateDjinn { djinn_index } => {
             let idx = *djinn_index as usize;
-            let slots = &unit.djinn_slots;
+            let slots = &battle.team_djinn_slots;
             if idx >= slots.slots.len() {
                 return Err(PlanError::InvalidDjinnIndex);
             }
@@ -291,7 +295,7 @@ pub fn plan_action(
             }
         }
         BattleAction::Summon { djinn_indices } => {
-            let slots = &unit.djinn_slots;
+            let slots = &battle.team_djinn_slots;
             for &idx in djinn_indices {
                 let i = idx as usize;
                 if i >= slots.slots.len() {
@@ -1072,11 +1076,11 @@ fn execute_djinn_activate(
     djinn_index: usize,
     events: &mut Vec<BattleEvent>,
 ) {
+    hydrate_team_djinn_slots_from_players(battle);
     let recovery_turns = battle.config.djinn_recovery_start_delay
         + battle.config.djinn_recovery_per_turn;
     let djinn_def = {
-        let actor = get_unit(battle, actor_ref).unwrap();
-        let djinn_id = match actor.djinn_slots.slots.get(djinn_index) {
+        let djinn_id = match battle.team_djinn_slots.slots.get(djinn_index) {
             Some(djinn) => &djinn.djinn_id,
             None => return,
         };
@@ -1086,18 +1090,16 @@ fn execute_djinn_activate(
         }
     };
 
-    let activation = {
-        let actor = get_unit_mut(battle, actor_ref).unwrap();
-        djinn::activate_djinn(
-            &mut actor.djinn_slots,
-            djinn_index,
-            actor_ref,
-            recovery_turns,
-            &djinn_def,
-        )
-    };
+    let activation = djinn::activate_djinn(
+        &mut battle.team_djinn_slots,
+        djinn_index,
+        actor_ref,
+        recovery_turns,
+        &djinn_def,
+    );
 
     if let Some((state_change, activation_event)) = activation {
+        sync_team_djinn_slots_to_players(battle);
         events.push(BattleEvent::DjinnChanged(state_change));
         resolve_djinn_activation_damage(battle, actor_ref, activation_event, events);
     }
@@ -1199,25 +1201,23 @@ fn execute_summon_action(
     djinn_indices: &[u8],
     events: &mut Vec<BattleEvent>,
 ) {
+    hydrate_team_djinn_slots_from_players(battle);
     let recovery_turns = battle.config.djinn_recovery_start_delay
         + battle.config.djinn_recovery_per_turn;
     let indices: Vec<usize> = djinn_indices.iter().map(|&i| i as usize).collect();
 
     // Collect djinn IDs before mutating slots (for summon damage lookup)
-    let djinn_ids: Vec<DjinnId> = {
-        let actor = get_unit(battle, actor_ref).unwrap();
-        indices
-            .iter()
-            .filter_map(|&i| actor.djinn_slots.slots.get(i))
-            .map(|inst| inst.djinn_id.clone())
-            .collect()
-    };
+    let djinn_ids: Vec<DjinnId> = indices
+        .iter()
+        .filter_map(|&i| battle.team_djinn_slots.slots.get(i))
+        .map(|inst| inst.djinn_id.clone())
+        .collect();
 
     // Transition djinn to Recovery
-    let actor = get_unit_mut(battle, actor_ref).unwrap();
     let summon_succeeded = if let Some(djinn_events) =
-        djinn::execute_summon(&mut actor.djinn_slots, &indices, actor_ref, recovery_turns)
+        djinn::execute_summon(&mut battle.team_djinn_slots, &indices, actor_ref, recovery_turns)
     {
+        sync_team_djinn_slots_to_players(battle);
         for ev in djinn_events {
             events.push(BattleEvent::DjinnChanged(ev));
         }
@@ -1455,32 +1455,70 @@ fn tick_all_units_barriers(battle: &mut Battle) {
 }
 
 fn tick_all_units_djinn(battle: &mut Battle, events: &mut Vec<BattleEvent>) {
-    for (i, unit) in battle.player_units.iter_mut().enumerate() {
-        if !unit.unit.is_alive {
-            continue;
-        }
-        let unit_ref = TargetRef {
-            side: Side::Player,
-            index: i as u8,
-        };
-        let djinn_events = djinn::tick_recovery(&mut unit.djinn_slots, unit_ref);
+    hydrate_team_djinn_slots_from_players(battle);
+    let anchor = team_djinn_anchor_ref(battle);
+    let djinn_events = djinn::tick_recovery(&mut battle.team_djinn_slots, anchor);
+    if !djinn_events.is_empty() {
+        sync_team_djinn_slots_to_players(battle);
         for ev in djinn_events {
             events.push(BattleEvent::DjinnChanged(ev));
         }
     }
+}
 
-    for (i, unit) in battle.enemies.iter_mut().enumerate() {
-        if !unit.unit.is_alive {
-            continue;
+fn collect_team_djinn_slots(player_data: &[PlayerUnitData]) -> DjinnSlots {
+    let mut team_slots = DjinnSlots::new();
+    for player in player_data {
+        for inst in &player.djinn_slots.slots {
+            if team_slots
+                .slots
+                .iter()
+                .any(|existing| existing.djinn_id == inst.djinn_id)
+            {
+                continue;
+            }
+            if !team_slots.add(inst.djinn_id.clone()) {
+                break;
+            }
+            if let Some(last) = team_slots.slots.last_mut() {
+                *last = inst.clone();
+            }
+            team_slots.next_activation_order =
+                team_slots.next_activation_order.max(inst.activation_order.saturating_add(1));
         }
-        let unit_ref = TargetRef {
-            side: Side::Enemy,
-            index: i as u8,
-        };
-        let djinn_events = djinn::tick_recovery(&mut unit.djinn_slots, unit_ref);
-        for ev in djinn_events {
-            events.push(BattleEvent::DjinnChanged(ev));
+    }
+    team_slots
+}
+
+fn sync_team_djinn_slots_to_players(battle: &mut Battle) {
+    for player in &mut battle.player_units {
+        player.djinn_slots = battle.team_djinn_slots.clone();
+    }
+}
+
+fn hydrate_team_djinn_slots_from_players(battle: &mut Battle) {
+    if !battle.team_djinn_slots.slots.is_empty() {
+        return;
+    }
+
+    for player in &battle.player_units {
+        if !player.djinn_slots.slots.is_empty() {
+            battle.team_djinn_slots = player.djinn_slots.clone();
+            sync_team_djinn_slots_to_players(battle);
+            break;
         }
+    }
+}
+
+fn team_djinn_anchor_ref(battle: &Battle) -> TargetRef {
+    let index = battle
+        .player_units
+        .iter()
+        .position(|unit| unit.unit.is_alive)
+        .unwrap_or(0) as u8;
+    TargetRef {
+        side: Side::Player,
+        index,
     }
 }
 
@@ -2020,6 +2058,76 @@ mod tests {
             BattleAction::ActivateDjinn { djinn_index: 5 },
         );
         assert_eq!(result, Err(PlanError::InvalidDjinnIndex));
+    }
+
+    #[test]
+    fn test_any_player_can_activate_team_djinn_pool() {
+        let p1 = make_player(
+            "adept",
+            Stats {
+                hp: 100,
+                atk: 10,
+                def: 10,
+                mag: 10,
+                spd: 10,
+            },
+            2,
+        );
+        let p2 = make_player(
+            "blaze",
+            Stats {
+                hp: 100,
+                atk: 12,
+                def: 8,
+                mag: 12,
+                spd: 12,
+            },
+            2,
+        );
+        let enemy = make_enemy(
+            "goblin",
+            Stats {
+                hp: 100,
+                atk: 10,
+                def: 10,
+                mag: 5,
+                spd: 5,
+            },
+        );
+
+        let (djinn_id, djinn_def) = make_djinn_def("flint", Element::Venus, 50);
+        let mut djinn_defs = HashMap::new();
+        djinn_defs.insert(djinn_id.clone(), djinn_def);
+
+        let mut players = vec![p1, p2];
+        players[0].djinn_slots.add(djinn_id);
+
+        let mut battle = new_battle(
+            players,
+            vec![enemy],
+            test_config(),
+            HashMap::new(),
+            djinn_defs,
+        );
+
+        let actor = TargetRef {
+            side: Side::Player,
+            index: 1,
+        };
+        let result = plan_action(
+            &mut battle,
+            actor,
+            BattleAction::ActivateDjinn { djinn_index: 0 },
+        );
+        assert_eq!(result, Ok(()));
+
+        let events = execute_round(&mut battle);
+        assert!(events
+            .iter()
+            .any(|event| matches!(event, BattleEvent::DjinnChanged(_))));
+        assert_eq!(battle.team_djinn_slots.slots[0].state, DjinnState::Recovery);
+        assert_eq!(battle.player_units[0].djinn_slots.slots[0].state, DjinnState::Recovery);
+        assert_eq!(battle.player_units[1].djinn_slots.slots[0].state, DjinnState::Recovery);
     }
 
     // ── Test: full scenario plan + execute + check across 2 rounds ──
