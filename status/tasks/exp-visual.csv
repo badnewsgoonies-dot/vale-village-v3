@@ -1,0 +1,3 @@
+task_name,scope,prompt
+map-enemies-to-sprites,"docs/data/ assets/","Read docs/data/data_enemies.json to get all enemy IDs and names. Then list all files under assets/sprites/ (or any sprites directory). Match each enemy to its most likely sprite file by name similarity. Write the mapping as JSON to status/enemy-sprite-mapping.json. Mark any enemies with NO matching sprite as unmapped."
+check-bevy-render,"src/","Search all .rs files for Bevy rendering components: SpriteBundle SpriteSheetBundle TextureAtlas Camera2dBundle ImageBundle. List every file that uses these with line numbers. This shows what rendering infrastructure already exists. Write to status/bevy-render-audit.txt."

@@ -1,0 +1,4 @@
+task_name,scope,prompt
+draft-enemy-manifest,"docs/data/","Read docs/data/data_enemies.json. For each enemy generate a TOML block: [entities.<enemy_id>] with display_name, sprite_idle (guess path as assets/sprites/enemies/<name>_idle.png), sprite_attack, sprite_hit, data ref. Write to status/draft-enemy-manifest.toml."
+draft-djinn-manifest,"docs/data/","Read docs/data/data_djinn.json. For each djinn generate a TOML block with display_name, element, sprite path (guess assets/sprites/djinn/<name>.png), data ref. Write to status/draft-djinn-manifest.toml."
+draft-ability-manifest,"docs/data/","Read docs/data/data_abilities_deterministic.json. Count total abilities. Group by element. List any that reference visual effects or animations. Write summary to status/ability-summary.json."
