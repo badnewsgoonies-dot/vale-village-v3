@@ -2,6 +2,9 @@
 //! FROZEN after checksum. No worker edits this file.
 //! Shapes only — tuning values live in data/tuning.
 #![allow(dead_code)]
+pub mod bounded_types;
+pub mod lifecycle_types;
+pub mod entity_types;
 
 use serde::{Deserialize, Serialize};
 

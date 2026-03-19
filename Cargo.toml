@@ -1,9 +1,14 @@
+[workspace]
+members = [".", "ironclad"]
+resolver = "2"
+
 [package]
 name = "vale-village"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+ironclad = { path = "ironclad" }
 serde = { version = "1", features = ["derive"] }
 ron = "0.8"
 bevy = "0.15"
