@@ -1,0 +1,160 @@
+[[djinn]]
+id = "flint"
+display_name = "Flint"
+element = "Venus"
+sprite = "assets/sprites/djinn/flint.png"
+data_ref = "docs/data/data_djinn.json#flint"
+
+[[djinn]]
+id = "granite"
+display_name = "Granite"
+element = "Venus"
+sprite = "assets/sprites/djinn/granite.png"
+data_ref = "docs/data/data_djinn.json#granite"
+
+[[djinn]]
+id = "bane"
+display_name = "Bane"
+element = "Venus"
+sprite = "assets/sprites/djinn/bane.png"
+data_ref = "docs/data/data_djinn.json#bane"
+
+[[djinn]]
+id = "forge"
+display_name = "Forge"
+element = "Mars"
+sprite = "assets/sprites/djinn/forge.png"
+data_ref = "docs/data/data_djinn.json#forge"
+
+[[djinn]]
+id = "corona"
+display_name = "Corona"
+element = "Mars"
+sprite = "assets/sprites/djinn/corona.png"
+data_ref = "docs/data/data_djinn.json#corona"
+
+[[djinn]]
+id = "fury"
+display_name = "Fury"
+element = "Mars"
+sprite = "assets/sprites/djinn/fury.png"
+data_ref = "docs/data/data_djinn.json#fury"
+
+[[djinn]]
+id = "fizz"
+display_name = "Fizz"
+element = "Mercury"
+sprite = "assets/sprites/djinn/fizz.png"
+data_ref = "docs/data/data_djinn.json#fizz"
+
+[[djinn]]
+id = "tonic"
+display_name = "Tonic"
+element = "Mercury"
+sprite = "assets/sprites/djinn/tonic.png"
+data_ref = "docs/data/data_djinn.json#tonic"
+
+[[djinn]]
+id = "crystal"
+display_name = "Crystal"
+element = "Mercury"
+sprite = "assets/sprites/djinn/crystal.png"
+data_ref = "docs/data/data_djinn.json#crystal"
+
+[[djinn]]
+id = "breeze"
+display_name = "Breeze"
+element = "Jupiter"
+sprite = "assets/sprites/djinn/breeze.png"
+data_ref = "docs/data/data_djinn.json#breeze"
+
+[[djinn]]
+id = "squall"
+display_name = "Squall"
+element = "Jupiter"
+sprite = "assets/sprites/djinn/squall.png"
+data_ref = "docs/data/data_djinn.json#squall"
+
+[[djinn]]
+id = "storm"
+display_name = "Storm"
+element = "Jupiter"
+sprite = "assets/sprites/djinn/storm.png"
+data_ref = "docs/data/data_djinn.json#storm"
+
+[[djinn]]
+id = "surge"
+display_name = "Surge"
+element = "Mercury"
+sprite = "assets/sprites/djinn/surge.png"
+data_ref = "docs/data/data_djinn.json#surge"
+
+[[djinn]]
+id = "chill"
+display_name = "Chill"
+element = "Mercury"
+sprite = "assets/sprites/djinn/chill.png"
+data_ref = "docs/data/data_djinn.json#chill"
+
+[[djinn]]
+id = "gust"
+display_name = "Gust"
+element = "Jupiter"
+sprite = "assets/sprites/djinn/gust.png"
+data_ref = "docs/data/data_djinn.json#gust"
+
+[[djinn]]
+id = "bolt"
+display_name = "Bolt"
+element = "Jupiter"
+sprite = "assets/sprites/djinn/bolt.png"
+data_ref = "docs/data/data_djinn.json#bolt"
+
+[[djinn]]
+id = "tempest"
+display_name = "Tempest"
+element = "Jupiter"
+sprite = "assets/sprites/djinn/tempest.png"
+data_ref = "docs/data/data_djinn.json#tempest"
+
+[[djinn]]
+id = "rockling"
+display_name = "Rockling"
+element = "Venus"
+sprite = "assets/sprites/djinn/rockling.png"
+data_ref = "docs/data/data_djinn.json#rockling"
+
+[[djinn]]
+id = "ember"
+display_name = "Ember"
+element = "Mars"
+sprite = "assets/sprites/djinn/ember.png"
+data_ref = "docs/data/data_djinn.json#ember"
+
+[[djinn]]
+id = "nova"
+display_name = "Nova"
+element = "Mars"
+sprite = "assets/sprites/djinn/nova.png"
+data_ref = "docs/data/data_djinn.json#nova"
+
+[[djinn]]
+id = "scorch"
+display_name = "Scorch"
+element = "Mars"
+sprite = "assets/sprites/djinn/scorch.png"
+data_ref = "docs/data/data_djinn.json#scorch"
+
+[[djinn]]
+id = "serac"
+display_name = "Serac"
+element = "Venus"
+sprite = "assets/sprites/djinn/serac.png"
+data_ref = "docs/data/data_djinn.json#serac"
+
+[[djinn]]
+id = "eclipse"
+display_name = "Eclipse"
+element = "Jupiter"
+sprite = "assets/sprites/djinn/eclipse.png"
+data_ref = "docs/data/data_djinn.json#eclipse"

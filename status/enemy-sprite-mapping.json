@@ -1,0 +1,559 @@
+{
+  "generated_from": {
+    "enemies_file": "docs/data/data_enemies.json",
+    "sprite_search_roots": [
+      "assets/sprites"
+    ],
+    "sprite_files": []
+  },
+  "mappings": {
+    "mercury-slime": {
+      "name": "Mercury Slime",
+      "matched_sprite": "unmapped"
+    },
+    "venus-wolf": {
+      "name": "Earthbound Wolf",
+      "matched_sprite": "unmapped"
+    },
+    "venus-wolf-mini-boss": {
+      "name": "Earthbound Wolf (Mini-Boss)",
+      "matched_sprite": "unmapped"
+    },
+    "mars-bandit-mini-boss": {
+      "name": "Flame Bandit (Mini-Boss)",
+      "matched_sprite": "unmapped"
+    },
+    "stone-guardian-mini-boss": {
+      "name": "Stone Guardian (Mini-Boss)",
+      "matched_sprite": "unmapped"
+    },
+    "venus-beetle": {
+      "name": "Stone Beetle",
+      "matched_sprite": "unmapped"
+    },
+    "mars-bandit": {
+      "name": "Flame Bandit",
+      "matched_sprite": "unmapped"
+    },
+    "jupiter-sprite": {
+      "name": "Wind Sprite",
+      "matched_sprite": "unmapped"
+    },
+    "mars-wolf": {
+      "name": "Flame Wolf",
+      "matched_sprite": "unmapped"
+    },
+    "mercury-wolf": {
+      "name": "Frost Wolf",
+      "matched_sprite": "unmapped"
+    },
+    "jupiter-wolf": {
+      "name": "Storm Wolf",
+      "matched_sprite": "unmapped"
+    },
+    "frost-mystic": {
+      "name": "Frost Mystic",
+      "matched_sprite": "unmapped"
+    },
+    "gale-priest": {
+      "name": "Gale Priest",
+      "matched_sprite": "unmapped"
+    },
+    "stone-guardian": {
+      "name": "Stone Guardian",
+      "matched_sprite": "unmapped"
+    },
+    "ember-cleric": {
+      "name": "Ember Cleric",
+      "matched_sprite": "unmapped"
+    },
+    "earth-shaman": {
+      "name": "Earth Shaman",
+      "matched_sprite": "unmapped"
+    },
+    "tide-enchanter": {
+      "name": "Tide Enchanter",
+      "matched_sprite": "unmapped"
+    },
+    "frost-oracle": {
+      "name": "Frost Oracle",
+      "matched_sprite": "unmapped"
+    },
+    "terra-warden": {
+      "name": "Terra Warden",
+      "matched_sprite": "unmapped"
+    },
+    "flame-herald": {
+      "name": "Flame Herald",
+      "matched_sprite": "unmapped"
+    },
+    "venus-bear": {
+      "name": "Mountain Bear",
+      "matched_sprite": "unmapped"
+    },
+    "mars-bear": {
+      "name": "Inferno Bear",
+      "matched_sprite": "unmapped"
+    },
+    "mercury-bear": {
+      "name": "Glacier Bear",
+      "matched_sprite": "unmapped"
+    },
+    "jupiter-bear": {
+      "name": "Thunder Bear",
+      "matched_sprite": "unmapped"
+    },
+    "earth-scout": {
+      "name": "Earth Scout",
+      "matched_sprite": "unmapped"
+    },
+    "flame-scout": {
+      "name": "Flame Scout",
+      "matched_sprite": "unmapped"
+    },
+    "frost-scout": {
+      "name": "Frost Scout",
+      "matched_sprite": "unmapped"
+    },
+    "gale-scout": {
+      "name": "Gale Scout",
+      "matched_sprite": "unmapped"
+    },
+    "terra-soldier": {
+      "name": "Terra Soldier",
+      "matched_sprite": "unmapped"
+    },
+    "blaze-soldier": {
+      "name": "Blaze Soldier",
+      "matched_sprite": "unmapped"
+    },
+    "tide-soldier": {
+      "name": "Tide Soldier",
+      "matched_sprite": "unmapped"
+    },
+    "wind-soldier": {
+      "name": "Wind Soldier",
+      "matched_sprite": "unmapped"
+    },
+    "stone-captain": {
+      "name": "Stone Captain",
+      "matched_sprite": "unmapped"
+    },
+    "inferno-captain": {
+      "name": "Inferno Captain",
+      "matched_sprite": "unmapped"
+    },
+    "glacier-captain": {
+      "name": "Glacier Captain",
+      "matched_sprite": "unmapped"
+    },
+    "thunder-captain": {
+      "name": "Thunder Captain",
+      "matched_sprite": "unmapped"
+    },
+    "mountain-commander": {
+      "name": "Mountain Commander",
+      "matched_sprite": "unmapped"
+    },
+    "fire-commander": {
+      "name": "Fire Commander",
+      "matched_sprite": "unmapped"
+    },
+    "storm-commander": {
+      "name": "Storm Commander",
+      "matched_sprite": "unmapped"
+    },
+    "lightning-commander": {
+      "name": "Lightning Commander",
+      "matched_sprite": "unmapped"
+    },
+    "granite-warlord": {
+      "name": "Granite Warlord",
+      "matched_sprite": "unmapped"
+    },
+    "volcano-warlord": {
+      "name": "Volcano Warlord",
+      "matched_sprite": "unmapped"
+    },
+    "blizzard-warlord": {
+      "name": "Blizzard Warlord",
+      "matched_sprite": "unmapped"
+    },
+    "tempest-warlord": {
+      "name": "Tempest Warlord",
+      "matched_sprite": "unmapped"
+    },
+    "rock-elemental": {
+      "name": "Rock Elemental",
+      "matched_sprite": "unmapped"
+    },
+    "flame-elemental": {
+      "name": "Flame Elemental",
+      "matched_sprite": "unmapped"
+    },
+    "ice-elemental": {
+      "name": "Ice Elemental",
+      "matched_sprite": "unmapped"
+    },
+    "storm-elemental": {
+      "name": "Storm Elemental",
+      "matched_sprite": "unmapped"
+    },
+    "basilisk": {
+      "name": "Basilisk",
+      "matched_sprite": "unmapped"
+    },
+    "phoenix": {
+      "name": "Phoenix",
+      "matched_sprite": "unmapped"
+    },
+    "leviathan": {
+      "name": "Leviathan",
+      "matched_sprite": "unmapped"
+    },
+    "thunderbird": {
+      "name": "Thunderbird",
+      "matched_sprite": "unmapped"
+    },
+    "hydra": {
+      "name": "Hydra",
+      "matched_sprite": "unmapped"
+    },
+    "mars-sprite": {
+      "name": "Flame Sprite",
+      "matched_sprite": "unmapped"
+    },
+    "mercury-sprite": {
+      "name": "Frost Sprite",
+      "matched_sprite": "unmapped"
+    },
+    "venus-sprite": {
+      "name": "Stone Sprite",
+      "matched_sprite": "unmapped"
+    },
+    "chimera": {
+      "name": "Chimera",
+      "matched_sprite": "unmapped"
+    },
+    "overseer": {
+      "name": "The Overseer",
+      "matched_sprite": "unmapped"
+    },
+    "skeleton-warrior": {
+      "name": "Skeleton Warrior",
+      "matched_sprite": "unmapped"
+    },
+    "ghost-wisp": {
+      "name": "Ghost Wisp",
+      "matched_sprite": "unmapped"
+    },
+    "zombie-hound": {
+      "name": "Zombie Hound",
+      "matched_sprite": "unmapped"
+    },
+    "bone-mage": {
+      "name": "Bone Mage",
+      "matched_sprite": "unmapped"
+    },
+    "clay-golem": {
+      "name": "Clay Golem",
+      "matched_sprite": "unmapped"
+    },
+    "iron-golem": {
+      "name": "Iron Golem",
+      "matched_sprite": "unmapped"
+    },
+    "crystal-golem": {
+      "name": "Crystal Golem",
+      "matched_sprite": "unmapped"
+    },
+    "storm-golem": {
+      "name": "Storm Golem",
+      "matched_sprite": "unmapped"
+    },
+    "wind-hawk": {
+      "name": "Wind Hawk",
+      "matched_sprite": "unmapped"
+    },
+    "fire-eagle": {
+      "name": "Fire Eagle",
+      "matched_sprite": "unmapped"
+    },
+    "ice-owl": {
+      "name": "Ice Owl",
+      "matched_sprite": "unmapped"
+    },
+    "stone-roc": {
+      "name": "Stone Roc",
+      "matched_sprite": "unmapped"
+    },
+    "frost-serpent": {
+      "name": "Frost Serpent",
+      "matched_sprite": "unmapped"
+    },
+    "aqua-drake": {
+      "name": "Aqua Drake",
+      "matched_sprite": "unmapped"
+    },
+    "tidal-wraith": {
+      "name": "Tidal Wraith",
+      "matched_sprite": "unmapped"
+    },
+    "glacier-wyrm": {
+      "name": "Glacier Wyrm",
+      "matched_sprite": "unmapped"
+    },
+    "storm-raven": {
+      "name": "Storm Raven",
+      "matched_sprite": "unmapped"
+    },
+    "lightning-lynx": {
+      "name": "Lightning Lynx",
+      "matched_sprite": "unmapped"
+    },
+    "cyclone-djinni": {
+      "name": "Cyclone Djinni",
+      "matched_sprite": "unmapped"
+    },
+    "tempest-dragon": {
+      "name": "Tempest Dragon",
+      "matched_sprite": "unmapped"
+    },
+    "alpha-phoenix": {
+      "name": "Alpha Phoenix",
+      "matched_sprite": "unmapped"
+    },
+    "elder-basilisk": {
+      "name": "Elder Basilisk",
+      "matched_sprite": "unmapped"
+    },
+    "kraken": {
+      "name": "Kraken",
+      "matched_sprite": "unmapped"
+    },
+    "storm-titan": {
+      "name": "Storm Titan",
+      "matched_sprite": "unmapped"
+    },
+    "void-specter": {
+      "name": "Void Specter",
+      "matched_sprite": "unmapped"
+    },
+    "frost-lich": {
+      "name": "Frost Lich",
+      "matched_sprite": "unmapped"
+    },
+    "magma-colossus": {
+      "name": "Magma Colossus",
+      "matched_sprite": "unmapped"
+    },
+    "terra-guardian": {
+      "name": "Terra Guardian",
+      "matched_sprite": "unmapped"
+    },
+    "arctic-sovereign": {
+      "name": "Arctic Sovereign",
+      "matched_sprite": "unmapped"
+    },
+    "neptune-warden": {
+      "name": "Neptune Warden",
+      "matched_sprite": "unmapped"
+    },
+    "abyssal-emperor": {
+      "name": "Abyssal Emperor",
+      "matched_sprite": "unmapped"
+    },
+    "stratosphere-lord": {
+      "name": "Stratosphere Lord",
+      "matched_sprite": "unmapped"
+    },
+    "zeus-avatar": {
+      "name": "Zeus Avatar",
+      "matched_sprite": "unmapped"
+    },
+    "celestial-fury": {
+      "name": "Celestial Fury",
+      "matched_sprite": "unmapped"
+    },
+    "permafrost-golem": {
+      "name": "Permafrost Golem",
+      "matched_sprite": "unmapped"
+    },
+    "tundra-serpent": {
+      "name": "Tundra Serpent",
+      "matched_sprite": "unmapped"
+    },
+    "polar-guardian": {
+      "name": "Polar Guardian",
+      "matched_sprite": "unmapped"
+    },
+    "voltage-chimera": {
+      "name": "Voltage Chimera",
+      "matched_sprite": "unmapped"
+    },
+    "monsoon-drake": {
+      "name": "Monsoon Drake",
+      "matched_sprite": "unmapped"
+    },
+    "aurora-elemental": {
+      "name": "Aurora Elemental",
+      "matched_sprite": "unmapped"
+    },
+    "vortex-sentinel": {
+      "name": "Vortex Sentinel",
+      "matched_sprite": "unmapped"
+    },
+    "maelstrom-beast": {
+      "name": "Maelstrom Beast",
+      "matched_sprite": "unmapped"
+    },
+    "thunderstorm-colossus": {
+      "name": "Thunderstorm Colossus",
+      "matched_sprite": "unmapped"
+    },
+    "bandit-minion": {
+      "name": "Bandit",
+      "matched_sprite": "unmapped"
+    },
+    "bandit-captain": {
+      "name": "Bandit Captain",
+      "matched_sprite": "unmapped"
+    },
+    "bandit": {
+      "name": "Road Bandit",
+      "matched_sprite": "unmapped"
+    },
+    "scavenger": {
+      "name": "Scavenger",
+      "matched_sprite": "unmapped"
+    },
+    "merchant-guard": {
+      "name": "Merchant Guard",
+      "matched_sprite": "unmapped"
+    },
+    "wild-boar": {
+      "name": "Wild Boar",
+      "matched_sprite": "unmapped"
+    },
+    "carrion-bird": {
+      "name": "Carrion Bird",
+      "matched_sprite": "unmapped"
+    },
+    "garet-enemy": {
+      "name": "War Mage",
+      "matched_sprite": "unmapped"
+    },
+    "sentinel-enemy": {
+      "name": "Sentinel",
+      "matched_sprite": "unmapped"
+    },
+    "stormcaller-enemy": {
+      "name": "Stormcaller",
+      "matched_sprite": "unmapped"
+    },
+    "mercury-mistling": {
+      "name": "Mistling",
+      "matched_sprite": "unmapped"
+    },
+    "mercury-glacial-sprite": {
+      "name": "Glacial Sprite",
+      "matched_sprite": "unmapped"
+    },
+    "mercury-frost-hound": {
+      "name": "Frost Hound",
+      "matched_sprite": "unmapped"
+    },
+    "mercury-aquifer-imp": {
+      "name": "Aquifer Imp",
+      "matched_sprite": "unmapped"
+    },
+    "mercury-warder": {
+      "name": "Warder of the Tides",
+      "matched_sprite": "unmapped"
+    },
+    "jupiter-zephyr-imp": {
+      "name": "Zephyr Imp",
+      "matched_sprite": "unmapped"
+    },
+    "jupiter-gale-moth": {
+      "name": "Gale Moth",
+      "matched_sprite": "unmapped"
+    },
+    "jupiter-stormling": {
+      "name": "Stormling",
+      "matched_sprite": "unmapped"
+    },
+    "jupiter-lightning-hopper": {
+      "name": "Lightning Hopper",
+      "matched_sprite": "unmapped"
+    },
+    "jupiter-vortex-sentry": {
+      "name": "Vortex Sentry",
+      "matched_sprite": "unmapped"
+    },
+    "mire-toad": {
+      "name": "Mire Toad",
+      "matched_sprite": "unmapped"
+    },
+    "lumen-fawn": {
+      "name": "Lumen Fawn",
+      "matched_sprite": "unmapped"
+    },
+    "the-golden-sun": {
+      "name": "The Golden Sun",
+      "matched_sprite": "unmapped"
+    },
+    "poison-toad": {
+      "name": "Poison Toad",
+      "matched_sprite": "unmapped"
+    },
+    "storm-knight": {
+      "name": "Storm Knight",
+      "matched_sprite": "unmapped"
+    },
+    "lava-salamander": {
+      "name": "Lava Salamander",
+      "matched_sprite": "unmapped"
+    },
+    "crystal-bat": {
+      "name": "Crystal Bat",
+      "matched_sprite": "unmapped"
+    },
+    "dark-mage": {
+      "name": "Dark Mage",
+      "matched_sprite": "unmapped"
+    },
+    "fire-elemental": {
+      "name": "Fire Elemental",
+      "matched_sprite": "unmapped"
+    },
+    "ice-golem": {
+      "name": "Ice Golem",
+      "matched_sprite": "unmapped"
+    },
+    "thunder-hawk": {
+      "name": "Thunder Hawk",
+      "matched_sprite": "unmapped"
+    },
+    "earth-wyrm": {
+      "name": "Earth Wyrm",
+      "matched_sprite": "unmapped"
+    },
+    "shadow-wisp": {
+      "name": "Shadow Wisp",
+      "matched_sprite": "unmapped"
+    },
+    "tower-elite-mercury-lich": {
+      "name": "Arctic Lich",
+      "matched_sprite": "unmapped"
+    },
+    "tower-elite-jupiter-void": {
+      "name": "Void Tempest",
+      "matched_sprite": "unmapped"
+    },
+    "tower-elite-hybrid-golem": {
+      "name": "Titanium Colossus",
+      "matched_sprite": "unmapped"
+    }
+  }
+}

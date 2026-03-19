@@ -1,0 +1,958 @@
+[entities.mercury-slime]
+display_name = "Mercury Slime"
+sprite_idle = "assets/sprites/enemies/mercury_slime_idle.png"
+sprite_attack = "assets/sprites/enemies/mercury_slime_attack.png"
+sprite_hit = "assets/sprites/enemies/mercury_slime_hit.png"
+data = "docs/data/data_enemies.json#mercury-slime"
+
+[entities.venus-wolf]
+display_name = "Earthbound Wolf"
+sprite_idle = "assets/sprites/enemies/earthbound_wolf_idle.png"
+sprite_attack = "assets/sprites/enemies/earthbound_wolf_attack.png"
+sprite_hit = "assets/sprites/enemies/earthbound_wolf_hit.png"
+data = "docs/data/data_enemies.json#venus-wolf"
+
+[entities.venus-wolf-mini-boss]
+display_name = "Earthbound Wolf (Mini-Boss)"
+sprite_idle = "assets/sprites/enemies/earthbound_wolf_idle.png"
+sprite_attack = "assets/sprites/enemies/earthbound_wolf_attack.png"
+sprite_hit = "assets/sprites/enemies/earthbound_wolf_hit.png"
+data = "docs/data/data_enemies.json#venus-wolf-mini-boss"
+
+[entities.mars-bandit-mini-boss]
+display_name = "Flame Bandit (Mini-Boss)"
+sprite_idle = "assets/sprites/enemies/flame_bandit_idle.png"
+sprite_attack = "assets/sprites/enemies/flame_bandit_attack.png"
+sprite_hit = "assets/sprites/enemies/flame_bandit_hit.png"
+data = "docs/data/data_enemies.json#mars-bandit-mini-boss"
+
+[entities.stone-guardian-mini-boss]
+display_name = "Stone Guardian (Mini-Boss)"
+sprite_idle = "assets/sprites/enemies/stone_guardian_idle.png"
+sprite_attack = "assets/sprites/enemies/stone_guardian_attack.png"
+sprite_hit = "assets/sprites/enemies/stone_guardian_hit.png"
+data = "docs/data/data_enemies.json#stone-guardian-mini-boss"
+
+[entities.venus-beetle]
+display_name = "Stone Beetle"
+sprite_idle = "assets/sprites/enemies/stone_beetle_idle.png"
+sprite_attack = "assets/sprites/enemies/stone_beetle_attack.png"
+sprite_hit = "assets/sprites/enemies/stone_beetle_hit.png"
+data = "docs/data/data_enemies.json#venus-beetle"
+
+[entities.mars-bandit]
+display_name = "Flame Bandit"
+sprite_idle = "assets/sprites/enemies/flame_bandit_idle.png"
+sprite_attack = "assets/sprites/enemies/flame_bandit_attack.png"
+sprite_hit = "assets/sprites/enemies/flame_bandit_hit.png"
+data = "docs/data/data_enemies.json#mars-bandit"
+
+[entities.jupiter-sprite]
+display_name = "Wind Sprite"
+sprite_idle = "assets/sprites/enemies/wind_sprite_idle.png"
+sprite_attack = "assets/sprites/enemies/wind_sprite_attack.png"
+sprite_hit = "assets/sprites/enemies/wind_sprite_hit.png"
+data = "docs/data/data_enemies.json#jupiter-sprite"
+
+[entities.mars-wolf]
+display_name = "Flame Wolf"
+sprite_idle = "assets/sprites/enemies/flame_wolf_idle.png"
+sprite_attack = "assets/sprites/enemies/flame_wolf_attack.png"
+sprite_hit = "assets/sprites/enemies/flame_wolf_hit.png"
+data = "docs/data/data_enemies.json#mars-wolf"
+
+[entities.mercury-wolf]
+display_name = "Frost Wolf"
+sprite_idle = "assets/sprites/enemies/frost_wolf_idle.png"
+sprite_attack = "assets/sprites/enemies/frost_wolf_attack.png"
+sprite_hit = "assets/sprites/enemies/frost_wolf_hit.png"
+data = "docs/data/data_enemies.json#mercury-wolf"
+
+[entities.jupiter-wolf]
+display_name = "Storm Wolf"
+sprite_idle = "assets/sprites/enemies/storm_wolf_idle.png"
+sprite_attack = "assets/sprites/enemies/storm_wolf_attack.png"
+sprite_hit = "assets/sprites/enemies/storm_wolf_hit.png"
+data = "docs/data/data_enemies.json#jupiter-wolf"
+
+[entities.frost-mystic]
+display_name = "Frost Mystic"
+sprite_idle = "assets/sprites/enemies/frost_mystic_idle.png"
+sprite_attack = "assets/sprites/enemies/frost_mystic_attack.png"
+sprite_hit = "assets/sprites/enemies/frost_mystic_hit.png"
+data = "docs/data/data_enemies.json#frost-mystic"
+
+[entities.gale-priest]
+display_name = "Gale Priest"
+sprite_idle = "assets/sprites/enemies/gale_priest_idle.png"
+sprite_attack = "assets/sprites/enemies/gale_priest_attack.png"
+sprite_hit = "assets/sprites/enemies/gale_priest_hit.png"
+data = "docs/data/data_enemies.json#gale-priest"
+
+[entities.stone-guardian]
+display_name = "Stone Guardian"
+sprite_idle = "assets/sprites/enemies/stone_guardian_idle.png"
+sprite_attack = "assets/sprites/enemies/stone_guardian_attack.png"
+sprite_hit = "assets/sprites/enemies/stone_guardian_hit.png"
+data = "docs/data/data_enemies.json#stone-guardian"
+
+[entities.ember-cleric]
+display_name = "Ember Cleric"
+sprite_idle = "assets/sprites/enemies/ember_cleric_idle.png"
+sprite_attack = "assets/sprites/enemies/ember_cleric_attack.png"
+sprite_hit = "assets/sprites/enemies/ember_cleric_hit.png"
+data = "docs/data/data_enemies.json#ember-cleric"
+
+[entities.earth-shaman]
+display_name = "Earth Shaman"
+sprite_idle = "assets/sprites/enemies/earth_shaman_idle.png"
+sprite_attack = "assets/sprites/enemies/earth_shaman_attack.png"
+sprite_hit = "assets/sprites/enemies/earth_shaman_hit.png"
+data = "docs/data/data_enemies.json#earth-shaman"
+
+[entities.tide-enchanter]
+display_name = "Tide Enchanter"
+sprite_idle = "assets/sprites/enemies/tide_enchanter_idle.png"
+sprite_attack = "assets/sprites/enemies/tide_enchanter_attack.png"
+sprite_hit = "assets/sprites/enemies/tide_enchanter_hit.png"
+data = "docs/data/data_enemies.json#tide-enchanter"
+
+[entities.frost-oracle]
+display_name = "Frost Oracle"
+sprite_idle = "assets/sprites/enemies/frost_oracle_idle.png"
+sprite_attack = "assets/sprites/enemies/frost_oracle_attack.png"
+sprite_hit = "assets/sprites/enemies/frost_oracle_hit.png"
+data = "docs/data/data_enemies.json#frost-oracle"
+
+[entities.terra-warden]
+display_name = "Terra Warden"
+sprite_idle = "assets/sprites/enemies/terra_warden_idle.png"
+sprite_attack = "assets/sprites/enemies/terra_warden_attack.png"
+sprite_hit = "assets/sprites/enemies/terra_warden_hit.png"
+data = "docs/data/data_enemies.json#terra-warden"
+
+[entities.flame-herald]
+display_name = "Flame Herald"
+sprite_idle = "assets/sprites/enemies/flame_herald_idle.png"
+sprite_attack = "assets/sprites/enemies/flame_herald_attack.png"
+sprite_hit = "assets/sprites/enemies/flame_herald_hit.png"
+data = "docs/data/data_enemies.json#flame-herald"
+
+[entities.venus-bear]
+display_name = "Mountain Bear"
+sprite_idle = "assets/sprites/enemies/mountain_bear_idle.png"
+sprite_attack = "assets/sprites/enemies/mountain_bear_attack.png"
+sprite_hit = "assets/sprites/enemies/mountain_bear_hit.png"
+data = "docs/data/data_enemies.json#venus-bear"
+
+[entities.mars-bear]
+display_name = "Inferno Bear"
+sprite_idle = "assets/sprites/enemies/inferno_bear_idle.png"
+sprite_attack = "assets/sprites/enemies/inferno_bear_attack.png"
+sprite_hit = "assets/sprites/enemies/inferno_bear_hit.png"
+data = "docs/data/data_enemies.json#mars-bear"
+
+[entities.mercury-bear]
+display_name = "Glacier Bear"
+sprite_idle = "assets/sprites/enemies/glacier_bear_idle.png"
+sprite_attack = "assets/sprites/enemies/glacier_bear_attack.png"
+sprite_hit = "assets/sprites/enemies/glacier_bear_hit.png"
+data = "docs/data/data_enemies.json#mercury-bear"
+
+[entities.jupiter-bear]
+display_name = "Thunder Bear"
+sprite_idle = "assets/sprites/enemies/thunder_bear_idle.png"
+sprite_attack = "assets/sprites/enemies/thunder_bear_attack.png"
+sprite_hit = "assets/sprites/enemies/thunder_bear_hit.png"
+data = "docs/data/data_enemies.json#jupiter-bear"
+
+[entities.earth-scout]
+display_name = "Earth Scout"
+sprite_idle = "assets/sprites/enemies/earth_scout_idle.png"
+sprite_attack = "assets/sprites/enemies/earth_scout_attack.png"
+sprite_hit = "assets/sprites/enemies/earth_scout_hit.png"
+data = "docs/data/data_enemies.json#earth-scout"
+
+[entities.flame-scout]
+display_name = "Flame Scout"
+sprite_idle = "assets/sprites/enemies/flame_scout_idle.png"
+sprite_attack = "assets/sprites/enemies/flame_scout_attack.png"
+sprite_hit = "assets/sprites/enemies/flame_scout_hit.png"
+data = "docs/data/data_enemies.json#flame-scout"
+
+[entities.frost-scout]
+display_name = "Frost Scout"
+sprite_idle = "assets/sprites/enemies/frost_scout_idle.png"
+sprite_attack = "assets/sprites/enemies/frost_scout_attack.png"
+sprite_hit = "assets/sprites/enemies/frost_scout_hit.png"
+data = "docs/data/data_enemies.json#frost-scout"
+
+[entities.gale-scout]
+display_name = "Gale Scout"
+sprite_idle = "assets/sprites/enemies/gale_scout_idle.png"
+sprite_attack = "assets/sprites/enemies/gale_scout_attack.png"
+sprite_hit = "assets/sprites/enemies/gale_scout_hit.png"
+data = "docs/data/data_enemies.json#gale-scout"
+
+[entities.terra-soldier]
+display_name = "Terra Soldier"
+sprite_idle = "assets/sprites/enemies/terra_soldier_idle.png"
+sprite_attack = "assets/sprites/enemies/terra_soldier_attack.png"
+sprite_hit = "assets/sprites/enemies/terra_soldier_hit.png"
+data = "docs/data/data_enemies.json#terra-soldier"
+
+[entities.blaze-soldier]
+display_name = "Blaze Soldier"
+sprite_idle = "assets/sprites/enemies/blaze_soldier_idle.png"
+sprite_attack = "assets/sprites/enemies/blaze_soldier_attack.png"
+sprite_hit = "assets/sprites/enemies/blaze_soldier_hit.png"
+data = "docs/data/data_enemies.json#blaze-soldier"
+
+[entities.tide-soldier]
+display_name = "Tide Soldier"
+sprite_idle = "assets/sprites/enemies/tide_soldier_idle.png"
+sprite_attack = "assets/sprites/enemies/tide_soldier_attack.png"
+sprite_hit = "assets/sprites/enemies/tide_soldier_hit.png"
+data = "docs/data/data_enemies.json#tide-soldier"
+
+[entities.wind-soldier]
+display_name = "Wind Soldier"
+sprite_idle = "assets/sprites/enemies/wind_soldier_idle.png"
+sprite_attack = "assets/sprites/enemies/wind_soldier_attack.png"
+sprite_hit = "assets/sprites/enemies/wind_soldier_hit.png"
+data = "docs/data/data_enemies.json#wind-soldier"
+
+[entities.stone-captain]
+display_name = "Stone Captain"
+sprite_idle = "assets/sprites/enemies/stone_captain_idle.png"
+sprite_attack = "assets/sprites/enemies/stone_captain_attack.png"
+sprite_hit = "assets/sprites/enemies/stone_captain_hit.png"
+data = "docs/data/data_enemies.json#stone-captain"
+
+[entities.inferno-captain]
+display_name = "Inferno Captain"
+sprite_idle = "assets/sprites/enemies/inferno_captain_idle.png"
+sprite_attack = "assets/sprites/enemies/inferno_captain_attack.png"
+sprite_hit = "assets/sprites/enemies/inferno_captain_hit.png"
+data = "docs/data/data_enemies.json#inferno-captain"
+
+[entities.glacier-captain]
+display_name = "Glacier Captain"
+sprite_idle = "assets/sprites/enemies/glacier_captain_idle.png"
+sprite_attack = "assets/sprites/enemies/glacier_captain_attack.png"
+sprite_hit = "assets/sprites/enemies/glacier_captain_hit.png"
+data = "docs/data/data_enemies.json#glacier-captain"
+
+[entities.thunder-captain]
+display_name = "Thunder Captain"
+sprite_idle = "assets/sprites/enemies/thunder_captain_idle.png"
+sprite_attack = "assets/sprites/enemies/thunder_captain_attack.png"
+sprite_hit = "assets/sprites/enemies/thunder_captain_hit.png"
+data = "docs/data/data_enemies.json#thunder-captain"
+
+[entities.mountain-commander]
+display_name = "Mountain Commander"
+sprite_idle = "assets/sprites/enemies/mountain_commander_idle.png"
+sprite_attack = "assets/sprites/enemies/mountain_commander_attack.png"
+sprite_hit = "assets/sprites/enemies/mountain_commander_hit.png"
+data = "docs/data/data_enemies.json#mountain-commander"
+
+[entities.fire-commander]
+display_name = "Fire Commander"
+sprite_idle = "assets/sprites/enemies/fire_commander_idle.png"
+sprite_attack = "assets/sprites/enemies/fire_commander_attack.png"
+sprite_hit = "assets/sprites/enemies/fire_commander_hit.png"
+data = "docs/data/data_enemies.json#fire-commander"
+
+[entities.storm-commander]
+display_name = "Storm Commander"
+sprite_idle = "assets/sprites/enemies/storm_commander_idle.png"
+sprite_attack = "assets/sprites/enemies/storm_commander_attack.png"
+sprite_hit = "assets/sprites/enemies/storm_commander_hit.png"
+data = "docs/data/data_enemies.json#storm-commander"
+
+[entities.lightning-commander]
+display_name = "Lightning Commander"
+sprite_idle = "assets/sprites/enemies/lightning_commander_idle.png"
+sprite_attack = "assets/sprites/enemies/lightning_commander_attack.png"
+sprite_hit = "assets/sprites/enemies/lightning_commander_hit.png"
+data = "docs/data/data_enemies.json#lightning-commander"
+
+[entities.granite-warlord]
+display_name = "Granite Warlord"
+sprite_idle = "assets/sprites/enemies/granite_warlord_idle.png"
+sprite_attack = "assets/sprites/enemies/granite_warlord_attack.png"
+sprite_hit = "assets/sprites/enemies/granite_warlord_hit.png"
+data = "docs/data/data_enemies.json#granite-warlord"
+
+[entities.volcano-warlord]
+display_name = "Volcano Warlord"
+sprite_idle = "assets/sprites/enemies/volcano_warlord_idle.png"
+sprite_attack = "assets/sprites/enemies/volcano_warlord_attack.png"
+sprite_hit = "assets/sprites/enemies/volcano_warlord_hit.png"
+data = "docs/data/data_enemies.json#volcano-warlord"
+
+[entities.blizzard-warlord]
+display_name = "Blizzard Warlord"
+sprite_idle = "assets/sprites/enemies/blizzard_warlord_idle.png"
+sprite_attack = "assets/sprites/enemies/blizzard_warlord_attack.png"
+sprite_hit = "assets/sprites/enemies/blizzard_warlord_hit.png"
+data = "docs/data/data_enemies.json#blizzard-warlord"
+
+[entities.tempest-warlord]
+display_name = "Tempest Warlord"
+sprite_idle = "assets/sprites/enemies/tempest_warlord_idle.png"
+sprite_attack = "assets/sprites/enemies/tempest_warlord_attack.png"
+sprite_hit = "assets/sprites/enemies/tempest_warlord_hit.png"
+data = "docs/data/data_enemies.json#tempest-warlord"
+
+[entities.rock-elemental]
+display_name = "Rock Elemental"
+sprite_idle = "assets/sprites/enemies/rock_elemental_idle.png"
+sprite_attack = "assets/sprites/enemies/rock_elemental_attack.png"
+sprite_hit = "assets/sprites/enemies/rock_elemental_hit.png"
+data = "docs/data/data_enemies.json#rock-elemental"
+
+[entities.flame-elemental]
+display_name = "Flame Elemental"
+sprite_idle = "assets/sprites/enemies/flame_elemental_idle.png"
+sprite_attack = "assets/sprites/enemies/flame_elemental_attack.png"
+sprite_hit = "assets/sprites/enemies/flame_elemental_hit.png"
+data = "docs/data/data_enemies.json#flame-elemental"
+
+[entities.ice-elemental]
+display_name = "Ice Elemental"
+sprite_idle = "assets/sprites/enemies/ice_elemental_idle.png"
+sprite_attack = "assets/sprites/enemies/ice_elemental_attack.png"
+sprite_hit = "assets/sprites/enemies/ice_elemental_hit.png"
+data = "docs/data/data_enemies.json#ice-elemental"
+
+[entities.storm-elemental]
+display_name = "Storm Elemental"
+sprite_idle = "assets/sprites/enemies/storm_elemental_idle.png"
+sprite_attack = "assets/sprites/enemies/storm_elemental_attack.png"
+sprite_hit = "assets/sprites/enemies/storm_elemental_hit.png"
+data = "docs/data/data_enemies.json#storm-elemental"
+
+[entities.basilisk]
+display_name = "Basilisk"
+sprite_idle = "assets/sprites/enemies/basilisk_idle.png"
+sprite_attack = "assets/sprites/enemies/basilisk_attack.png"
+sprite_hit = "assets/sprites/enemies/basilisk_hit.png"
+data = "docs/data/data_enemies.json#basilisk"
+
+[entities.phoenix]
+display_name = "Phoenix"
+sprite_idle = "assets/sprites/enemies/phoenix_idle.png"
+sprite_attack = "assets/sprites/enemies/phoenix_attack.png"
+sprite_hit = "assets/sprites/enemies/phoenix_hit.png"
+data = "docs/data/data_enemies.json#phoenix"
+
+[entities.leviathan]
+display_name = "Leviathan"
+sprite_idle = "assets/sprites/enemies/leviathan_idle.png"
+sprite_attack = "assets/sprites/enemies/leviathan_attack.png"
+sprite_hit = "assets/sprites/enemies/leviathan_hit.png"
+data = "docs/data/data_enemies.json#leviathan"
+
+[entities.thunderbird]
+display_name = "Thunderbird"
+sprite_idle = "assets/sprites/enemies/thunderbird_idle.png"
+sprite_attack = "assets/sprites/enemies/thunderbird_attack.png"
+sprite_hit = "assets/sprites/enemies/thunderbird_hit.png"
+data = "docs/data/data_enemies.json#thunderbird"
+
+[entities.hydra]
+display_name = "Hydra"
+sprite_idle = "assets/sprites/enemies/hydra_idle.png"
+sprite_attack = "assets/sprites/enemies/hydra_attack.png"
+sprite_hit = "assets/sprites/enemies/hydra_hit.png"
+data = "docs/data/data_enemies.json#hydra"
+
+[entities.mars-sprite]
+display_name = "Flame Sprite"
+sprite_idle = "assets/sprites/enemies/flame_sprite_idle.png"
+sprite_attack = "assets/sprites/enemies/flame_sprite_attack.png"
+sprite_hit = "assets/sprites/enemies/flame_sprite_hit.png"
+data = "docs/data/data_enemies.json#mars-sprite"
+
+[entities.mercury-sprite]
+display_name = "Frost Sprite"
+sprite_idle = "assets/sprites/enemies/frost_sprite_idle.png"
+sprite_attack = "assets/sprites/enemies/frost_sprite_attack.png"
+sprite_hit = "assets/sprites/enemies/frost_sprite_hit.png"
+data = "docs/data/data_enemies.json#mercury-sprite"
+
+[entities.venus-sprite]
+display_name = "Stone Sprite"
+sprite_idle = "assets/sprites/enemies/stone_sprite_idle.png"
+sprite_attack = "assets/sprites/enemies/stone_sprite_attack.png"
+sprite_hit = "assets/sprites/enemies/stone_sprite_hit.png"
+data = "docs/data/data_enemies.json#venus-sprite"
+
+[entities.chimera]
+display_name = "Chimera"
+sprite_idle = "assets/sprites/enemies/chimera_idle.png"
+sprite_attack = "assets/sprites/enemies/chimera_attack.png"
+sprite_hit = "assets/sprites/enemies/chimera_hit.png"
+data = "docs/data/data_enemies.json#chimera"
+
+[entities.overseer]
+display_name = "The Overseer"
+sprite_idle = "assets/sprites/enemies/the_overseer_idle.png"
+sprite_attack = "assets/sprites/enemies/the_overseer_attack.png"
+sprite_hit = "assets/sprites/enemies/the_overseer_hit.png"
+data = "docs/data/data_enemies.json#overseer"
+
+[entities.skeleton-warrior]
+display_name = "Skeleton Warrior"
+sprite_idle = "assets/sprites/enemies/skeleton_warrior_idle.png"
+sprite_attack = "assets/sprites/enemies/skeleton_warrior_attack.png"
+sprite_hit = "assets/sprites/enemies/skeleton_warrior_hit.png"
+data = "docs/data/data_enemies.json#skeleton-warrior"
+
+[entities.ghost-wisp]
+display_name = "Ghost Wisp"
+sprite_idle = "assets/sprites/enemies/ghost_wisp_idle.png"
+sprite_attack = "assets/sprites/enemies/ghost_wisp_attack.png"
+sprite_hit = "assets/sprites/enemies/ghost_wisp_hit.png"
+data = "docs/data/data_enemies.json#ghost-wisp"
+
+[entities.zombie-hound]
+display_name = "Zombie Hound"
+sprite_idle = "assets/sprites/enemies/zombie_hound_idle.png"
+sprite_attack = "assets/sprites/enemies/zombie_hound_attack.png"
+sprite_hit = "assets/sprites/enemies/zombie_hound_hit.png"
+data = "docs/data/data_enemies.json#zombie-hound"
+
+[entities.bone-mage]
+display_name = "Bone Mage"
+sprite_idle = "assets/sprites/enemies/bone_mage_idle.png"
+sprite_attack = "assets/sprites/enemies/bone_mage_attack.png"
+sprite_hit = "assets/sprites/enemies/bone_mage_hit.png"
+data = "docs/data/data_enemies.json#bone-mage"
+
+[entities.clay-golem]
+display_name = "Clay Golem"
+sprite_idle = "assets/sprites/enemies/clay_golem_idle.png"
+sprite_attack = "assets/sprites/enemies/clay_golem_attack.png"
+sprite_hit = "assets/sprites/enemies/clay_golem_hit.png"
+data = "docs/data/data_enemies.json#clay-golem"
+
+[entities.iron-golem]
+display_name = "Iron Golem"
+sprite_idle = "assets/sprites/enemies/iron_golem_idle.png"
+sprite_attack = "assets/sprites/enemies/iron_golem_attack.png"
+sprite_hit = "assets/sprites/enemies/iron_golem_hit.png"
+data = "docs/data/data_enemies.json#iron-golem"
+
+[entities.crystal-golem]
+display_name = "Crystal Golem"
+sprite_idle = "assets/sprites/enemies/crystal_golem_idle.png"
+sprite_attack = "assets/sprites/enemies/crystal_golem_attack.png"
+sprite_hit = "assets/sprites/enemies/crystal_golem_hit.png"
+data = "docs/data/data_enemies.json#crystal-golem"
+
+[entities.storm-golem]
+display_name = "Storm Golem"
+sprite_idle = "assets/sprites/enemies/storm_golem_idle.png"
+sprite_attack = "assets/sprites/enemies/storm_golem_attack.png"
+sprite_hit = "assets/sprites/enemies/storm_golem_hit.png"
+data = "docs/data/data_enemies.json#storm-golem"
+
+[entities.wind-hawk]
+display_name = "Wind Hawk"
+sprite_idle = "assets/sprites/enemies/wind_hawk_idle.png"
+sprite_attack = "assets/sprites/enemies/wind_hawk_attack.png"
+sprite_hit = "assets/sprites/enemies/wind_hawk_hit.png"
+data = "docs/data/data_enemies.json#wind-hawk"
+
+[entities.fire-eagle]
+display_name = "Fire Eagle"
+sprite_idle = "assets/sprites/enemies/fire_eagle_idle.png"
+sprite_attack = "assets/sprites/enemies/fire_eagle_attack.png"
+sprite_hit = "assets/sprites/enemies/fire_eagle_hit.png"
+data = "docs/data/data_enemies.json#fire-eagle"
+
+[entities.ice-owl]
+display_name = "Ice Owl"
+sprite_idle = "assets/sprites/enemies/ice_owl_idle.png"
+sprite_attack = "assets/sprites/enemies/ice_owl_attack.png"
+sprite_hit = "assets/sprites/enemies/ice_owl_hit.png"
+data = "docs/data/data_enemies.json#ice-owl"
+
+[entities.stone-roc]
+display_name = "Stone Roc"
+sprite_idle = "assets/sprites/enemies/stone_roc_idle.png"
+sprite_attack = "assets/sprites/enemies/stone_roc_attack.png"
+sprite_hit = "assets/sprites/enemies/stone_roc_hit.png"
+data = "docs/data/data_enemies.json#stone-roc"
+
+[entities.frost-serpent]
+display_name = "Frost Serpent"
+sprite_idle = "assets/sprites/enemies/frost_serpent_idle.png"
+sprite_attack = "assets/sprites/enemies/frost_serpent_attack.png"
+sprite_hit = "assets/sprites/enemies/frost_serpent_hit.png"
+data = "docs/data/data_enemies.json#frost-serpent"
+
+[entities.aqua-drake]
+display_name = "Aqua Drake"
+sprite_idle = "assets/sprites/enemies/aqua_drake_idle.png"
+sprite_attack = "assets/sprites/enemies/aqua_drake_attack.png"
+sprite_hit = "assets/sprites/enemies/aqua_drake_hit.png"
+data = "docs/data/data_enemies.json#aqua-drake"
+
+[entities.tidal-wraith]
+display_name = "Tidal Wraith"
+sprite_idle = "assets/sprites/enemies/tidal_wraith_idle.png"
+sprite_attack = "assets/sprites/enemies/tidal_wraith_attack.png"
+sprite_hit = "assets/sprites/enemies/tidal_wraith_hit.png"
+data = "docs/data/data_enemies.json#tidal-wraith"
+
+[entities.glacier-wyrm]
+display_name = "Glacier Wyrm"
+sprite_idle = "assets/sprites/enemies/glacier_wyrm_idle.png"
+sprite_attack = "assets/sprites/enemies/glacier_wyrm_attack.png"
+sprite_hit = "assets/sprites/enemies/glacier_wyrm_hit.png"
+data = "docs/data/data_enemies.json#glacier-wyrm"
+
+[entities.storm-raven]
+display_name = "Storm Raven"
+sprite_idle = "assets/sprites/enemies/storm_raven_idle.png"
+sprite_attack = "assets/sprites/enemies/storm_raven_attack.png"
+sprite_hit = "assets/sprites/enemies/storm_raven_hit.png"
+data = "docs/data/data_enemies.json#storm-raven"
+
+[entities.lightning-lynx]
+display_name = "Lightning Lynx"
+sprite_idle = "assets/sprites/enemies/lightning_lynx_idle.png"
+sprite_attack = "assets/sprites/enemies/lightning_lynx_attack.png"
+sprite_hit = "assets/sprites/enemies/lightning_lynx_hit.png"
+data = "docs/data/data_enemies.json#lightning-lynx"
+
+[entities.cyclone-djinni]
+display_name = "Cyclone Djinni"
+sprite_idle = "assets/sprites/enemies/cyclone_djinni_idle.png"
+sprite_attack = "assets/sprites/enemies/cyclone_djinni_attack.png"
+sprite_hit = "assets/sprites/enemies/cyclone_djinni_hit.png"
+data = "docs/data/data_enemies.json#cyclone-djinni"
+
+[entities.tempest-dragon]
+display_name = "Tempest Dragon"
+sprite_idle = "assets/sprites/enemies/tempest_dragon_idle.png"
+sprite_attack = "assets/sprites/enemies/tempest_dragon_attack.png"
+sprite_hit = "assets/sprites/enemies/tempest_dragon_hit.png"
+data = "docs/data/data_enemies.json#tempest-dragon"
+
+[entities.alpha-phoenix]
+display_name = "Alpha Phoenix"
+sprite_idle = "assets/sprites/enemies/alpha_phoenix_idle.png"
+sprite_attack = "assets/sprites/enemies/alpha_phoenix_attack.png"
+sprite_hit = "assets/sprites/enemies/alpha_phoenix_hit.png"
+data = "docs/data/data_enemies.json#alpha-phoenix"
+
+[entities.elder-basilisk]
+display_name = "Elder Basilisk"
+sprite_idle = "assets/sprites/enemies/elder_basilisk_idle.png"
+sprite_attack = "assets/sprites/enemies/elder_basilisk_attack.png"
+sprite_hit = "assets/sprites/enemies/elder_basilisk_hit.png"
+data = "docs/data/data_enemies.json#elder-basilisk"
+
+[entities.kraken]
+display_name = "Kraken"
+sprite_idle = "assets/sprites/enemies/kraken_idle.png"
+sprite_attack = "assets/sprites/enemies/kraken_attack.png"
+sprite_hit = "assets/sprites/enemies/kraken_hit.png"
+data = "docs/data/data_enemies.json#kraken"
+
+[entities.storm-titan]
+display_name = "Storm Titan"
+sprite_idle = "assets/sprites/enemies/storm_titan_idle.png"
+sprite_attack = "assets/sprites/enemies/storm_titan_attack.png"
+sprite_hit = "assets/sprites/enemies/storm_titan_hit.png"
+data = "docs/data/data_enemies.json#storm-titan"
+
+[entities.void-specter]
+display_name = "Void Specter"
+sprite_idle = "assets/sprites/enemies/void_specter_idle.png"
+sprite_attack = "assets/sprites/enemies/void_specter_attack.png"
+sprite_hit = "assets/sprites/enemies/void_specter_hit.png"
+data = "docs/data/data_enemies.json#void-specter"
+
+[entities.frost-lich]
+display_name = "Frost Lich"
+sprite_idle = "assets/sprites/enemies/frost_lich_idle.png"
+sprite_attack = "assets/sprites/enemies/frost_lich_attack.png"
+sprite_hit = "assets/sprites/enemies/frost_lich_hit.png"
+data = "docs/data/data_enemies.json#frost-lich"
+
+[entities.magma-colossus]
+display_name = "Magma Colossus"
+sprite_idle = "assets/sprites/enemies/magma_colossus_idle.png"
+sprite_attack = "assets/sprites/enemies/magma_colossus_attack.png"
+sprite_hit = "assets/sprites/enemies/magma_colossus_hit.png"
+data = "docs/data/data_enemies.json#magma-colossus"
+
+[entities.terra-guardian]
+display_name = "Terra Guardian"
+sprite_idle = "assets/sprites/enemies/terra_guardian_idle.png"
+sprite_attack = "assets/sprites/enemies/terra_guardian_attack.png"
+sprite_hit = "assets/sprites/enemies/terra_guardian_hit.png"
+data = "docs/data/data_enemies.json#terra-guardian"
+
+[entities.arctic-sovereign]
+display_name = "Arctic Sovereign"
+sprite_idle = "assets/sprites/enemies/arctic_sovereign_idle.png"
+sprite_attack = "assets/sprites/enemies/arctic_sovereign_attack.png"
+sprite_hit = "assets/sprites/enemies/arctic_sovereign_hit.png"
+data = "docs/data/data_enemies.json#arctic-sovereign"
+
+[entities.neptune-warden]
+display_name = "Neptune Warden"
+sprite_idle = "assets/sprites/enemies/neptune_warden_idle.png"
+sprite_attack = "assets/sprites/enemies/neptune_warden_attack.png"
+sprite_hit = "assets/sprites/enemies/neptune_warden_hit.png"
+data = "docs/data/data_enemies.json#neptune-warden"
+
+[entities.abyssal-emperor]
+display_name = "Abyssal Emperor"
+sprite_idle = "assets/sprites/enemies/abyssal_emperor_idle.png"
+sprite_attack = "assets/sprites/enemies/abyssal_emperor_attack.png"
+sprite_hit = "assets/sprites/enemies/abyssal_emperor_hit.png"
+data = "docs/data/data_enemies.json#abyssal-emperor"
+
+[entities.stratosphere-lord]
+display_name = "Stratosphere Lord"
+sprite_idle = "assets/sprites/enemies/stratosphere_lord_idle.png"
+sprite_attack = "assets/sprites/enemies/stratosphere_lord_attack.png"
+sprite_hit = "assets/sprites/enemies/stratosphere_lord_hit.png"
+data = "docs/data/data_enemies.json#stratosphere-lord"
+
+[entities.zeus-avatar]
+display_name = "Zeus Avatar"
+sprite_idle = "assets/sprites/enemies/zeus_avatar_idle.png"
+sprite_attack = "assets/sprites/enemies/zeus_avatar_attack.png"
+sprite_hit = "assets/sprites/enemies/zeus_avatar_hit.png"
+data = "docs/data/data_enemies.json#zeus-avatar"
+
+[entities.celestial-fury]
+display_name = "Celestial Fury"
+sprite_idle = "assets/sprites/enemies/celestial_fury_idle.png"
+sprite_attack = "assets/sprites/enemies/celestial_fury_attack.png"
+sprite_hit = "assets/sprites/enemies/celestial_fury_hit.png"
+data = "docs/data/data_enemies.json#celestial-fury"
+
+[entities.permafrost-golem]
+display_name = "Permafrost Golem"
+sprite_idle = "assets/sprites/enemies/permafrost_golem_idle.png"
+sprite_attack = "assets/sprites/enemies/permafrost_golem_attack.png"
+sprite_hit = "assets/sprites/enemies/permafrost_golem_hit.png"
+data = "docs/data/data_enemies.json#permafrost-golem"
+
+[entities.tundra-serpent]
+display_name = "Tundra Serpent"
+sprite_idle = "assets/sprites/enemies/tundra_serpent_idle.png"
+sprite_attack = "assets/sprites/enemies/tundra_serpent_attack.png"
+sprite_hit = "assets/sprites/enemies/tundra_serpent_hit.png"
+data = "docs/data/data_enemies.json#tundra-serpent"
+
+[entities.polar-guardian]
+display_name = "Polar Guardian"
+sprite_idle = "assets/sprites/enemies/polar_guardian_idle.png"
+sprite_attack = "assets/sprites/enemies/polar_guardian_attack.png"
+sprite_hit = "assets/sprites/enemies/polar_guardian_hit.png"
+data = "docs/data/data_enemies.json#polar-guardian"
+
+[entities.voltage-chimera]
+display_name = "Voltage Chimera"
+sprite_idle = "assets/sprites/enemies/voltage_chimera_idle.png"
+sprite_attack = "assets/sprites/enemies/voltage_chimera_attack.png"
+sprite_hit = "assets/sprites/enemies/voltage_chimera_hit.png"
+data = "docs/data/data_enemies.json#voltage-chimera"
+
+[entities.monsoon-drake]
+display_name = "Monsoon Drake"
+sprite_idle = "assets/sprites/enemies/monsoon_drake_idle.png"
+sprite_attack = "assets/sprites/enemies/monsoon_drake_attack.png"
+sprite_hit = "assets/sprites/enemies/monsoon_drake_hit.png"
+data = "docs/data/data_enemies.json#monsoon-drake"
+
+[entities.aurora-elemental]
+display_name = "Aurora Elemental"
+sprite_idle = "assets/sprites/enemies/aurora_elemental_idle.png"
+sprite_attack = "assets/sprites/enemies/aurora_elemental_attack.png"
+sprite_hit = "assets/sprites/enemies/aurora_elemental_hit.png"
+data = "docs/data/data_enemies.json#aurora-elemental"
+
+[entities.vortex-sentinel]
+display_name = "Vortex Sentinel"
+sprite_idle = "assets/sprites/enemies/vortex_sentinel_idle.png"
+sprite_attack = "assets/sprites/enemies/vortex_sentinel_attack.png"
+sprite_hit = "assets/sprites/enemies/vortex_sentinel_hit.png"
+data = "docs/data/data_enemies.json#vortex-sentinel"
+
+[entities.maelstrom-beast]
+display_name = "Maelstrom Beast"
+sprite_idle = "assets/sprites/enemies/maelstrom_beast_idle.png"
+sprite_attack = "assets/sprites/enemies/maelstrom_beast_attack.png"
+sprite_hit = "assets/sprites/enemies/maelstrom_beast_hit.png"
+data = "docs/data/data_enemies.json#maelstrom-beast"
+
+[entities.thunderstorm-colossus]
+display_name = "Thunderstorm Colossus"
+sprite_idle = "assets/sprites/enemies/thunderstorm_colossus_idle.png"
+sprite_attack = "assets/sprites/enemies/thunderstorm_colossus_attack.png"
+sprite_hit = "assets/sprites/enemies/thunderstorm_colossus_hit.png"
+data = "docs/data/data_enemies.json#thunderstorm-colossus"
+
+[entities.bandit-minion]
+display_name = "Bandit"
+sprite_idle = "assets/sprites/enemies/bandit_idle.png"
+sprite_attack = "assets/sprites/enemies/bandit_attack.png"
+sprite_hit = "assets/sprites/enemies/bandit_hit.png"
+data = "docs/data/data_enemies.json#bandit-minion"
+
+[entities.bandit-captain]
+display_name = "Bandit Captain"
+sprite_idle = "assets/sprites/enemies/bandit_captain_idle.png"
+sprite_attack = "assets/sprites/enemies/bandit_captain_attack.png"
+sprite_hit = "assets/sprites/enemies/bandit_captain_hit.png"
+data = "docs/data/data_enemies.json#bandit-captain"
+
+[entities.bandit]
+display_name = "Road Bandit"
+sprite_idle = "assets/sprites/enemies/road_bandit_idle.png"
+sprite_attack = "assets/sprites/enemies/road_bandit_attack.png"
+sprite_hit = "assets/sprites/enemies/road_bandit_hit.png"
+data = "docs/data/data_enemies.json#bandit"
+
+[entities.scavenger]
+display_name = "Scavenger"
+sprite_idle = "assets/sprites/enemies/scavenger_idle.png"
+sprite_attack = "assets/sprites/enemies/scavenger_attack.png"
+sprite_hit = "assets/sprites/enemies/scavenger_hit.png"
+data = "docs/data/data_enemies.json#scavenger"
+
+[entities.merchant-guard]
+display_name = "Merchant Guard"
+sprite_idle = "assets/sprites/enemies/merchant_guard_idle.png"
+sprite_attack = "assets/sprites/enemies/merchant_guard_attack.png"
+sprite_hit = "assets/sprites/enemies/merchant_guard_hit.png"
+data = "docs/data/data_enemies.json#merchant-guard"
+
+[entities.wild-boar]
+display_name = "Wild Boar"
+sprite_idle = "assets/sprites/enemies/wild_boar_idle.png"
+sprite_attack = "assets/sprites/enemies/wild_boar_attack.png"
+sprite_hit = "assets/sprites/enemies/wild_boar_hit.png"
+data = "docs/data/data_enemies.json#wild-boar"
+
+[entities.carrion-bird]
+display_name = "Carrion Bird"
+sprite_idle = "assets/sprites/enemies/carrion_bird_idle.png"
+sprite_attack = "assets/sprites/enemies/carrion_bird_attack.png"
+sprite_hit = "assets/sprites/enemies/carrion_bird_hit.png"
+data = "docs/data/data_enemies.json#carrion-bird"
+
+[entities.garet-enemy]
+display_name = "War Mage"
+sprite_idle = "assets/sprites/enemies/war_mage_idle.png"
+sprite_attack = "assets/sprites/enemies/war_mage_attack.png"
+sprite_hit = "assets/sprites/enemies/war_mage_hit.png"
+data = "docs/data/data_enemies.json#garet-enemy"
+
+[entities.sentinel-enemy]
+display_name = "Sentinel"
+sprite_idle = "assets/sprites/enemies/sentinel_idle.png"
+sprite_attack = "assets/sprites/enemies/sentinel_attack.png"
+sprite_hit = "assets/sprites/enemies/sentinel_hit.png"
+data = "docs/data/data_enemies.json#sentinel-enemy"
+
+[entities.stormcaller-enemy]
+display_name = "Stormcaller"
+sprite_idle = "assets/sprites/enemies/stormcaller_idle.png"
+sprite_attack = "assets/sprites/enemies/stormcaller_attack.png"
+sprite_hit = "assets/sprites/enemies/stormcaller_hit.png"
+data = "docs/data/data_enemies.json#stormcaller-enemy"
+
+[entities.mercury-mistling]
+display_name = "Mistling"
+sprite_idle = "assets/sprites/enemies/mistling_idle.png"
+sprite_attack = "assets/sprites/enemies/mistling_attack.png"
+sprite_hit = "assets/sprites/enemies/mistling_hit.png"
+data = "docs/data/data_enemies.json#mercury-mistling"
+
+[entities.mercury-glacial-sprite]
+display_name = "Glacial Sprite"
+sprite_idle = "assets/sprites/enemies/glacial_sprite_idle.png"
+sprite_attack = "assets/sprites/enemies/glacial_sprite_attack.png"
+sprite_hit = "assets/sprites/enemies/glacial_sprite_hit.png"
+data = "docs/data/data_enemies.json#mercury-glacial-sprite"
+
+[entities.mercury-frost-hound]
+display_name = "Frost Hound"
+sprite_idle = "assets/sprites/enemies/frost_hound_idle.png"
+sprite_attack = "assets/sprites/enemies/frost_hound_attack.png"
+sprite_hit = "assets/sprites/enemies/frost_hound_hit.png"
+data = "docs/data/data_enemies.json#mercury-frost-hound"
+
+[entities.mercury-aquifer-imp]
+display_name = "Aquifer Imp"
+sprite_idle = "assets/sprites/enemies/aquifer_imp_idle.png"
+sprite_attack = "assets/sprites/enemies/aquifer_imp_attack.png"
+sprite_hit = "assets/sprites/enemies/aquifer_imp_hit.png"
+data = "docs/data/data_enemies.json#mercury-aquifer-imp"
+
+[entities.mercury-warder]
+display_name = "Warder of the Tides"
+sprite_idle = "assets/sprites/enemies/warder_of_the_tides_idle.png"
+sprite_attack = "assets/sprites/enemies/warder_of_the_tides_attack.png"
+sprite_hit = "assets/sprites/enemies/warder_of_the_tides_hit.png"
+data = "docs/data/data_enemies.json#mercury-warder"
+
+[entities.jupiter-zephyr-imp]
+display_name = "Zephyr Imp"
+sprite_idle = "assets/sprites/enemies/zephyr_imp_idle.png"
+sprite_attack = "assets/sprites/enemies/zephyr_imp_attack.png"
+sprite_hit = "assets/sprites/enemies/zephyr_imp_hit.png"
+data = "docs/data/data_enemies.json#jupiter-zephyr-imp"
+
+[entities.jupiter-gale-moth]
+display_name = "Gale Moth"
+sprite_idle = "assets/sprites/enemies/gale_moth_idle.png"
+sprite_attack = "assets/sprites/enemies/gale_moth_attack.png"
+sprite_hit = "assets/sprites/enemies/gale_moth_hit.png"
+data = "docs/data/data_enemies.json#jupiter-gale-moth"
+
+[entities.jupiter-stormling]
+display_name = "Stormling"
+sprite_idle = "assets/sprites/enemies/stormling_idle.png"
+sprite_attack = "assets/sprites/enemies/stormling_attack.png"
+sprite_hit = "assets/sprites/enemies/stormling_hit.png"
+data = "docs/data/data_enemies.json#jupiter-stormling"
+
+[entities.jupiter-lightning-hopper]
+display_name = "Lightning Hopper"
+sprite_idle = "assets/sprites/enemies/lightning_hopper_idle.png"
+sprite_attack = "assets/sprites/enemies/lightning_hopper_attack.png"
+sprite_hit = "assets/sprites/enemies/lightning_hopper_hit.png"
+data = "docs/data/data_enemies.json#jupiter-lightning-hopper"
+
+[entities.jupiter-vortex-sentry]
+display_name = "Vortex Sentry"
+sprite_idle = "assets/sprites/enemies/vortex_sentry_idle.png"
+sprite_attack = "assets/sprites/enemies/vortex_sentry_attack.png"
+sprite_hit = "assets/sprites/enemies/vortex_sentry_hit.png"
+data = "docs/data/data_enemies.json#jupiter-vortex-sentry"
+
+[entities.mire-toad]
+display_name = "Mire Toad"
+sprite_idle = "assets/sprites/enemies/mire_toad_idle.png"
+sprite_attack = "assets/sprites/enemies/mire_toad_attack.png"
+sprite_hit = "assets/sprites/enemies/mire_toad_hit.png"
+data = "docs/data/data_enemies.json#mire-toad"
+
+[entities.lumen-fawn]
+display_name = "Lumen Fawn"
+sprite_idle = "assets/sprites/enemies/lumen_fawn_idle.png"
+sprite_attack = "assets/sprites/enemies/lumen_fawn_attack.png"
+sprite_hit = "assets/sprites/enemies/lumen_fawn_hit.png"
+data = "docs/data/data_enemies.json#lumen-fawn"
+
+[entities.the-golden-sun]
+display_name = "The Golden Sun"
+sprite_idle = "assets/sprites/enemies/the_golden_sun_idle.png"
+sprite_attack = "assets/sprites/enemies/the_golden_sun_attack.png"
+sprite_hit = "assets/sprites/enemies/the_golden_sun_hit.png"
+data = "docs/data/data_enemies.json#the-golden-sun"
+
+[entities.poison-toad]
+display_name = "Poison Toad"
+sprite_idle = "assets/sprites/enemies/poison_toad_idle.png"
+sprite_attack = "assets/sprites/enemies/poison_toad_attack.png"
+sprite_hit = "assets/sprites/enemies/poison_toad_hit.png"
+data = "docs/data/data_enemies.json#poison-toad"
+
+[entities.storm-knight]
+display_name = "Storm Knight"
+sprite_idle = "assets/sprites/enemies/storm_knight_idle.png"
+sprite_attack = "assets/sprites/enemies/storm_knight_attack.png"
+sprite_hit = "assets/sprites/enemies/storm_knight_hit.png"
+data = "docs/data/data_enemies.json#storm-knight"
+
+[entities.lava-salamander]
+display_name = "Lava Salamander"
+sprite_idle = "assets/sprites/enemies/lava_salamander_idle.png"
+sprite_attack = "assets/sprites/enemies/lava_salamander_attack.png"
+sprite_hit = "assets/sprites/enemies/lava_salamander_hit.png"
+data = "docs/data/data_enemies.json#lava-salamander"
+
+[entities.crystal-bat]
+display_name = "Crystal Bat"
+sprite_idle = "assets/sprites/enemies/crystal_bat_idle.png"
+sprite_attack = "assets/sprites/enemies/crystal_bat_attack.png"
+sprite_hit = "assets/sprites/enemies/crystal_bat_hit.png"
+data = "docs/data/data_enemies.json#crystal-bat"
+
+[entities.dark-mage]
+display_name = "Dark Mage"
+sprite_idle = "assets/sprites/enemies/dark_mage_idle.png"
+sprite_attack = "assets/sprites/enemies/dark_mage_attack.png"
+sprite_hit = "assets/sprites/enemies/dark_mage_hit.png"
+data = "docs/data/data_enemies.json#dark-mage"
+
+[entities.fire-elemental]
+display_name = "Fire Elemental"
+sprite_idle = "assets/sprites/enemies/fire_elemental_idle.png"
+sprite_attack = "assets/sprites/enemies/fire_elemental_attack.png"
+sprite_hit = "assets/sprites/enemies/fire_elemental_hit.png"
+data = "docs/data/data_enemies.json#fire-elemental"
+
+[entities.ice-golem]
+display_name = "Ice Golem"
+sprite_idle = "assets/sprites/enemies/ice_golem_idle.png"
+sprite_attack = "assets/sprites/enemies/ice_golem_attack.png"
+sprite_hit = "assets/sprites/enemies/ice_golem_hit.png"
+data = "docs/data/data_enemies.json#ice-golem"
+
+[entities.thunder-hawk]
+display_name = "Thunder Hawk"
+sprite_idle = "assets/sprites/enemies/thunder_hawk_idle.png"
+sprite_attack = "assets/sprites/enemies/thunder_hawk_attack.png"
+sprite_hit = "assets/sprites/enemies/thunder_hawk_hit.png"
+data = "docs/data/data_enemies.json#thunder-hawk"
+
+[entities.earth-wyrm]
+display_name = "Earth Wyrm"
+sprite_idle = "assets/sprites/enemies/earth_wyrm_idle.png"
+sprite_attack = "assets/sprites/enemies/earth_wyrm_attack.png"
+sprite_hit = "assets/sprites/enemies/earth_wyrm_hit.png"
+data = "docs/data/data_enemies.json#earth-wyrm"
+
+[entities.shadow-wisp]
+display_name = "Shadow Wisp"
+sprite_idle = "assets/sprites/enemies/shadow_wisp_idle.png"
+sprite_attack = "assets/sprites/enemies/shadow_wisp_attack.png"
+sprite_hit = "assets/sprites/enemies/shadow_wisp_hit.png"
+data = "docs/data/data_enemies.json#shadow-wisp"
+
+[entities.tower-elite-mercury-lich]
+display_name = "Arctic Lich"
+sprite_idle = "assets/sprites/enemies/arctic_lich_idle.png"
+sprite_attack = "assets/sprites/enemies/arctic_lich_attack.png"
+sprite_hit = "assets/sprites/enemies/arctic_lich_hit.png"
+data = "docs/data/data_enemies.json#tower-elite-mercury-lich"
+
+[entities.tower-elite-jupiter-void]
+display_name = "Void Tempest"
+sprite_idle = "assets/sprites/enemies/void_tempest_idle.png"
+sprite_attack = "assets/sprites/enemies/void_tempest_attack.png"
+sprite_hit = "assets/sprites/enemies/void_tempest_hit.png"
+data = "docs/data/data_enemies.json#tower-elite-jupiter-void"
+
+[entities.tower-elite-hybrid-golem]
+display_name = "Titanium Colossus"
+sprite_idle = "assets/sprites/enemies/titanium_colossus_idle.png"
+sprite_attack = "assets/sprites/enemies/titanium_colossus_attack.png"
+sprite_hit = "assets/sprites/enemies/titanium_colossus_hit.png"
+data = "docs/data/data_enemies.json#tower-elite-hybrid-golem"

@@ -1,0 +1,19 @@
+Bevy render component audit
+Repo: /home/claude/vale-village-v3
+Scope searched: src/**/*.rs
+Symbols searched:
+- SpriteBundle
+- SpriteSheetBundle
+- TextureAtlas
+- Camera2dBundle
+- ImageBundle
+
+Result:
+No matches found for any requested symbol in Rust source files under src/.
+
+Matched files with line numbers:
+- SpriteBundle: none
+- SpriteSheetBundle: none
+- TextureAtlas: none
+- Camera2dBundle: none
+- ImageBundle: none

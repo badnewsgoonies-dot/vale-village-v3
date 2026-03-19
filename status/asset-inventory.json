@@ -1,0 +1,9 @@
+{
+  "root": "assets/",
+  "file_types": [
+    ".png",
+    ".gif"
+  ],
+  "files": [],
+  "notes": "No .png or .gif files were found under assets/ at verification time."
+}

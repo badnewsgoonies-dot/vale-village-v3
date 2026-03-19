@@ -1,0 +1,1533 @@
+{
+  "generated_from": "docs/data/*.json",
+  "file_count": 12,
+  "files": [
+    {
+      "file": "docs/data/data_abilities.json",
+      "top_level_type": "list",
+      "top_level_entry_count": 241,
+      "first_3_entry_ids_or_names": [
+        "strike",
+        "heavy-strike",
+        "guard-break"
+      ],
+      "schema": {
+        "entry_type": "object",
+        "variant_count": 1,
+        "variants": [
+          {
+            "fields": [
+              "basePower",
+              "buffEffect",
+              "chainDamage",
+              "cleanse_type",
+              "damageReductionPercent",
+              "element",
+              "grantImmunity",
+              "healOverTime",
+              "hitCount",
+              "id",
+              "ignoreDefensePercent",
+              "manaCost",
+              "name",
+              "revive",
+              "reviveHPPercent",
+              "shieldCharges",
+              "splashDamagePercent",
+              "statusEffect",
+              "targets",
+              "type",
+              "unlockLevel"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "file": "docs/data/data_abilities_deterministic.json",
+      "top_level_type": "list",
+      "top_level_entry_count": 241,
+      "first_3_entry_ids_or_names": [
+        "strike",
+        "heavy-strike",
+        "guard-break"
+      ],
+      "schema": {
+        "entry_type": "object",
+        "variant_count": 1,
+        "variants": [
+          {
+            "fields": [
+              "basePower",
+              "buffEffect",
+              "chainDamage",
+              "cleanse_type",
+              "damageReductionPercent",
+              "element",
+              "grantImmunity",
+              "healOverTime",
+              "hitCount",
+              "id",
+              "ignoreDefensePercent",
+              "manaCost",
+              "name",
+              "revive",
+              "reviveHPPercent",
+              "shieldCharges",
+              "splashDamagePercent",
+              "statusEffect",
+              "targets",
+              "type",
+              "unlockLevel"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "file": "docs/data/data_abilities_v3.json",
+      "top_level_type": "list",
+      "top_level_entry_count": 241,
+      "first_3_entry_ids_or_names": [
+        "strike",
+        "heavy-strike",
+        "guard-break"
+      ],
+      "schema": {
+        "entry_type": "object",
+        "variant_count": 2,
+        "variants": [
+          {
+            "fields": [
+              "barrierCharges",
+              "basePower",
+              "buffEffect",
+              "chainDamage",
+              "cleanse_type",
+              "element",
+              "grantImmunity",
+              "healOverTime",
+              "hitCount",
+              "id",
+              "ignoreDefensePercent",
+              "manaCost",
+              "name",
+              "revive",
+              "reviveHPPercent",
+              "splashDamagePercent",
+              "statusEffect",
+              "targets",
+              "type",
+              "unlockLevel"
+            ]
+          },
+          {
+            "fields": [
+              "basePower",
+              "buffEffect",
+              "chainDamage",
+              "cleanse_type",
+              "damageReductionPercent",
+              "element",
+              "grantImmunity",
+              "healOverTime",
+              "hitCount",
+              "id",
+              "ignoreDefensePercent",
+              "manaCost",
+              "name",
+              "revive",
+              "reviveHPPercent",
+              "shieldCharges",
+              "splashDamagePercent",
+              "statusEffect",
+              "targets",
+              "type",
+              "unlockLevel"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "file": "docs/data/data_djinn.json",
+      "top_level_type": "list",
+      "top_level_entry_count": 23,
+      "first_3_entry_ids_or_names": [
+        "flint",
+        "granite",
+        "bane"
+      ],
+      "schema": {
+        "entry_type": "object",
+        "variant_count": 1,
+        "variants": [
+          {
+            "fields": [
+              "element",
+              "id",
+              "name",
+              "statBonuses",
+              "summon",
+              "tier"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "file": "docs/data/data_djinn_abilities.json",
+      "top_level_type": "list",
+      "top_level_entry_count": 23,
+      "first_3_entry_ids_or_names": [
+        "flint",
+        "granite",
+        "bane"
+      ],
+      "schema": {
+        "entry_type": "object",
+        "variant_count": 1,
+        "variants": [
+          {
+            "fields": [
+              "abilities",
+              "djinnId",
+              "djinnName",
+              "element"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "file": "docs/data/data_encounters.json",
+      "top_level_type": "list",
+      "top_level_entry_count": 55,
+      "first_3_entry_ids_or_names": [
+        "house-01",
+        "vs1-garet",
+        "house-02"
+      ],
+      "schema": {
+        "entry_type": "object",
+        "variant_count": 1,
+        "variants": [
+          {
+            "fields": [
+              "difficulty",
+              "enemies",
+              "id",
+              "name",
+              "reward"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "file": "docs/data/data_enemies.json",
+      "top_level_type": "list",
+      "top_level_entry_count": 137,
+      "first_3_entry_ids_or_names": [
+        "mercury-slime",
+        "venus-wolf",
+        "venus-wolf-mini-boss"
+      ],
+      "schema": {
+        "entry_type": "object",
+        "variant_count": 1,
+        "variants": [
+          {
+            "fields": [
+              "abilityCount",
+              "atk",
+              "def",
+              "element",
+              "goldReward",
+              "hp",
+              "id",
+              "level",
+              "mag",
+              "name",
+              "spd",
+              "xpReward"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "file": "docs/data/data_equipment.json",
+      "top_level_type": "list",
+      "top_level_entry_count": 109,
+      "first_3_entry_ids_or_names": [
+        "wooden-sword",
+        "bronze-sword",
+        "iron-sword"
+      ],
+      "schema": {
+        "entry_type": "object",
+        "variant_count": 1,
+        "variants": [
+          {
+            "fields": [
+              "allowedElements",
+              "cost",
+              "id",
+              "name",
+              "setId",
+              "slot",
+              "statBonus",
+              "tier",
+              "unlocksAbility"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "file": "docs/data/data_unit_abilities.json",
+      "top_level_type": "list",
+      "top_level_entry_count": 11,
+      "first_3_entry_ids_or_names": [
+        "adept",
+        "war-mage",
+        "mystic"
+      ],
+      "schema": {
+        "entry_type": "object",
+        "variant_count": 1,
+        "variants": [
+          {
+            "fields": [
+              "abilities",
+              "element",
+              "unitId",
+              "unitName"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "file": "docs/data/sprite_map_complete.json",
+      "top_level_type": "object",
+      "top_level_entry_count": 4,
+      "first_3_entry_ids_or_names": [
+        "partyMembers",
+        "enemies",
+        "djinn"
+      ],
+      "schema": {
+        "entry_type": "mapping",
+        "entries": [
+          {
+            "entry": "partyMembers",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "object",
+              "nested_fields": [
+                "attack",
+                "hit",
+                "idle"
+              ]
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "enemies",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "djinn",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "backgrounds",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          }
+        ]
+      }
+    },
+    {
+      "file": "docs/data/sprite_map_enemies.json",
+      "top_level_type": "object",
+      "top_level_entry_count": 137,
+      "first_3_entry_ids_or_names": [
+        "mercury-slime",
+        "venus-wolf",
+        "venus-wolf-mini-boss"
+      ],
+      "schema": {
+        "entry_type": "mapping",
+        "entries": [
+          {
+            "entry": "mercury-slime",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "venus-wolf",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "venus-wolf-mini-boss",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mars-bandit-mini-boss",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "stone-guardian-mini-boss",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "venus-beetle",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mars-bandit",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "jupiter-sprite",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mars-wolf",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mercury-wolf",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "jupiter-wolf",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "frost-mystic",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "gale-priest",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "stone-guardian",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "ember-cleric",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "earth-shaman",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "tide-enchanter",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "frost-oracle",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "terra-warden",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "flame-herald",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "venus-bear",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mars-bear",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mercury-bear",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "jupiter-bear",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "earth-scout",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "flame-scout",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "frost-scout",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "gale-scout",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "terra-soldier",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "blaze-soldier",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "tide-soldier",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "wind-soldier",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "stone-captain",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "inferno-captain",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "glacier-captain",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "thunder-captain",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mountain-commander",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "fire-commander",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "storm-commander",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "lightning-commander",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "granite-warlord",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "volcano-warlord",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "blizzard-warlord",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "tempest-warlord",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "rock-elemental",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "flame-elemental",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "ice-elemental",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "storm-elemental",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "basilisk",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "phoenix",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "leviathan",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "thunderbird",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "hydra",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mars-sprite",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mercury-sprite",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "venus-sprite",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "chimera",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "overseer",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "skeleton-warrior",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "ghost-wisp",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "zombie-hound",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "bone-mage",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "clay-golem",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "iron-golem",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "crystal-golem",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "storm-golem",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "wind-hawk",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "fire-eagle",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "ice-owl",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "stone-roc",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "frost-serpent",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "aqua-drake",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "tidal-wraith",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "glacier-wyrm",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "storm-raven",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "lightning-lynx",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "cyclone-djinni",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "tempest-dragon",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "alpha-phoenix",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "elder-basilisk",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "kraken",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "storm-titan",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "void-specter",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "frost-lich",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "magma-colossus",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "terra-guardian",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "arctic-sovereign",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "neptune-warden",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "abyssal-emperor",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "stratosphere-lord",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "zeus-avatar",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "celestial-fury",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "permafrost-golem",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "tundra-serpent",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "polar-guardian",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "voltage-chimera",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "monsoon-drake",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "aurora-elemental",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "vortex-sentinel",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "maelstrom-beast",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "thunderstorm-colossus",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "bandit-minion",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "bandit-captain",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "bandit",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "scavenger",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "merchant-guard",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "wild-boar",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "carrion-bird",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "garet-enemy",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "sentinel-enemy",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "stormcaller-enemy",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mercury-mistling",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mercury-glacial-sprite",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mercury-frost-hound",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mercury-aquifer-imp",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mercury-warder",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "jupiter-zephyr-imp",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "jupiter-gale-moth",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "jupiter-stormling",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "jupiter-lightning-hopper",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "jupiter-vortex-sentry",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "mire-toad",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "lumen-fawn",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "the-golden-sun",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "poison-toad",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "storm-knight",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "lava-salamander",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "crystal-bat",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "dark-mage",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "fire-elemental",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "ice-golem",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "thunder-hawk",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "earth-wyrm",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "shadow-wisp",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "tower-elite-mercury-lich",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "tower-elite-jupiter-void",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          },
+          {
+            "entry": "tower-elite-hybrid-golem",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "empty"
+            },
+            "value_fields": []
+          }
+        ]
+      }
+    },
+    {
+      "file": "docs/data/sprite_map_overworld_icons.json",
+      "top_level_type": "object",
+      "top_level_entry_count": 5,
+      "first_3_entry_ids_or_names": [
+        "overworld",
+        "icons",
+        "djinn"
+      ],
+      "schema": {
+        "entry_type": "mapping",
+        "entries": [
+          {
+            "entry": "overworld",
+            "value_shape": {
+              "type": "dict",
+              "nested_entry_type": "str"
+            },
+            "value_fields": [
+              "default_pose",
+              "major_npc_base_path",
+              "npc_role_to_file",
+              "player_unit_to_sprite",
+              "protagonist_base_path",
+              "protagonist_poses",
+              "scenery_sprite_map",
+              "specific_npc_to_file",
+              "tile_sprite_map"
+            ]
+          },
+          {
+            "entry": "icons",
+            "value_shape": {
+              "type": "list"
+            }
+          },
+          {
+            "entry": "djinn",
+            "value_shape": {
+              "type": "list"
+            }
+          },
+          {
+            "entry": "backgrounds_gs1",
+            "value_shape": {
+              "type": "list"
+            }
+          },
+          {
+            "entry": "backgrounds_gs2",
+            "value_shape": {
+              "type": "list"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

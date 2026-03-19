@@ -1,0 +1,40 @@
+Hardcoded asset/path filename inventory under src/
+
+No hardcoded sprite/image/font/audio asset files were found in `src/`.
+The hardcoded references present are save/data paths and RON filenames.
+
+src/main.rs:15: "saves/game.ron"
+src/main.rs:78: "data/full"
+
+src/domains/ui/plugin.rs:33: "data/full"
+src/domains/ui/planning.rs:958: "data/full"
+
+src/domains/data_loader/mod.rs:228: "abilities.ron"
+src/domains/data_loader/mod.rs:229: "units.ron"
+src/domains/data_loader/mod.rs:230: "enemies.ron"
+src/domains/data_loader/mod.rs:232: "equipment.ron"
+src/domains/data_loader/mod.rs:233: "djinn.ron"
+src/domains/data_loader/mod.rs:235: "encounters.ron"
+src/domains/data_loader/mod.rs:237: "config.ron"
+src/domains/data_loader/mod.rs:293: "data" (part of constructed "data/sample" path)
+src/domains/data_loader/mod.rs:293: "sample" (part of constructed "data/sample" path)
+src/domains/data_loader/mod.rs:408: "abilities.ron"
+src/domains/data_loader/mod.rs:413: "units.ron"
+src/domains/data_loader/mod.rs:414: "enemies.ron"
+src/domains/data_loader/mod.rs:415: "equipment.ron"
+src/domains/data_loader/mod.rs:416: "djinn.ron"
+src/domains/data_loader/mod.rs:417: "encounters.ron"
+src/domains/data_loader/mod.rs:422: "config.ron"
+
+src/domains/cli_runner/mod.rs:1144: "data" (part of constructed "data/sample" path)
+src/domains/cli_runner/mod.rs:1145: "sample" (part of constructed "data/sample" path)
+
+src/domains/save/mod.rs:196: "save.ron"
+src/domains/save/mod.rs:240: "old_save.ron"
+src/domains/save/mod.rs:267: "/tmp/vale_no_such_dir_xyz/nested/save.ron"
+src/domains/save/mod.rs:281: "/tmp/vale_no_such_file_xyz.ron"
+src/domains/save/mod.rs:295: "save.ron"
+src/domains/save/mod.rs:334: "save.ron"
+src/domains/save/mod.rs:364: "save.ron"
+src/domains/save/mod.rs:396: "save.ron"
+src/domains/save/mod.rs:421: "save.ron"
