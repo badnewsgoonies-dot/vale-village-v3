@@ -118,7 +118,7 @@ pub fn apply_status(
 
     state.statuses.push(ActiveStatus {
         effect_type: status_effect.effect_type,
-        remaining_turns: status_effect.duration,
+        remaining_turns: status_effect.duration.get(),
         burn_percent: status_effect.burn_percent,
         poison_percent: status_effect.poison_percent,
         freeze_threshold: status_effect.freeze_threshold,
@@ -185,7 +185,7 @@ pub fn apply_buff(state: &mut UnitStatusState, buff_effect: &BuffEffect, max_sta
     if state.buffs.len() < max_stacks {
         state.buffs.push(ActiveBuff {
             stat_modifiers: buff_effect.stat_modifiers,
-            remaining_turns: buff_effect.duration,
+            remaining_turns: buff_effect.duration.get(),
         });
     }
 }
@@ -196,7 +196,7 @@ pub fn apply_debuff(state: &mut UnitStatusState, debuff_effect: &DebuffEffect, m
     if state.debuffs.len() < max_stacks {
         state.debuffs.push(ActiveBuff {
             stat_modifiers: debuff_effect.stat_modifiers,
-            remaining_turns: debuff_effect.duration,
+            remaining_turns: debuff_effect.duration.get(),
         });
     }
 }
@@ -349,7 +349,7 @@ pub fn apply_immunity(state: &mut UnitStatusState, immunity: &Immunity) {
     state.immunity = Some(ActiveImmunity {
         all: immunity.all,
         types: immunity.types.clone(),
-        remaining_turns: immunity.duration,
+        remaining_turns: immunity.duration.get(),
     });
 }
 
@@ -372,6 +372,7 @@ pub fn tick_immunity(immunity: &mut Option<ActiveImmunity>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::shared::bounded_types::EffectDuration;
 
     // -- helpers --
 
@@ -382,7 +383,7 @@ mod tests {
     fn burn_effect(pct: f32, dur: u8) -> StatusEffect {
         StatusEffect {
             effect_type: StatusEffectType::Burn,
-            duration: dur,
+            duration: EffectDuration::new_unchecked(dur),
             burn_percent: Some(pct),
             poison_percent: None,
             freeze_threshold: None,
@@ -392,7 +393,7 @@ mod tests {
     fn poison_effect(pct: f32, dur: u8) -> StatusEffect {
         StatusEffect {
             effect_type: StatusEffectType::Poison,
-            duration: dur,
+            duration: EffectDuration::new_unchecked(dur),
             burn_percent: None,
             poison_percent: Some(pct),
             freeze_threshold: None,
@@ -402,7 +403,7 @@ mod tests {
     fn freeze_effect(threshold: u16, dur: u8) -> StatusEffect {
         StatusEffect {
             effect_type: StatusEffectType::Freeze,
-            duration: dur,
+            duration: EffectDuration::new_unchecked(dur),
             burn_percent: None,
             poison_percent: None,
             freeze_threshold: Some(threshold),
@@ -412,7 +413,7 @@ mod tests {
     fn stun_effect(dur: u8) -> StatusEffect {
         StatusEffect {
             effect_type: StatusEffectType::Stun,
-            duration: dur,
+            duration: EffectDuration::new_unchecked(dur),
             burn_percent: None,
             poison_percent: None,
             freeze_threshold: None,
@@ -422,7 +423,7 @@ mod tests {
     fn null_effect(dur: u8) -> StatusEffect {
         StatusEffect {
             effect_type: StatusEffectType::Null,
-            duration: dur,
+            duration: EffectDuration::new_unchecked(dur),
             burn_percent: None,
             poison_percent: None,
             freeze_threshold: None,
@@ -432,7 +433,7 @@ mod tests {
     fn incap_effect(dur: u8) -> StatusEffect {
         StatusEffect {
             effect_type: StatusEffectType::Incapacitate,
-            duration: dur,
+            duration: EffectDuration::new_unchecked(dur),
             burn_percent: None,
             poison_percent: None,
             freeze_threshold: None,
@@ -448,7 +449,7 @@ mod tests {
                 spd: 0,
                 hp: 0,
             },
-            duration: dur,
+            duration: EffectDuration::new_unchecked(dur),
             shield_charges: None,
             grant_immunity: false,
         }
@@ -463,7 +464,7 @@ mod tests {
                 spd: 0,
                 hp: 0,
             },
-            duration: dur,
+            duration: EffectDuration::new_unchecked(dur),
         }
     }
 

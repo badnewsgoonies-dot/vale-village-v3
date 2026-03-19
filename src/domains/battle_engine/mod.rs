@@ -5,9 +5,10 @@
 use std::collections::HashMap;
 
 use crate::shared::{
+    bounded_types::{BasePower, EffectDuration, HitCount, Level, ManaCost},
     AbilityDef, AbilityId, BattleAction, BattlePhase, CombatConfig, DamageDealt, DamageType,
-    DjinnDef, DjinnId, DjinnState, DjinnStateChanged, EnemyDef, HealingDone, ManaPoolChanged, Side,
-    Stats, StatusApplied, StatusEffectType, TargetRef, UnitDefeated,
+    DjinnDef, DjinnId, DjinnState, DjinnStateChanged, EnemyDef, HealingDone, ManaPoolChanged,
+    Side, Stats, StatusApplied, StatusEffectType, TargetRef, UnitDefeated,
 };
 
 use crate::domains::ai::{self, AiSelfView, AiStrategy, AiUnitView};
@@ -285,7 +286,7 @@ pub fn plan_action(
                 .ability_defs
                 .get(ability_id)
                 .ok_or(PlanError::InvalidTarget)?;
-            if battle.mana_pool.current_mana < ability.mana_cost {
+            if battle.mana_pool.current_mana < ability.mana_cost.get() {
                 return Err(PlanError::InsufficientMana);
             }
             // Validate all targets exist
@@ -343,7 +344,7 @@ fn projected_mana_delta(battle: &Battle, unit_ref: TargetRef, action: &BattleAct
         BattleAction::UseAbility { ability_id, .. } => battle
             .ability_defs
             .get(ability_id)
-            .map(|ability| -(ability.mana_cost as i16))
+            .map(|ability| -(ability.mana_cost.get() as i16))
             .unwrap_or(0),
         BattleAction::ActivateDjinn { .. } | BattleAction::Summon { .. } => 0,
     }
@@ -749,7 +750,7 @@ fn execute_ability(
     // Spend mana — enemies have their own budget, only deduct from pool for players
     if actor_ref.side == Side::Player {
         let old_mana = battle.mana_pool.current_mana;
-        if !battle.mana_pool.spend_mana(ability.mana_cost) {
+        if !battle.mana_pool.spend_mana(ability.mana_cost.get()) {
             return;
         }
         events.push(BattleEvent::ManaChanged(ManaPoolChanged {
@@ -796,7 +797,7 @@ fn execute_ability(
         // Handle healing abilities
         // FIX 6: heal_amount = base_power + attacker MAG, floor 1
         if ability.category == crate::shared::AbilityCategory::Healing {
-            let heal_amount = (ability.base_power + effective_attacker.mag).max(1);
+            let heal_amount = (ability.base_power.get() + effective_attacker.mag).max(1);
             {
                 let target = get_unit_mut(battle, target_ref).unwrap();
                 let max_hp = target.unit.stats.hp;
@@ -841,7 +842,7 @@ fn execute_ability(
             };
 
             let base_damage = combat::calculate_damage(
-                ability.base_power,
+                ability.base_power.get(),
                 damage_type,
                 &effective_attacker,
                 &modified_target_stats,
@@ -850,7 +851,7 @@ fn execute_ability(
 
             let crit_counter = get_unit(battle, actor_ref).unwrap().unit.crit_counter;
             let hits = combat::resolve_multi_hit(
-                ability.hit_count.max(1),
+                ability.hit_count.get().max(1),
                 base_damage,
                 target_hp,
                 crit_counter,
@@ -989,7 +990,7 @@ fn execute_ability(
         // Apply HoT
         if let Some(ref hot) = ability.heal_over_time {
             let target = get_unit_mut(battle, target_ref).unwrap();
-            status::apply_hot(&mut target.status_state, hot.amount, hot.duration);
+            status::apply_hot(&mut target.status_state, hot.amount, hot.duration.get());
         }
 
         // FIX 4: Apply immunity
@@ -1120,9 +1121,9 @@ fn resolve_djinn_activation_damage(
                         def: 0,
                         mag: 0,
                         spd: 0,
-                        hp: 0,
-                    },
-                    duration: 3,
+                    hp: 0,
+                },
+                    duration: EffectDuration::new_unchecked(3),
                     shield_charges: None,
                     grant_immunity: false,
                 },
@@ -1695,10 +1696,10 @@ mod tests {
                 id: EnemyId(id.to_string()),
                 name: id.to_string(),
                 element: Element::Venus,
-                level: 1,
+                level: Level::new_unchecked(1),
                 stats,
-                xp: 10,
-                gold: 5,
+                xp: crate::shared::bounded_types::Xp::new_unchecked(10),
+                gold: crate::shared::bounded_types::Gold::new_unchecked(5),
                 abilities: vec![],
             },
         }
@@ -1712,11 +1713,11 @@ mod tests {
             category: AbilityCategory::Psynergy,
             damage_type: Some(DamageType::Psynergy),
             element: Some(Element::Venus),
-            mana_cost: cost,
-            base_power: power,
+            mana_cost: ManaCost::new_unchecked(cost),
+            base_power: BasePower::new_unchecked(power),
             targets: TargetMode::SingleEnemy,
-            unlock_level: 1,
-            hit_count: 1,
+            unlock_level: Level::new_unchecked(1),
+            hit_count: HitCount::new_unchecked(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -1744,7 +1745,7 @@ mod tests {
             id: djinn_id.clone(),
             name: id.to_string(),
             element,
-            tier: 1,
+            tier: crate::shared::bounded_types::DjinnTier::new_unchecked(1),
             stat_bonus: crate::shared::StatBonus::default(),
             summon_effect: Some(crate::shared::SummonEffect {
                 damage: summon_damage,
@@ -2130,7 +2131,7 @@ mod tests {
         // Apply burn to enemy
         let burn = StatusEffect {
             effect_type: StatusEffectType::Burn,
-            duration: 3,
+            duration: EffectDuration::new_unchecked(3),
             burn_percent: Some(0.10),
             poison_percent: None,
             freeze_threshold: None,
@@ -2657,7 +2658,7 @@ mod tests {
             id: djinn_id.clone(),
             name: "Mist".to_string(),
             element: Element::Mercury,
-            tier: 1,
+            tier: crate::shared::bounded_types::DjinnTier::new_unchecked(1),
             stat_bonus: crate::shared::StatBonus::default(),
             summon_effect: Some(crate::shared::SummonEffect {
                 damage: 0,
@@ -2763,7 +2764,7 @@ mod tests {
             id: djinn_id.clone(),
             name: "Forge".to_string(),
             element: Element::Mars,
-            tier: 1,
+            tier: crate::shared::bounded_types::DjinnTier::new_unchecked(1),
             stat_bonus: crate::shared::StatBonus::default(),
             summon_effect: Some(crate::shared::SummonEffect {
                 damage: 0,
@@ -2773,9 +2774,9 @@ mod tests {
                         def: 0,
                         mag: 0,
                         spd: 0,
-                        hp: 0,
-                    },
-                    duration: 2,
+                    hp: 0,
+                },
+                    duration: EffectDuration::new_unchecked(2),
                     shield_charges: None,
                     grant_immunity: false,
                 }),
@@ -3441,7 +3442,7 @@ mod tests {
         // Apply freeze with a low threshold to the enemy
         let freeze = StatusEffect {
             effect_type: StatusEffectType::Freeze,
-            duration: 10,
+            duration: EffectDuration::new_unchecked(10),
             burn_percent: None,
             poison_percent: None,
             freeze_threshold: Some(10), // breaks after 10 cumulative damage
@@ -3515,11 +3516,11 @@ mod tests {
             category: AbilityCategory::Psynergy,
             damage_type: Some(DamageType::Psynergy),
             element: Some(Element::Jupiter),
-            mana_cost: 2,
-            base_power: 30,
+            mana_cost: ManaCost::new_unchecked(2),
+            base_power: BasePower::new_unchecked(30),
             targets: TargetMode::SingleEnemy,
-            unlock_level: 1,
-            hit_count: 1,
+            unlock_level: Level::new_unchecked(1),
+            hit_count: HitCount::new_unchecked(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -3686,11 +3687,11 @@ mod tests {
             category: AbilityCategory::Buff,
             damage_type: None,
             element: None,
-            mana_cost: 2,
-            base_power: 0,
+            mana_cost: ManaCost::new_unchecked(2),
+            base_power: BasePower::new_unchecked(0),
             targets: TargetMode::SingleAlly,
-            unlock_level: 1,
-            hit_count: 0,
+            unlock_level: Level::new_unchecked(1),
+            hit_count: HitCount::new_unchecked(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -3700,7 +3701,7 @@ mod tests {
             grant_immunity: Some(Immunity {
                 all: true,
                 types: vec![],
-                duration: 3,
+                duration: EffectDuration::new_unchecked(3),
             }),
             cleanse: None,
             ignore_defense_percent: None,
@@ -3746,7 +3747,7 @@ mod tests {
         // Try to apply a burn status — should be blocked
         let burn = StatusEffect {
             effect_type: StatusEffectType::Burn,
-            duration: 3,
+            duration: EffectDuration::new_unchecked(3),
             burn_percent: Some(0.10),
             poison_percent: None,
             freeze_threshold: None,
@@ -3790,11 +3791,11 @@ mod tests {
             category: AbilityCategory::Buff,
             damage_type: None,
             element: None,
-            mana_cost: 2,
-            base_power: 0,
+            mana_cost: ManaCost::new_unchecked(2),
+            base_power: BasePower::new_unchecked(0),
             targets: TargetMode::SingleAlly,
-            unlock_level: 1,
-            hit_count: 0,
+            unlock_level: Level::new_unchecked(1),
+            hit_count: HitCount::new_unchecked(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -3824,14 +3825,14 @@ mod tests {
         // Apply burn and poison to the player (not stun — stun prevents acting)
         let burn = StatusEffect {
             effect_type: StatusEffectType::Burn,
-            duration: 5,
+            duration: EffectDuration::new_unchecked(5),
             burn_percent: Some(0.10),
             poison_percent: None,
             freeze_threshold: None,
         };
         let poison = StatusEffect {
             effect_type: StatusEffectType::Poison,
-            duration: 5,
+            duration: EffectDuration::new_unchecked(5),
             burn_percent: None,
             poison_percent: Some(0.05),
             freeze_threshold: None,
@@ -3894,11 +3895,11 @@ mod tests {
             category: AbilityCategory::Healing,
             damage_type: None,
             element: None,
-            mana_cost: 3,
-            base_power: 0,
+            mana_cost: ManaCost::new_unchecked(3),
+            base_power: BasePower::new_unchecked(0),
             targets: TargetMode::SingleAlly,
-            unlock_level: 1,
-            hit_count: 0,
+            unlock_level: Level::new_unchecked(1),
+            hit_count: HitCount::new_unchecked(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -4000,11 +4001,11 @@ mod tests {
             category: AbilityCategory::Healing,
             damage_type: None,
             element: None,
-            mana_cost: 2,
-            base_power: 20, // base heal = 20
+            mana_cost: ManaCost::new_unchecked(2),
+            base_power: BasePower::new_unchecked(20), // base heal = 20
             targets: TargetMode::SingleAlly,
-            unlock_level: 1,
-            hit_count: 0,
+            unlock_level: Level::new_unchecked(1),
+            hit_count: HitCount::new_unchecked(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -4101,11 +4102,11 @@ mod tests {
             category: AbilityCategory::Buff,
             damage_type: None,
             element: None,
-            mana_cost: 2,
-            base_power: 0,
+            mana_cost: ManaCost::new_unchecked(2),
+            base_power: BasePower::new_unchecked(0),
             targets: TargetMode::SingleAlly,
-            unlock_level: 1,
-            hit_count: 0,
+            unlock_level: Level::new_unchecked(1),
+            hit_count: HitCount::new_unchecked(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -4199,7 +4200,7 @@ mod tests {
         let immunity = Immunity {
             all: true,
             types: vec![],
-            duration: 2,
+            duration: EffectDuration::new_unchecked(2),
         };
         status::apply_immunity(&mut battle.player_units[0].status_state, &immunity);
         assert!(
@@ -4275,7 +4276,7 @@ mod tests {
                 spd: 0,
                 hp: 0,
             },
-            duration: 5,
+            duration: EffectDuration::new_unchecked(5),
             shield_charges: None,
             grant_immunity: false,
         };
@@ -4318,7 +4319,7 @@ mod tests {
                 id: EnemyId("weak-a".to_string()),
                 name: "Weak A".to_string(),
                 element: Element::Venus,
-                level: 1,
+                level: Level::new_unchecked(1),
                 stats: Stats {
                     hp: 10,
                     atk: 1,
@@ -4326,8 +4327,8 @@ mod tests {
                     mag: 1,
                     spd: 1,
                 },
-                xp: 25,
-                gold: 15,
+                xp: crate::shared::bounded_types::Xp::new_unchecked(25),
+                gold: crate::shared::bounded_types::Gold::new_unchecked(15),
                 abilities: vec![],
             },
         };
@@ -4336,7 +4337,7 @@ mod tests {
                 id: EnemyId("weak-b".to_string()),
                 name: "Weak B".to_string(),
                 element: Element::Mars,
-                level: 1,
+                level: Level::new_unchecked(1),
                 stats: Stats {
                     hp: 10,
                     atk: 1,
@@ -4344,8 +4345,8 @@ mod tests {
                     mag: 1,
                     spd: 1,
                 },
-                xp: 40,
-                gold: 20,
+                xp: crate::shared::bounded_types::Xp::new_unchecked(40),
+                gold: crate::shared::bounded_types::Gold::new_unchecked(20),
                 abilities: vec![],
             },
         };
@@ -4407,7 +4408,7 @@ mod tests {
             id: djinn_id.clone(),
             name: "Ramses".to_string(),
             element: Element::Venus,
-            tier: 1,
+            tier: crate::shared::bounded_types::DjinnTier::new_unchecked(1),
             stat_bonus: crate::shared::StatBonus::default(),
             summon_effect: Some(crate::shared::SummonEffect {
                 damage: 50,

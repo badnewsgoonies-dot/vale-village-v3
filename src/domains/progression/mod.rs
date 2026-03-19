@@ -167,7 +167,7 @@ mod tests {
             id: UnitId("test-unit".to_string()),
             name: "Test Unit".to_string(),
             element: Element::Venus,
-            mana_contribution: 2,
+            mana_contribution: crate::shared::bounded_types::ManaCost::new_unchecked(2),
             base_stats: test_base_stats(),
             growth_rates: test_growth_rates(),
             abilities: test_abilities(),

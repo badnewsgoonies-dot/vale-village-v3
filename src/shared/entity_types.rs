@@ -7,11 +7,11 @@ pub struct AbilityDefBuilder {
     pub category: super::AbilityCategory,
     pub damage_type: Option<super::DamageType>,
     pub element: Option<super::Element>,
-    pub mana_cost: u8,
-    pub base_power: u16,
+    pub mana_cost: super::bounded_types::ManaCost,
+    pub base_power: super::bounded_types::BasePower,
     pub targets: super::TargetMode,
     pub unlock_level: super::bounded_types::Level,
-    pub hit_count: u8,
+    pub hit_count: super::bounded_types::HitCount,
 }
 
 #[game_entity(requires = [id, name, element, mana_contribution, base_stats, growth_rates])]
@@ -19,7 +19,7 @@ pub struct UnitDefBuilder {
     pub id: super::UnitId,
     pub name: String,
     pub element: super::Element,
-    pub mana_contribution: u8,
+    pub mana_contribution: super::bounded_types::ManaCost,
     pub base_stats: super::Stats,
     pub growth_rates: super::GrowthRates,
     pub abilities: Vec<super::AbilityProgression>,

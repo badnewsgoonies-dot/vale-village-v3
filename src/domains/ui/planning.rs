@@ -268,8 +268,8 @@ pub fn update_planning_ui(
                     .with_children(|row| {
                         for aid in &available_abilities {
                             if let Some(ability) = game_data.0.abilities.get(aid) {
-                                if ability.mana_cost <= battle.mana_pool.current_mana {
-                                    let label = format!("{} ({})", ability.name, ability.mana_cost);
+                                if ability.mana_cost.get() <= battle.mana_pool.current_mana {
+                                    let label = format!("{} ({})", ability.name, ability.mana_cost.get());
                                     spawn_action_button(
                                         row,
                                         &label,

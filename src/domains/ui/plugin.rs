@@ -125,7 +125,7 @@ fn build_player_unit(
         base_stats: unit_def.base_stats,
         equipment: loadout,
         djinn_slots: DjinnSlots::new(),
-        mana_contribution: unit_def.mana_contribution,
+        mana_contribution: unit_def.mana_contribution.get(),
         equipment_effects: eq_effects,
     }
 }

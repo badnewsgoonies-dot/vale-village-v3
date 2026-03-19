@@ -18,8 +18,8 @@ use crate::domains::djinn::DjinnSlots;
 use crate::domains::equipment::{self, EquipmentEffects, EquipmentLoadout};
 use crate::domains::djinn;
 use crate::shared::{
-    AbilityCategory, AbilityId, BattleAction, DjinnId, DjinnState, EncounterId, EnemyId,
-    EquipmentId, EquipmentSlot, Side, TargetMode, TargetRef, UnitDef, UnitId,
+    bounded_types::EffectDuration, AbilityCategory, AbilityId, BattleAction, DjinnId, DjinnState,
+    EncounterId, EnemyId, EquipmentId, EquipmentSlot, Side, TargetMode, TargetRef, UnitDef, UnitId,
 };
 
 // ── Public API ──────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ fn build_player_unit(
         base_stats: unit_def.base_stats,
         equipment: loadout,
         djinn_slots: DjinnSlots::new(),
-        mana_contribution: unit_def.mana_contribution,
+        mana_contribution: unit_def.mana_contribution.get(),
         equipment_effects: eq_effects,
     }
 }
@@ -130,7 +130,7 @@ fn format_unit_gear(
 fn find_first_psynergy_ability(unit_def: &UnitDef, game_data: &GameData) -> Option<AbilityId> {
     for ap in &unit_def.abilities {
         if let Some(adef) = game_data.abilities.get(&ap.ability_id) {
-            if adef.mana_cost > 0 {
+            if adef.mana_cost.get() > 0 {
                 return Some(ap.ability_id.clone());
             }
         }
@@ -183,16 +183,16 @@ fn ability_menu_entry(battle: &Battle, ability_id: &AbilityId) -> String {
         .ability_defs
         .get(ability_id)
         .map(|ability| {
-            let multi_hit = if ability.hit_count > 1 {
-                format!(", {}-hit", ability.hit_count)
+            let multi_hit = if ability.hit_count.get() > 1 {
+                format!(", {}-hit", ability.hit_count.get())
             } else {
                 String::new()
             };
             format!(
                 "{} (cost:{}, power:{}, {}, {}{})",
                 ability.name,
-                ability.mana_cost,
-                ability.base_power,
+                ability.mana_cost.get(),
+                ability.base_power.get(),
                 ability_category_label(ability.category),
                 target_mode_label(ability.targets),
                 multi_hit
@@ -488,7 +488,7 @@ fn plan_auto_action_for_player(
             let can_use = battle
                 .ability_defs
                 .get(ability_id)
-                .map(|ability| battle.mana_pool.current_mana >= ability.mana_cost)
+                .map(|ability| battle.mana_pool.current_mana >= ability.mana_cost.get())
                 .unwrap_or(false);
 
             if can_use {
@@ -596,7 +596,7 @@ fn plan_interactive_action_for_player(
                     let mana_note = battle
                         .ability_defs
                         .get(ability_id)
-                        .filter(|ability| battle.mana_pool.projected_mana < ability.mana_cost)
+                        .filter(|ability| battle.mana_pool.projected_mana < ability.mana_cost.get())
                         .map(|_| " [insufficient mana]")
                         .unwrap_or("");
                     println!(
@@ -613,7 +613,7 @@ fn plan_interactive_action_for_player(
                 let ability_id = available_abilities[selected].clone();
 
                 if let Some(ability) = battle.ability_defs.get(&ability_id) {
-                    if battle.mana_pool.projected_mana < ability.mana_cost {
+                    if battle.mana_pool.projected_mana < ability.mana_cost.get() {
                         println!("  Not enough mana left for {}.", ability.name);
                         continue;
                     }
@@ -1182,7 +1182,7 @@ mod tests {
                 base_stats: adept.base_stats,
                 equipment: EquipmentLoadout::default(),
                 djinn_slots: DjinnSlots::new(),
-                mana_contribution: adept.mana_contribution,
+                mana_contribution: adept.mana_contribution.get(),
                 equipment_effects: EquipmentEffects::default(),
             }],
             vec![EnemyUnitData {
@@ -1228,7 +1228,7 @@ mod tests {
                 target: enemy_ref,
                 effect: crate::shared::StatusEffect {
                     effect_type: crate::shared::StatusEffectType::Burn,
-                    duration: 3,
+                    duration: EffectDuration::new_unchecked(3),
                     burn_percent: Some(0.10),
                     poison_percent: None,
                     freeze_threshold: None,
@@ -1331,7 +1331,7 @@ mod tests {
                 base_stats: adept.base_stats,
                 equipment: EquipmentLoadout::default(),
                 djinn_slots: DjinnSlots::new(),
-                mana_contribution: adept.mana_contribution,
+                mana_contribution: adept.mana_contribution.get(),
                 equipment_effects: EquipmentEffects::default(),
             }],
             vec![EnemyUnitData {
@@ -1389,7 +1389,7 @@ mod tests {
                 base_stats: adept.base_stats,
                 equipment: EquipmentLoadout::default(),
                 djinn_slots,
-                mana_contribution: adept.mana_contribution,
+                mana_contribution: adept.mana_contribution.get(),
                 equipment_effects: EquipmentEffects::default(),
             }],
             vec![EnemyUnitData {
@@ -1470,7 +1470,7 @@ mod tests {
                 base_stats: adept.base_stats,
                 equipment: EquipmentLoadout::default(),
                 djinn_slots,
-                mana_contribution: adept.mana_contribution,
+                mana_contribution: adept.mana_contribution.get(),
                 equipment_effects: EquipmentEffects::default(),
             }],
             vec![EnemyUnitData {
@@ -1583,7 +1583,7 @@ mod tests {
                 base_stats: adept.base_stats,
                 equipment: EquipmentLoadout::default(),
                 djinn_slots,
-                mana_contribution: adept.mana_contribution,
+                mana_contribution: adept.mana_contribution.get(),
                 equipment_effects: EquipmentEffects::default(),
             }],
             vec![EnemyUnitData {

@@ -7,7 +7,9 @@ pub mod lifecycle_types;
 pub mod entity_types;
 
 use serde::{Deserialize, Serialize};
-use crate::shared::bounded_types::{Level, Gold, Xp, DjinnTier};
+use crate::shared::bounded_types::{
+    BasePower, DjinnTier, EffectDuration, Gold, HitCount, Level, ManaCost, Xp,
+};
 
 // ── ID Types (string-branded for stable serialization) ──────────────
 
@@ -121,7 +123,7 @@ pub enum StatusEffectType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatusEffect {
     pub effect_type: StatusEffectType,
-    pub duration: u8,
+    pub duration: EffectDuration,
     /// Burn: % of max HP per turn (e.g. 0.10 = 10%)
     pub burn_percent: Option<f32>,
     /// Poison: % of MISSING HP per turn
@@ -172,7 +174,7 @@ pub struct StatBonus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BuffEffect {
     pub stat_modifiers: StatBonus,
-    pub duration: u8,
+    pub duration: EffectDuration,
     pub shield_charges: Option<u8>,
     pub grant_immunity: bool,
 }
@@ -180,7 +182,7 @@ pub struct BuffEffect {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DebuffEffect {
     pub stat_modifiers: StatBonus,
-    pub duration: u8,
+    pub duration: EffectDuration,
 }
 
 // ── HoT (S10) ───────────────────────────────────────────────────────
@@ -188,7 +190,7 @@ pub struct DebuffEffect {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealOverTime {
     pub amount: u16,
-    pub duration: u8,
+    pub duration: EffectDuration,
 }
 
 // ── Immunity (S12) ──────────────────────────────────────────────────
@@ -197,7 +199,7 @@ pub struct HealOverTime {
 pub struct Immunity {
     pub all: bool,
     pub types: Vec<StatusEffectType>,
-    pub duration: u8,
+    pub duration: EffectDuration,
 }
 
 // ── Cleanse (S13) ───────────────────────────────────────────────────
@@ -238,11 +240,11 @@ pub struct AbilityDef {
     pub category: AbilityCategory,
     pub damage_type: Option<DamageType>,
     pub element: Option<Element>,
-    pub mana_cost: u8,
-    pub base_power: u16,
+    pub mana_cost: ManaCost,
+    pub base_power: BasePower,
     pub targets: TargetMode,
     pub unlock_level: Level,
-    pub hit_count: u8,
+    pub hit_count: HitCount,
     // S07: status
     pub status_effect: Option<StatusEffect>,
     // S08: buff/debuff
@@ -279,7 +281,7 @@ pub struct UnitDef {
     pub id: UnitId,
     pub name: String,
     pub element: Element,
-    pub mana_contribution: u8,
+    pub mana_contribution: ManaCost,
     pub base_stats: Stats,
     pub growth_rates: GrowthRates,
     pub abilities: Vec<AbilityProgression>,

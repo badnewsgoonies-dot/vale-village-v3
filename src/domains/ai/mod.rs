@@ -83,8 +83,8 @@ fn best_damaging_ability<'a>(
                 AbilityCategory::Physical | AbilityCategory::Psynergy
             )
         })
-        .filter(|a| a.mana_cost <= mana_available)
-        .max_by_key(|a| a.base_power)
+        .filter(|a| a.mana_cost.get() <= mana_available)
+        .max_by_key(|a| a.base_power.get())
         .copied()
 }
 
@@ -96,8 +96,8 @@ fn healing_ability<'a>(
     abilities
         .iter()
         .filter(|a| a.category == AbilityCategory::Healing)
-        .filter(|a| a.mana_cost <= mana_available)
-        .max_by_key(|a| a.base_power)
+        .filter(|a| a.mana_cost.get() <= mana_available)
+        .max_by_key(|a| a.base_power.get())
         .copied()
 }
 
@@ -109,8 +109,8 @@ fn buff_ability<'a>(
     abilities
         .iter()
         .filter(|a| a.category == AbilityCategory::Buff)
-        .filter(|a| a.mana_cost <= mana_available)
-        .max_by_key(|a| a.base_power)
+        .filter(|a| a.mana_cost.get() <= mana_available)
+        .max_by_key(|a| a.base_power.get())
         .copied()
 }
 
@@ -128,8 +128,8 @@ fn aoe_damaging_ability<'a>(
             )
         })
         .filter(|a| a.targets == TargetMode::AllEnemies)
-        .filter(|a| a.mana_cost <= mana_available)
-        .max_by_key(|a| a.base_power)
+        .filter(|a| a.mana_cost.get() <= mana_available)
+        .max_by_key(|a| a.base_power.get())
         .copied()
 }
 
@@ -301,6 +301,7 @@ fn choose_balanced(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::shared::bounded_types::{BasePower, HitCount, Level, ManaCost};
     use crate::shared::{
         AbilityCategory, AbilityDef, AbilityId, DamageType, TargetMode,
     };
@@ -332,11 +333,11 @@ mod tests {
                 _ => None,
             },
             element: None,
-            mana_cost: cost,
-            base_power: power,
+            mana_cost: ManaCost::new_unchecked(cost),
+            base_power: BasePower::new_unchecked(power),
             targets,
-            unlock_level: 1,
-            hit_count: 1,
+            unlock_level: Level::new_unchecked(1),
+            hit_count: HitCount::new_unchecked(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
