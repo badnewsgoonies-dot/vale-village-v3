@@ -158,6 +158,12 @@ pub fn calculate_damage(
     }
 }
 
+/// Calculate healing given base power and healer stats.
+/// Healing: base_power + mag, floor 1
+pub fn calculate_healing(base_power: u16, healer_stats: &Stats) -> u16 {
+    (base_power + healer_stats.mag).max(1)
+}
+
 // ── S02 — Targeting ─────────────────────────────────────────────────
 
 /// Resolve targets based on targeting mode.
@@ -332,6 +338,13 @@ mod tests {
         // base_power(0) + mag(1) - def(200)*0.3 = 1 - 60 = -59 -> floor 1
         let dmg = calculate_damage(0, DamageType::Psynergy, &attacker, &defender, &cfg);
         assert_eq!(dmg, 1);
+    }
+
+    #[test]
+    fn test_healing_uses_mag() {
+        let healer = Stats { hp: 100, atk: 10, def: 10, mag: 8, spd: 10 };
+        let healing = calculate_healing(10, &healer);
+        assert_eq!(healing, 18);
     }
 
     // ── S02: Targeting — SingleEnemy ────────────────────────────────
