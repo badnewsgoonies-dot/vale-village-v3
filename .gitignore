@@ -21,3 +21,4 @@ saves/*.ron
 
 # Original zip (extracted)
 ai-orchestration-kit.zip
+__pycache__/

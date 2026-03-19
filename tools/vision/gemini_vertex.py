@@ -1,150 +1,264 @@
-#!/usr/bin/env python3
 """
-gemini_vertex.py — Gemini via Vertex AI (bypasses proxy block)
+Gemini via Vertex AI — OAuth-based wrapper for text, vision, and JSON mode.
 
-Usage:
-    from gemini_vertex import gemini_generate, gemini_vision
+Works from containers where generativelanguage.googleapis.com is blocked
+but us-central1-aiplatform.googleapis.com and aiplatform.googleapis.com are open.
 
-    # Text
-    text = gemini_generate("Explain quicksort", model="gemini-3-flash-preview")
+Required env vars:
+    GEMINI_OAUTH_CLIENT_ID
+    GEMINI_OAUTH_CLIENT_SECRET
+    GEMINI_OAUTH_REFRESH_TOKEN
+    GEMINI_VERTEX_PROJECT
 
-    # Vision (image + prompt)
-    result = gemini_vision("screenshot.png", "Is the player character visible?")
+Models and locations:
+    Stable (2.x)  -> us-central1
+    Preview (3.x) -> global
 """
-import json, base64, urllib.request, urllib.parse, os
-from pathlib import Path
 
-CLIENT_ID = os.environ.get("GEMINI_OAUTH_CLIENT_ID", "")
-CLIENT_SECRET = os.environ.get("GEMINI_OAUTH_CLIENT_SECRET", "")
-REFRESH_TOKEN = os.environ.get("GEMINI_OAUTH_REFRESH_TOKEN", "")
-PROJECT = os.environ.get("GEMINI_VERTEX_PROJECT", "")
+import base64
+import json
+import os
+import time
+import urllib.request
+import urllib.parse
+from typing import Any, Optional
 
-def _check_env():
-    missing = [k for k, v in [("GEMINI_OAUTH_CLIENT_ID", CLIENT_ID),
-        ("GEMINI_OAUTH_CLIENT_SECRET", CLIENT_SECRET),
-        ("GEMINI_OAUTH_REFRESH_TOKEN", REFRESH_TOKEN),
-        ("GEMINI_VERTEX_PROJECT", PROJECT)] if not v]
-    if missing:
-        raise RuntimeError(f"Set env vars: {', '.join(missing)}. See ~/.env_tokens")
+# ---------- token cache ----------
 
-# Preview models (3.x) use global, stable models (2.x) use us-central1
-LOCATION_MAP = {
-    "gemini-2.5-flash": "us-central1",
-    "gemini-2.5-pro": "us-central1",
-    "gemini-2.5-flash-lite": "us-central1",
-    "gemini-3-flash-preview": "global",
-    "gemini-3.1-pro-preview": "global",
-    "gemini-3.1-flash-lite-preview": "global",
-}
+_token_cache = {"access_token": None, "expires_at": 0.0}
 
-_cached_token = None
-_cached_expiry = 0
 
-def _get_token():
-    global _cached_token, _cached_expiry
-    import time
-    _check_env()
-    if _cached_token and time.time() < _cached_expiry - 60:
-        return _cached_token
+def _get_access_token():
+    """Get or refresh OAuth access token. Caches for ~55 minutes."""
+    if _token_cache["access_token"] and time.time() < _token_cache["expires_at"]:
+        return _token_cache["access_token"]
+
+    client_id = os.environ["GEMINI_OAUTH_CLIENT_ID"]
+    client_secret = os.environ["GEMINI_OAUTH_CLIENT_SECRET"]
+    refresh_token = os.environ["GEMINI_OAUTH_REFRESH_TOKEN"]
+
     data = urllib.parse.urlencode({
-        "client_id": CLIENT_ID, "client_secret": CLIENT_SECRET,
-        "grant_type": "refresh_token", "refresh_token": REFRESH_TOKEN,
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
     }).encode()
-    resp = urllib.request.urlopen(urllib.request.Request(
-        "https://oauth2.googleapis.com/token", data=data))
-    tokens = json.loads(resp.read())
-    _cached_token = tokens["access_token"]
-    _cached_expiry = time.time() + tokens.get("expires_in", 3600)
-    return _cached_token
+
+    req = urllib.request.Request("https://oauth2.googleapis.com/token", data=data)
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        result = json.loads(resp.read())
+
+    _token_cache["access_token"] = result["access_token"]
+    _token_cache["expires_at"] = time.time() + result.get("expires_in", 3600) - 300
+    return _token_cache["access_token"]
+
+
+# ---------- endpoint routing ----------
 
 def _endpoint(model):
-    loc = LOCATION_MAP.get(model, "global")
-    host = f"{loc}-aiplatform.googleapis.com" if loc != "global" else "aiplatform.googleapis.com"
-    return f"https://{host}/v1/projects/{PROJECT}/locations/{loc}/publishers/google/models/{model}:generateContent"
+    """Route model to correct Vertex AI endpoint."""
+    project = os.environ["GEMINI_VERTEX_PROJECT"]
 
-def gemini_generate(prompt, model="gemini-3-flash-preview", max_tokens=2048):
-    """Generate text from a prompt."""
-    token = _get_token()
-    body = json.dumps({
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {"maxOutputTokens": max_tokens}
-    }).encode()
-    req = urllib.request.Request(_endpoint(model), data=body, headers={
-        "Authorization": f"Bearer {token}", "Content-Type": "application/json"})
-    resp = urllib.request.urlopen(req)
-    result = json.loads(resp.read())
-    return result["candidates"][0]["content"]["parts"][0]["text"]
+    # Preview models (3.x) -> global
+    if any(tag in model for tag in ("preview", "3-flash", "3.1-", "3-pro")):
+        return (
+            "https://aiplatform.googleapis.com/v1/projects/{}/locations/global"
+            "/publishers/google/models/{}:generateContent".format(project, model)
+        )
+    # Stable models (2.x) -> us-central1
+    return (
+        "https://us-central1-aiplatform.googleapis.com/v1/projects/{}/locations/us-central1"
+        "/publishers/google/models/{}:generateContent".format(project, model)
+    )
 
-def gemini_vision(image_path, prompt, model="gemini-3-flash-preview", max_tokens=2048):
-    """Send an image + prompt to Gemini and get a response."""
-    token = _get_token()
-    img_data = Path(image_path).read_bytes()
-    b64 = base64.b64encode(img_data).decode()
-    ext = Path(image_path).suffix.lower()
-    mime = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
-            "gif": "image/gif", "webp": "image/webp"}.get(ext.lstrip("."), "image/png")
-    body = json.dumps({
-        "contents": [{"role": "user", "parts": [
-            {"inlineData": {"mimeType": mime, "data": b64}},
-            {"text": prompt}
-        ]}],
-        "generationConfig": {"maxOutputTokens": max_tokens}
-    }).encode()
-    req = urllib.request.Request(_endpoint(model), data=body, headers={
-        "Authorization": f"Bearer {token}", "Content-Type": "application/json"})
-    resp = urllib.request.urlopen(req)
-    result = json.loads(resp.read())
-    return result["candidates"][0]["content"]["parts"][0]["text"]
+
+# ---------- response extraction ----------
+
+def _extract_text(response):
+    """Extract text from response, handling thinking models.
+
+    Gemini 3.x thinking models put text and thoughtSignature in the same
+    parts array. We collect text fields that are NOT thinking signatures.
+    If all parts have thoughtSignature, we fall back to collecting their
+    text anyway (thinking-only response with no separate output).
+    """
+    candidates = response.get("candidates", [])
+    if not candidates:
+        raise ValueError("No candidates in response: {}".format(
+            json.dumps(response)[:500]))
+
+    candidate = candidates[0]
+    finish = candidate.get("finishReason", "")
+    if finish not in ("STOP", "MAX_TOKENS", ""):
+        raise ValueError("Unexpected finish reason: {}".format(finish))
+
+    parts = candidate.get("content", {}).get("parts", [])
+
+    # First pass: collect non-thinking text parts
+    text_parts = []
+    for part in parts:
+        if "text" in part and "thoughtSignature" not in part:
+            text_parts.append(part["text"])
+
+    if text_parts:
+        return "".join(text_parts)
+
+    # Fallback: thinking-only response — grab text from thought parts
+    for part in parts:
+        if "text" in part:
+            text_parts.append(part["text"])
+
+    if text_parts:
+        return "".join(text_parts)
+
+    raise ValueError("No text in response parts: {}".format(
+        json.dumps(parts)[:500]))
+
+
+# ---------- core API call ----------
+
+def _call(contents, model, generation_config=None):
+    """Make a raw Vertex AI generateContent call."""
+    token = _get_access_token()
+    url = _endpoint(model)
+
+    body = {"contents": contents}
+    if generation_config:
+        body["generationConfig"] = generation_config
+
+    payload = json.dumps(body).encode()
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={
+            "Authorization": "Bearer {}".format(token),
+            "Content-Type": "application/json",
+        },
+    )
+
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        return json.loads(resp.read())
+
+
+# ---------- public API ----------
+
+def gemini_generate(prompt, model="gemini-3-flash-preview", max_tokens=4096):
+    """Text generation. Returns response text."""
+    contents = [{"role": "user", "parts": [{"text": prompt}]}]
+    config = {"maxOutputTokens": max_tokens}
+    response = _call(contents, model, config)
+    return _extract_text(response)
+
+
+def gemini_generate_json(prompt, schema, model="gemini-3-flash-preview",
+                         max_tokens=4096):
+    """Text generation with forced JSON output. Returns parsed dict."""
+    contents = [{"role": "user", "parts": [{"text": prompt}]}]
+    config = {
+        "maxOutputTokens": max_tokens,
+        "responseMimeType": "application/json",
+        "responseSchema": schema,
+    }
+    response = _call(contents, model, config)
+    text = _extract_text(response)
+    return json.loads(text)
+
+
+def gemini_vision(image_path, prompt, model="gemini-3-flash-preview",
+                  max_tokens=4096):
+    """Vision: image + text prompt. Returns response text."""
+    with open(image_path, "rb") as f:
+        image_data = base64.b64encode(f.read()).decode()
+
+    ext = image_path.rsplit(".", 1)[-1].lower()
+    mime_map = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
+                "gif": "image/gif", "webp": "image/webp"}
+    mime_type = mime_map.get(ext, "image/png")
+
+    contents = [{"role": "user", "parts": [
+        {"inlineData": {"mimeType": mime_type, "data": image_data}},
+        {"text": prompt},
+    ]}]
+    config = {"maxOutputTokens": max_tokens}
+    response = _call(contents, model, config)
+    return _extract_text(response)
+
+
+def gemini_vision_json(image_path, prompt, schema, model="gemini-3-flash-preview",
+                       max_tokens=4096):
+    """Vision with forced JSON output. Returns parsed dict."""
+    with open(image_path, "rb") as f:
+        image_data = base64.b64encode(f.read()).decode()
+
+    ext = image_path.rsplit(".", 1)[-1].lower()
+    mime_map = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
+                "gif": "image/gif", "webp": "image/webp"}
+    mime_type = mime_map.get(ext, "image/png")
+
+    contents = [{"role": "user", "parts": [
+        {"inlineData": {"mimeType": mime_type, "data": image_data}},
+        {"text": prompt},
+    ]}]
+    config = {
+        "maxOutputTokens": max_tokens,
+        "responseMimeType": "application/json",
+        "responseSchema": schema,
+    }
+    response = _call(contents, model, config)
+    text = _extract_text(response)
+    return json.loads(text)
+
+
+def gemini_vision_b64(image_b64, mime_type, prompt,
+                      model="gemini-3-flash-preview", max_tokens=4096):
+    """Vision from base64 string (for piping from other tools)."""
+    contents = [{"role": "user", "parts": [
+        {"inlineData": {"mimeType": mime_type, "data": image_b64}},
+        {"text": prompt},
+    ]}]
+    config = {"maxOutputTokens": max_tokens}
+    response = _call(contents, model, config)
+    return _extract_text(response)
+
+
+# ---------- CLI ----------
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) > 1 and sys.argv[1] == "test":
-        print(gemini_generate("Say hello in 3 words", model="gemini-3-flash-preview"))
-        print("Vision module ready.")
+    if len(sys.argv) < 2:
+        print("Usage: gemini_vertex.py <prompt> [--model MODEL] [--image PATH]")
+        print("       gemini_vertex.py --json <prompt> --schema '{...}'")
+        sys.exit(1)
+
+    args = sys.argv[1:]
+    model = "gemini-3-flash-preview"
+    image = None
+    use_json = False
+    schema_str = None
+    prompt_parts = []
+
+    i = 0
+    while i < len(args):
+        if args[i] == "--model" and i + 1 < len(args):
+            model = args[i + 1]; i += 2
+        elif args[i] == "--image" and i + 1 < len(args):
+            image = args[i + 1]; i += 2
+        elif args[i] == "--json":
+            use_json = True; i += 1
+        elif args[i] == "--schema" and i + 1 < len(args):
+            schema_str = args[i + 1]; i += 2
+        else:
+            prompt_parts.append(args[i]); i += 1
+
+    prompt = " ".join(prompt_parts)
+
+    if image and use_json and schema_str:
+        result = gemini_vision_json(image, prompt, json.loads(schema_str), model)
+        print(json.dumps(result, indent=2))
+    elif image:
+        print(gemini_vision(image, prompt, model))
+    elif use_json and schema_str:
+        result = gemini_generate_json(prompt, json.loads(schema_str), model)
+        print(json.dumps(result, indent=2))
     else:
-        print("Usage: python3 gemini_vertex.py test")
-
-
-def gemini_vision_json(image_path, prompt, schema=None, model="gemini-3-flash-preview", max_tokens=2048):
-    """Send image + prompt, force JSON response via responseMimeType."""
-    token = _get_token()
-    img_data = Path(image_path).read_bytes()
-    b64 = base64.b64encode(img_data).decode()
-    ext = Path(image_path).suffix.lower()
-    mime = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
-            "gif": "image/gif", "webp": "image/webp"}.get(ext.lstrip("."), "image/png")
-
-    gen_config = {"maxOutputTokens": max_tokens, "responseMimeType": "application/json"}
-    if schema:
-        gen_config["responseSchema"] = schema
-
-    body = json.dumps({
-        "contents": [{"role": "user", "parts": [
-            {"inlineData": {"mimeType": mime, "data": b64}},
-            {"text": prompt}
-        ]}],
-        "generationConfig": gen_config
-    }).encode()
-    req = urllib.request.Request(_endpoint(model), data=body, headers={
-        "Authorization": f"Bearer {token}", "Content-Type": "application/json"})
-    resp = urllib.request.urlopen(req)
-    result = json.loads(resp.read())
-    return json.loads(result["candidates"][0]["content"]["parts"][0]["text"])
-
-
-def gemini_generate_json(prompt, schema=None, model="gemini-3-flash-preview", max_tokens=2048):
-    """Generate text with forced JSON response."""
-    token = _get_token()
-    gen_config = {"maxOutputTokens": max_tokens, "responseMimeType": "application/json"}
-    if schema:
-        gen_config["responseSchema"] = schema
-
-    body = json.dumps({
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": gen_config
-    }).encode()
-    req = urllib.request.Request(_endpoint(model), data=body, headers={
-        "Authorization": f"Bearer {token}", "Content-Type": "application/json"})
-    resp = urllib.request.urlopen(req)
-    result = json.loads(resp.read())
-    return json.loads(result["candidates"][0]["content"]["parts"][0]["text"])
+        print(gemini_generate(prompt, model))
