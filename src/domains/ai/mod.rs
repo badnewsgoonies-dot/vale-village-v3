@@ -50,14 +50,8 @@ pub fn choose_target(units: &[AiUnitView], criteria: TargetCriteria) -> Option<T
     }
 
     let chosen = match criteria {
-        TargetCriteria::LowestHp => alive
-            .iter()
-            .min_by_key(|u| u.current_hp)
-            .unwrap(),
-        TargetCriteria::HighestAtk => alive
-            .iter()
-            .max_by_key(|u| u.stats.atk.get())
-            .unwrap(),
+        TargetCriteria::LowestHp => alive.iter().min_by_key(|u| u.current_hp).unwrap(),
+        TargetCriteria::HighestAtk => alive.iter().max_by_key(|u| u.stats.atk.get()).unwrap(),
         TargetCriteria::FirstAlive => alive.first().unwrap(),
     };
 
@@ -102,10 +96,7 @@ fn healing_ability<'a>(
 }
 
 /// Find the first buff ability the enemy can afford.
-fn buff_ability<'a>(
-    abilities: &'a [&'a AbilityDef],
-    mana_available: u8,
-) -> Option<&'a AbilityDef> {
+fn buff_ability<'a>(abilities: &'a [&'a AbilityDef], mana_available: u8) -> Option<&'a AbilityDef> {
     abilities
         .iter()
         .filter(|a| a.category == AbilityCategory::Buff)
@@ -134,21 +125,37 @@ fn aoe_damaging_ability<'a>(
 }
 
 /// Build the targets vec for a given ability aimed at one target.
-fn ability_targets(ability: &AbilityDef, single_target: TargetRef, alive_count: u8) -> Vec<TargetRef> {
+fn ability_targets(
+    ability: &AbilityDef,
+    single_target: TargetRef,
+    alive_count: u8,
+) -> Vec<TargetRef> {
     match ability.targets {
         TargetMode::SingleEnemy => vec![single_target],
         TargetMode::AllEnemies => {
             // From enemy perspective, "all enemies" means all players
             (0..alive_count)
-                .map(|i| TargetRef { side: Side::Player, index: i })
+                .map(|i| TargetRef {
+                    side: Side::Player,
+                    index: i,
+                })
                 .collect()
         }
-        TargetMode::SelfOnly => vec![TargetRef { side: Side::Enemy, index: single_target.index }],
-        TargetMode::SingleAlly => vec![TargetRef { side: Side::Enemy, index: single_target.index }],
+        TargetMode::SelfOnly => vec![TargetRef {
+            side: Side::Enemy,
+            index: single_target.index,
+        }],
+        TargetMode::SingleAlly => vec![TargetRef {
+            side: Side::Enemy,
+            index: single_target.index,
+        }],
         TargetMode::AllAllies => {
             // From enemy perspective, "all allies" means all enemies
             (0..alive_count)
-                .map(|i| TargetRef { side: Side::Enemy, index: i })
+                .map(|i| TargetRef {
+                    side: Side::Enemy,
+                    index: i,
+                })
                 .collect()
         }
     }
@@ -181,7 +188,10 @@ pub fn choose_enemy_action(
     if alive_count == 0 {
         // No targets; fallback auto-attack index 0 (will be a no-op at execution)
         return BattleAction::Attack {
-            target: TargetRef { side: Side::Player, index: 0 },
+            target: TargetRef {
+                side: Side::Player,
+                index: 0,
+            },
         };
     }
 
@@ -228,7 +238,10 @@ fn choose_defensive(
     // If HP < 30%: try to heal
     if hp_ratio < 0.30 {
         if let Some(heal) = healing_ability(abilities, enemy.mana_available) {
-            let self_ref = TargetRef { side: Side::Enemy, index: enemy.index };
+            let self_ref = TargetRef {
+                side: Side::Enemy,
+                index: enemy.index,
+            };
             let targets = ability_targets(heal, self_ref, alive_count);
             return BattleAction::UseAbility {
                 ability_id: heal.id.clone(),
@@ -239,7 +252,10 @@ fn choose_defensive(
 
     // If has a buff ability: buff self
     if let Some(buff) = buff_ability(abilities, enemy.mana_available) {
-        let self_ref = TargetRef { side: Side::Enemy, index: enemy.index };
+        let self_ref = TargetRef {
+            side: Side::Enemy,
+            index: enemy.index,
+        };
         let targets = ability_targets(buff, self_ref, alive_count);
         return BattleAction::UseAbility {
             ability_id: buff.id.clone(),
@@ -266,7 +282,10 @@ fn choose_balanced(
         .find(|u| (u.current_hp as f32 / u.max_hp.max(1) as f32) < 0.25);
 
     if let Some(weak) = low_hp_player {
-        let target = TargetRef { side: Side::Player, index: weak.index };
+        let target = TargetRef {
+            side: Side::Player,
+            index: weak.index,
+        };
         // Use best ability if available, else auto-attack
         if let Some(ability) = best_damaging_ability(abilities, enemy.mana_available) {
             if ability.targets == TargetMode::SingleEnemy {
@@ -282,7 +301,14 @@ fn choose_balanced(
     // If AoE ability available and 3+ players alive: use AoE
     if alive_count >= 3 {
         if let Some(aoe) = aoe_damaging_ability(abilities, enemy.mana_available) {
-            let targets = ability_targets(aoe, TargetRef { side: Side::Player, index: 0 }, alive_count);
+            let targets = ability_targets(
+                aoe,
+                TargetRef {
+                    side: Side::Player,
+                    index: 0,
+                },
+                alive_count,
+            );
             return BattleAction::UseAbility {
                 ability_id: aoe.id.clone(),
                 targets,
@@ -303,23 +329,17 @@ mod tests {
     use super::*;
     use crate::shared::bounded_types::*;
     use crate::shared::bounded_types::{BasePower, HitCount, Level, ManaCost};
-    use crate::shared::{
-        AbilityCategory, AbilityDef, AbilityId, DamageType, TargetMode,
-    };
+    use crate::shared::{AbilityCategory, AbilityDef, AbilityId, DamageType, TargetMode};
 
     // ── Helpers ──────────────────────────────────────────────────────
 
     fn test_stats(hp: u16, atk: u16, def: u16, mag: u16, spd: u16) -> Stats {
         Stats {
             hp: Hp::new(hp).unwrap_or_else(|_| Hp::new_unchecked(hp.clamp(1, 9999))),
-            atk: BaseStat::new(atk)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(atk.clamp(0, 9999))),
-            def: BaseStat::new(def)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(def.clamp(0, 9999))),
-            mag: BaseStat::new(mag)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(mag.clamp(0, 9999))),
-            spd: BaseStat::new(spd)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(spd.clamp(0, 9999))),
+            atk: BaseStat::new(atk).unwrap_or_else(|_| BaseStat::new_unchecked(atk.clamp(0, 9999))),
+            def: BaseStat::new(def).unwrap_or_else(|_| BaseStat::new_unchecked(def.clamp(0, 9999))),
+            mag: BaseStat::new(mag).unwrap_or_else(|_| BaseStat::new_unchecked(mag.clamp(0, 9999))),
+            spd: BaseStat::new(spd).unwrap_or_else(|_| BaseStat::new_unchecked(spd.clamp(0, 9999))),
         }
     }
 
@@ -334,10 +354,21 @@ mod tests {
     }
 
     fn make_enemy_self(index: u8, hp: u16, max_hp: u16, mana: u8) -> AiSelfView {
-        AiSelfView { index, current_hp: hp, max_hp, mana_available: mana }
+        AiSelfView {
+            index,
+            current_hp: hp,
+            max_hp,
+            mana_available: mana,
+        }
     }
 
-    fn make_ability(id: &str, category: AbilityCategory, power: u16, cost: u8, targets: TargetMode) -> AbilityDef {
+    fn make_ability(
+        id: &str,
+        category: AbilityCategory,
+        power: u16,
+        cost: u8,
+        targets: TargetMode,
+    ) -> AbilityDef {
         AbilityDef {
             id: AbilityId(id.to_string()),
             name: id.to_string(),
@@ -399,7 +430,7 @@ mod tests {
     #[test]
     fn target_first_alive_skips_dead() {
         let views = vec![
-            make_player_view(0, 0, 100, 20),  // dead
+            make_player_view(0, 0, 100, 20), // dead
             make_player_view(1, 50, 100, 20),
             make_player_view(2, 80, 100, 20),
         ];
@@ -441,13 +472,28 @@ mod tests {
             make_player_view(1, 30, 100, 20),
         ];
         let enemy = make_enemy_self(0, 100, 100, 5);
-        let weak = make_ability("weak_atk", AbilityCategory::Physical, 20, 2, TargetMode::SingleEnemy);
-        let strong = make_ability("strong_atk", AbilityCategory::Psynergy, 80, 4, TargetMode::SingleEnemy);
+        let weak = make_ability(
+            "weak_atk",
+            AbilityCategory::Physical,
+            20,
+            2,
+            TargetMode::SingleEnemy,
+        );
+        let strong = make_ability(
+            "strong_atk",
+            AbilityCategory::Psynergy,
+            80,
+            4,
+            TargetMode::SingleEnemy,
+        );
         let abilities: Vec<&AbilityDef> = vec![&weak, &strong];
 
         let action = choose_enemy_action(&enemy, &players, &abilities, AiStrategy::Aggressive);
         match action {
-            BattleAction::UseAbility { ability_id, targets } => {
+            BattleAction::UseAbility {
+                ability_id,
+                targets,
+            } => {
                 assert_eq!(ability_id.0, "strong_atk");
                 assert_eq!(targets.len(), 1);
                 assert_eq!(targets[0].index, 1); // lowest HP
@@ -463,7 +509,13 @@ mod tests {
             make_player_view(1, 80, 100, 20),
         ];
         let enemy = make_enemy_self(0, 100, 100, 0); // no mana
-        let expensive = make_ability("nuke", AbilityCategory::Psynergy, 100, 5, TargetMode::SingleEnemy);
+        let expensive = make_ability(
+            "nuke",
+            AbilityCategory::Psynergy,
+            100,
+            5,
+            TargetMode::SingleEnemy,
+        );
         let abilities: Vec<&AbilityDef> = vec![&expensive];
 
         let action = choose_enemy_action(&enemy, &players, &abilities, AiStrategy::Aggressive);
@@ -479,7 +531,13 @@ mod tests {
     fn defensive_heals_when_low_hp() {
         let players = vec![make_player_view(0, 80, 100, 20)];
         let enemy = make_enemy_self(0, 20, 100, 5); // 20% HP
-        let heal = make_ability("cure", AbilityCategory::Healing, 50, 3, TargetMode::SelfOnly);
+        let heal = make_ability(
+            "cure",
+            AbilityCategory::Healing,
+            50,
+            3,
+            TargetMode::SelfOnly,
+        );
         let abilities: Vec<&AbilityDef> = vec![&heal];
 
         let action = choose_enemy_action(&enemy, &players, &abilities, AiStrategy::Defensive);
@@ -506,7 +564,7 @@ mod tests {
     #[test]
     fn defensive_attacks_first_alive_when_no_abilities() {
         let players = vec![
-            make_player_view(0, 0, 100, 20),  // dead
+            make_player_view(0, 0, 100, 20), // dead
             make_player_view(1, 60, 100, 20),
             make_player_view(2, 80, 100, 20),
         ];
@@ -545,12 +603,21 @@ mod tests {
             make_player_view(2, 90, 100, 20),
         ];
         let enemy = make_enemy_self(0, 100, 100, 5);
-        let aoe = make_ability("quake", AbilityCategory::Psynergy, 40, 3, TargetMode::AllEnemies);
+        let aoe = make_ability(
+            "quake",
+            AbilityCategory::Psynergy,
+            40,
+            3,
+            TargetMode::AllEnemies,
+        );
         let abilities: Vec<&AbilityDef> = vec![&aoe];
 
         let action = choose_enemy_action(&enemy, &players, &abilities, AiStrategy::Balanced);
         match action {
-            BattleAction::UseAbility { ability_id, targets } => {
+            BattleAction::UseAbility {
+                ability_id,
+                targets,
+            } => {
                 assert_eq!(ability_id.0, "quake");
                 assert_eq!(targets.len(), 3); // hits all 3 players
             }
@@ -583,13 +650,28 @@ mod tests {
             make_player_view(2, 90, 100, 20),
         ];
         let enemy = make_enemy_self(0, 100, 100, 10);
-        let aoe = make_ability("quake", AbilityCategory::Psynergy, 40, 3, TargetMode::AllEnemies);
-        let single = make_ability("slash", AbilityCategory::Physical, 60, 2, TargetMode::SingleEnemy);
+        let aoe = make_ability(
+            "quake",
+            AbilityCategory::Psynergy,
+            40,
+            3,
+            TargetMode::AllEnemies,
+        );
+        let single = make_ability(
+            "slash",
+            AbilityCategory::Physical,
+            60,
+            2,
+            TargetMode::SingleEnemy,
+        );
         let abilities: Vec<&AbilityDef> = vec![&aoe, &single];
 
         let action = choose_enemy_action(&enemy, &players, &abilities, AiStrategy::Balanced);
         match action {
-            BattleAction::UseAbility { ability_id, targets } => {
+            BattleAction::UseAbility {
+                ability_id,
+                targets,
+            } => {
                 assert_eq!(ability_id.0, "slash");
                 assert_eq!(targets[0].index, 1); // focus the weak player
             }

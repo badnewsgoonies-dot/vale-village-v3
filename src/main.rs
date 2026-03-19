@@ -1,6 +1,6 @@
-mod shared;
 mod data;
 mod domains;
+mod shared;
 
 use std::path::Path;
 
@@ -16,16 +16,13 @@ const SAVE_PATH: &str = "saves/game.ron";
 
 /// The story encounter sequence from house-01 through house-50.
 const ENCOUNTER_SEQUENCE: &[&str] = &[
-    "house-01", "house-02", "house-03", "house-04", "house-05",
-    "house-06", "house-07", "house-08", "house-09", "house-10",
-    "house-11", "house-12", "house-13", "house-14", "house-15",
-    "house-16", "house-17", "house-18", "house-19", "house-20",
-    "house-21", "house-22", "house-23", "house-24", "house-25",
-    "house-26", "house-27", "house-28", "house-29", "house-30",
-    "house-31", "house-32", "house-33", "house-34", "house-35",
-    "house-36", "house-37", "house-38", "house-39", "house-40",
-    "house-41", "house-42", "house-43", "house-44", "house-45",
-    "house-46", "house-47", "house-48", "house-49", "house-50",
+    "house-01", "house-02", "house-03", "house-04", "house-05", "house-06", "house-07", "house-08",
+    "house-09", "house-10", "house-11", "house-12", "house-13", "house-14", "house-15", "house-16",
+    "house-17", "house-18", "house-19", "house-20", "house-21", "house-22", "house-23", "house-24",
+    "house-25", "house-26", "house-27", "house-28", "house-29", "house-30", "house-31", "house-32",
+    "house-33", "house-34", "house-35", "house-36", "house-37", "house-38", "house-39", "house-40",
+    "house-41", "house-42", "house-43", "house-44", "house-45", "house-46", "house-47", "house-48",
+    "house-49", "house-50",
 ];
 
 /// Find the next uncompleted encounter in the story sequence.
@@ -165,11 +162,8 @@ fn main() {
                         saved_unit.level,
                     );
 
-                    let level_result = progression::apply_battle_rewards(
-                        &mut progress,
-                        xp,
-                        unit_def,
-                    );
+                    let level_result =
+                        progression::apply_battle_rewards(&mut progress, xp, unit_def);
 
                     println!("  {} gained {} XP", unit_def.name, xp);
 
@@ -232,10 +226,8 @@ fn main() {
                         .player_party
                         .iter()
                         .any(|u| u.unit_id == *recruit_id);
-                    let already_in_roster = save_data
-                        .roster
-                        .iter()
-                        .any(|u| u.unit_id == *recruit_id);
+                    let already_in_roster =
+                        save_data.roster.iter().any(|u| u.unit_id == *recruit_id);
                     if !already_in_party && !already_in_roster {
                         save_data.roster.push(save::SavedUnit {
                             unit_id: recruit_id.clone(),

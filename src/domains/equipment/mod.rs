@@ -4,10 +4,10 @@
 
 use std::collections::HashMap;
 
+use crate::shared::bounded_types::StatMod;
 use crate::shared::{
     AbilityId, Element, EquipmentDef, EquipmentId, EquipmentSlot, SetId, StatBonus,
 };
-use crate::shared::bounded_types::StatMod;
 
 // ── Structs ──────────────────────────────────────────────────────────
 
@@ -192,11 +192,7 @@ mod tests {
     use crate::shared::{EquipmentTier, SetId};
 
     /// Helper: build a minimal EquipmentDef for testing.
-    fn make_def(
-        id: &str,
-        slot: EquipmentSlot,
-        elements: Vec<Element>,
-    ) -> EquipmentDef {
+    fn make_def(id: &str, slot: EquipmentSlot, elements: Vec<Element>) -> EquipmentDef {
         EquipmentDef {
             id: EquipmentId(id.to_string()),
             name: id.to_string(),
@@ -225,10 +221,7 @@ mod tests {
             Element::Venus,
         );
         assert!(result.is_ok());
-        assert_eq!(
-            loadout.weapon,
-            Some(EquipmentId("sword1".into()))
-        );
+        assert_eq!(loadout.weapon, Some(EquipmentId("sword1".into())));
     }
 
     #[test]
@@ -279,9 +272,21 @@ mod tests {
     fn test_stat_bonus_computation_two_items() {
         let mut loadout = EquipmentLoadout::default();
         let mut def_w = make_def("sword1", EquipmentSlot::Weapon, vec![Element::Venus]);
-        def_w.stat_bonus = StatBonus { atk: StatMod::new_unchecked(10), def: StatMod::new_unchecked(0), mag: StatMod::new_unchecked(0), spd: StatMod::new_unchecked(5), hp: StatMod::new_unchecked(0) };
+        def_w.stat_bonus = StatBonus {
+            atk: StatMod::new_unchecked(10),
+            def: StatMod::new_unchecked(0),
+            mag: StatMod::new_unchecked(0),
+            spd: StatMod::new_unchecked(5),
+            hp: StatMod::new_unchecked(0),
+        };
         let mut def_h = make_def("helm1", EquipmentSlot::Helm, vec![Element::Venus]);
-        def_h.stat_bonus = StatBonus { atk: StatMod::new_unchecked(0), def: StatMod::new_unchecked(8), mag: StatMod::new_unchecked(0), spd: StatMod::new_unchecked(0), hp: StatMod::new_unchecked(20) };
+        def_h.stat_bonus = StatBonus {
+            atk: StatMod::new_unchecked(0),
+            def: StatMod::new_unchecked(8),
+            mag: StatMod::new_unchecked(0),
+            spd: StatMod::new_unchecked(0),
+            hp: StatMod::new_unchecked(20),
+        };
 
         loadout.weapon = Some(EquipmentId("sword1".into()));
         loadout.helm = Some(EquipmentId("helm1".into()));
@@ -402,7 +407,11 @@ mod tests {
 
     #[test]
     fn test_can_equip_allowed() {
-        let def = make_def("sword", EquipmentSlot::Weapon, vec![Element::Venus, Element::Mars]);
+        let def = make_def(
+            "sword",
+            EquipmentSlot::Weapon,
+            vec![Element::Venus, Element::Mars],
+        );
         assert!(can_equip(&def, Element::Venus));
         assert!(can_equip(&def, Element::Mars));
     }

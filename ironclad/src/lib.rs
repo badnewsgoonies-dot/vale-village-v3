@@ -1,8 +1,8 @@
 extern crate proc_macro;
 
-mod game_value;
-mod game_lifecycle;
 mod game_entity;
+mod game_lifecycle;
+mod game_value;
 
 use proc_macro::TokenStream;
 

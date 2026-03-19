@@ -34,14 +34,18 @@ pub struct DjinnTier(pub u8);
 pub struct Gold(pub u32);
 
 impl Default for Gold {
-    fn default() -> Self { Self::new_unchecked(0) }
+    fn default() -> Self {
+        Self::new_unchecked(0)
+    }
 }
 
 #[game_value(min = 0, max = 999999)]
 pub struct Xp(pub u32);
 
 impl Default for Xp {
-    fn default() -> Self { Self::new_unchecked(0) }
+    fn default() -> Self {
+        Self::new_unchecked(0)
+    }
 }
 
 #[game_value(min = 0, max = 20)]
@@ -61,17 +65,25 @@ pub struct MaxBuffStacks(pub u8);
 
 // Default impls for types used in Default-deriving structs
 impl Default for Hp {
-    fn default() -> Self { Self::new_unchecked(1) }
+    fn default() -> Self {
+        Self::new_unchecked(1)
+    }
 }
 
 impl Default for BaseStat {
-    fn default() -> Self { Self::new_unchecked(0) }
+    fn default() -> Self {
+        Self::new_unchecked(0)
+    }
 }
 
 impl Default for GrowthRate {
-    fn default() -> Self { Self::new_unchecked(0) }
+    fn default() -> Self {
+        Self::new_unchecked(0)
+    }
 }
 
 impl Default for EffectDuration {
-    fn default() -> Self { Self::new_unchecked(0) }
+    fn default() -> Self {
+        Self::new_unchecked(0)
+    }
 }

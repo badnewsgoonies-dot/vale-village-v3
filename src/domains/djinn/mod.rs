@@ -2,11 +2,11 @@
 //! Djinn state machine: Good/Recovery states, ability oscillation,
 //! summon execution, and staggered recovery.
 
+use crate::shared::bounded_types::{DjinnTier, StatMod};
 use crate::shared::{
     AbilityId, DjinnCompatibility, DjinnDef, DjinnId, DjinnState, DjinnStateChanged, Element,
     StatBonus, SummonEffect, TargetRef,
 };
-    use crate::shared::bounded_types::{DjinnTier, StatMod};
 
 // ── Structs ─────────────────────────────────────────────────────────
 
@@ -195,11 +195,20 @@ pub fn compute_djinn_stat_bonus(slots: &DjinnSlots, djinn_defs: &[DjinnDef]) -> 
             continue;
         }
         if let Some(def) = djinn_defs.iter().find(|d| d.id == inst.djinn_id) {
-            bonus.atk = StatMod::new_unchecked((bonus.atk.get() + def.stat_bonus.atk.get()).clamp(-999, 999));
-            bonus.def = StatMod::new_unchecked((bonus.def.get() + def.stat_bonus.def.get()).clamp(-999, 999));
-            bonus.mag = StatMod::new_unchecked((bonus.mag.get() + def.stat_bonus.mag.get()).clamp(-999, 999));
-            bonus.spd = StatMod::new_unchecked((bonus.spd.get() + def.stat_bonus.spd.get()).clamp(-999, 999));
-            bonus.hp = StatMod::new_unchecked((bonus.hp.get() + def.stat_bonus.hp.get()).clamp(-999, 999));
+            bonus.atk = StatMod::new_unchecked(
+                (bonus.atk.get() + def.stat_bonus.atk.get()).clamp(-999, 999),
+            );
+            bonus.def = StatMod::new_unchecked(
+                (bonus.def.get() + def.stat_bonus.def.get()).clamp(-999, 999),
+            );
+            bonus.mag = StatMod::new_unchecked(
+                (bonus.mag.get() + def.stat_bonus.mag.get()).clamp(-999, 999),
+            );
+            bonus.spd = StatMod::new_unchecked(
+                (bonus.spd.get() + def.stat_bonus.spd.get()).clamp(-999, 999),
+            );
+            bonus.hp =
+                StatMod::new_unchecked((bonus.hp.get() + def.stat_bonus.hp.get()).clamp(-999, 999));
         }
     }
     bonus
@@ -215,11 +224,11 @@ pub fn get_available_summons(good_count: usize) -> Vec<SummonTier> {
             required_good: 1,
         });
     }
-        if good_count >= 2 {
-            tiers.push(SummonTier {
-                tier: 2,
-                required_good: 2,
-            });
+    if good_count >= 2 {
+        tiers.push(SummonTier {
+            tier: 2,
+            required_good: 2,
+        });
     }
     if good_count >= 3 {
         tiers.push(SummonTier {
@@ -386,8 +395,16 @@ mod tests {
 
     #[test]
     fn compatibility_same_all_elements() {
-        for elem in &[Element::Venus, Element::Mars, Element::Mercury, Element::Jupiter] {
-            assert_eq!(determine_compatibility(*elem, *elem), DjinnCompatibility::Same);
+        for elem in &[
+            Element::Venus,
+            Element::Mars,
+            Element::Mercury,
+            Element::Jupiter,
+        ] {
+            assert_eq!(
+                determine_compatibility(*elem, *elem),
+                DjinnCompatibility::Same
+            );
         }
     }
 
@@ -443,16 +460,14 @@ mod tests {
     #[test]
     fn abilities_same_recovery() {
         let def = make_djinn_def("flint", Element::Venus);
-        let abilities =
-            get_granted_abilities(&def, DjinnCompatibility::Same, DjinnState::Recovery);
+        let abilities = get_granted_abilities(&def, DjinnCompatibility::Same, DjinnState::Recovery);
         assert_eq!(abilities, vec![AbilityId("same_recovery".into())]);
     }
 
     #[test]
     fn abilities_counter_good() {
         let def = make_djinn_def("forge", Element::Mars);
-        let abilities =
-            get_granted_abilities(&def, DjinnCompatibility::Counter, DjinnState::Good);
+        let abilities = get_granted_abilities(&def, DjinnCompatibility::Counter, DjinnState::Good);
         assert_eq!(abilities, vec![AbilityId("counter_good".into())]);
     }
 
@@ -467,8 +482,7 @@ mod tests {
     #[test]
     fn abilities_neutral_always_good() {
         let def = make_djinn_def("fizz", Element::Mercury);
-        let abilities =
-            get_granted_abilities(&def, DjinnCompatibility::Neutral, DjinnState::Good);
+        let abilities = get_granted_abilities(&def, DjinnCompatibility::Neutral, DjinnState::Good);
         assert_eq!(abilities, vec![AbilityId("neutral_always".into())]);
     }
 
@@ -540,7 +554,10 @@ mod tests {
 
         assert_eq!(activation.element, Element::Mercury);
         assert_eq!(activation.base_damage, 0);
-        assert_eq!(activation.effect_type, Some(DjinnActivationEffectType::Heal));
+        assert_eq!(
+            activation.effect_type,
+            Some(DjinnActivationEffectType::Heal)
+        );
     }
 
     #[test]
@@ -743,7 +760,10 @@ mod tests {
         // End of Turn 4: tick — all at 1, decrement to 0, no recovery
         // DESIGN_LOCK: "Turn 4: Nothing recovers yet."
         let events = tick_recovery(&mut slots, unit_ref());
-        assert!(events.is_empty(), "Turn 4: Nothing recovers yet (DESIGN_LOCK)");
+        assert!(
+            events.is_empty(),
+            "Turn 4: Nothing recovers yet (DESIGN_LOCK)"
+        );
 
         // End of Turn 5: all at 0. Djinn 1 recovers (lowest activation_order).
         // DESIGN_LOCK: "Turn 5: Djinn 1 → GOOD."

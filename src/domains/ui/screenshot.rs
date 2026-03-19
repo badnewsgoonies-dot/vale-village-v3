@@ -22,10 +22,7 @@ impl Plugin for ScreenshotPlugin {
 }
 
 /// Capture a primary-window screenshot once the requested delay elapses.
-pub fn capture_screenshot(
-    mut commands: Commands,
-    request: Option<ResMut<ScreenshotRequest>>,
-) {
+pub fn capture_screenshot(mut commands: Commands, request: Option<ResMut<ScreenshotRequest>>) {
     let Some(mut request) = request else {
         return;
     };

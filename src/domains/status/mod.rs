@@ -3,10 +3,10 @@
 //!
 //! All status effects, buffs, debuffs, barriers, HoT, immunity, and cleansing.
 
+use crate::shared::bounded_types::StatMod;
 use crate::shared::{
     BuffEffect, CleanseType, DebuffEffect, Immunity, StatBonus, StatusEffect, StatusEffectType,
 };
-use crate::shared::bounded_types::StatMod;
 
 // ── S07 — Active Status ─────────────────────────────────────────────
 
@@ -98,9 +98,7 @@ pub struct StatusTickResult {
 /// Returns true if the given status type is blocked by active immunity.
 pub fn is_immune(immunity: &Option<ActiveImmunity>, status_type: StatusEffectType) -> bool {
     match immunity {
-        Some(imm) if imm.remaining_turns > 0 => {
-            imm.all || imm.types.contains(&status_type)
-        }
+        Some(imm) if imm.remaining_turns > 0 => imm.all || imm.types.contains(&status_type),
         _ => false,
     }
 }
@@ -216,11 +214,16 @@ pub fn tick_buffs(buffs: &mut Vec<ActiveBuff>) {
 pub fn compute_stat_modifiers(buffs: &[ActiveBuff], debuffs: &[ActiveBuff]) -> StatBonus {
     let mut total = StatBonus::default();
     for b in buffs.iter().chain(debuffs.iter()) {
-        total.atk = StatMod::new_unchecked((total.atk.get() + b.stat_modifiers.atk.get()).clamp(-999, 999));
-        total.def = StatMod::new_unchecked((total.def.get() + b.stat_modifiers.def.get()).clamp(-999, 999));
-        total.mag = StatMod::new_unchecked((total.mag.get() + b.stat_modifiers.mag.get()).clamp(-999, 999));
-        total.spd = StatMod::new_unchecked((total.spd.get() + b.stat_modifiers.spd.get()).clamp(-999, 999));
-        total.hp = StatMod::new_unchecked((total.hp.get() + b.stat_modifiers.hp.get()).clamp(-999, 999));
+        total.atk =
+            StatMod::new_unchecked((total.atk.get() + b.stat_modifiers.atk.get()).clamp(-999, 999));
+        total.def =
+            StatMod::new_unchecked((total.def.get() + b.stat_modifiers.def.get()).clamp(-999, 999));
+        total.mag =
+            StatMod::new_unchecked((total.mag.get() + b.stat_modifiers.mag.get()).clamp(-999, 999));
+        total.spd =
+            StatMod::new_unchecked((total.spd.get() + b.stat_modifiers.spd.get()).clamp(-999, 999));
+        total.hp =
+            StatMod::new_unchecked((total.hp.get() + b.stat_modifiers.hp.get()).clamp(-999, 999));
     }
     total
 }
@@ -648,21 +651,39 @@ mod tests {
     fn test_buff_stat_modifier_computation() {
         let buffs = vec![
             ActiveBuff {
-                stat_modifiers: StatBonus { atk: StatMod::new_unchecked(5), def: StatMod::new_unchecked(3), mag: StatMod::new_unchecked(0), spd: StatMod::new_unchecked(0), hp: StatMod::new_unchecked(0) },
+                stat_modifiers: StatBonus {
+                    atk: StatMod::new_unchecked(5),
+                    def: StatMod::new_unchecked(3),
+                    mag: StatMod::new_unchecked(0),
+                    spd: StatMod::new_unchecked(0),
+                    hp: StatMod::new_unchecked(0),
+                },
                 remaining_turns: 2,
             },
             ActiveBuff {
-                stat_modifiers: StatBonus { atk: StatMod::new_unchecked(10), def: StatMod::new_unchecked(0), mag: StatMod::new_unchecked(2), spd: StatMod::new_unchecked(0), hp: StatMod::new_unchecked(0) },
+                stat_modifiers: StatBonus {
+                    atk: StatMod::new_unchecked(10),
+                    def: StatMod::new_unchecked(0),
+                    mag: StatMod::new_unchecked(2),
+                    spd: StatMod::new_unchecked(0),
+                    hp: StatMod::new_unchecked(0),
+                },
                 remaining_turns: 3,
             },
         ];
         let debuffs = vec![ActiveBuff {
-            stat_modifiers: StatBonus { atk: StatMod::new_unchecked(-4), def: StatMod::new_unchecked(-2), mag: StatMod::new_unchecked(0), spd: StatMod::new_unchecked(0), hp: StatMod::new_unchecked(0) },
+            stat_modifiers: StatBonus {
+                atk: StatMod::new_unchecked(-4),
+                def: StatMod::new_unchecked(-2),
+                mag: StatMod::new_unchecked(0),
+                spd: StatMod::new_unchecked(0),
+                hp: StatMod::new_unchecked(0),
+            },
             remaining_turns: 1,
         }];
         let total = compute_stat_modifiers(&buffs, &debuffs);
         assert_eq!(total.atk.get(), 11); // 5 + 10 - 4
-        assert_eq!(total.def.get(), 1);  // 3 + 0 - 2
+        assert_eq!(total.def.get(), 1); // 3 + 0 - 2
         assert_eq!(total.mag.get(), 2);
     }
 
@@ -689,7 +710,10 @@ mod tests {
 
     #[test]
     fn test_barrier_blocks_one_hit() {
-        let mut barriers = vec![ActiveBarrier { charges: 1, remaining_turns: 3 }];
+        let mut barriers = vec![ActiveBarrier {
+            charges: 1,
+            remaining_turns: 3,
+        }];
         assert!(consume_barrier(&mut barriers));
         assert_eq!(barriers[0].charges, 0);
     }
@@ -698,7 +722,10 @@ mod tests {
 
     #[test]
     fn test_barrier_consumed_per_hit_multi() {
-        let mut barriers = vec![ActiveBarrier { charges: 3, remaining_turns: 5 }];
+        let mut barriers = vec![ActiveBarrier {
+            charges: 3,
+            remaining_turns: 5,
+        }];
         assert!(consume_barrier(&mut barriers)); // hit 1
         assert!(consume_barrier(&mut barriers)); // hit 2
         assert!(consume_barrier(&mut barriers)); // hit 3
@@ -718,7 +745,10 @@ mod tests {
             freeze_threshold: None,
             freeze_damage_taken: 0,
         }];
-        let barriers = vec![ActiveBarrier { charges: 2, remaining_turns: 5 }];
+        let barriers = vec![ActiveBarrier {
+            charges: 2,
+            remaining_turns: 5,
+        }];
         // tick_statuses does not interact with barriers at all — burn still ticks
         let result = tick_statuses(100, 100, &mut statuses);
         assert_eq!(result.damage, 10);
@@ -731,8 +761,14 @@ mod tests {
     #[test]
     fn test_barrier_tick_expires() {
         let mut barriers = vec![
-            ActiveBarrier { charges: 2, remaining_turns: 1 },
-            ActiveBarrier { charges: 1, remaining_turns: 3 },
+            ActiveBarrier {
+                charges: 2,
+                remaining_turns: 1,
+            },
+            ActiveBarrier {
+                charges: 1,
+                remaining_turns: 3,
+            },
         ];
         tick_barriers(&mut barriers);
         assert_eq!(barriers.len(), 1);
@@ -745,8 +781,14 @@ mod tests {
     #[test]
     fn test_hot_healing_per_tick() {
         let mut hots = vec![
-            ActiveHoT { amount: 15, remaining_turns: 3 },
-            ActiveHoT { amount: 10, remaining_turns: 1 },
+            ActiveHoT {
+                amount: 15,
+                remaining_turns: 3,
+            },
+            ActiveHoT {
+                amount: 10,
+                remaining_turns: 1,
+            },
         ];
         let healing = tick_hots(&mut hots);
         assert_eq!(healing, 25); // 15 + 10
@@ -872,7 +914,10 @@ mod tests {
             freeze_threshold: None,
             freeze_damage_taken: 0,
         }];
-        let mut hots = vec![ActiveHoT { amount: 5, remaining_turns: 3 }];
+        let mut hots = vec![ActiveHoT {
+            amount: 5,
+            remaining_turns: 3,
+        }];
 
         // Step 1: tick statuses (damage)
         let tick_result = tick_statuses(100, 80, &mut statuses);

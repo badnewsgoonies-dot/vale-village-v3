@@ -9,6 +9,7 @@ use crate::domains::battle_engine::{self, Battle, EnemyUnitData, PlayerUnitData}
 use crate::domains::data_loader::{self, GameData};
 use crate::domains::djinn::DjinnSlots;
 use crate::domains::equipment::{self, EquipmentLoadout};
+use crate::domains::sprite_loader::{self, SpriteLoaderPlugin};
 use crate::shared::{DjinnId, EncounterId, EquipmentId, EquipmentSlot, UnitDef, UnitId};
 
 use super::animation;
@@ -53,6 +54,7 @@ impl Plugin for ValeVillagePlugin {
             }),
             ..default()
         }))
+        .add_plugins(SpriteLoaderPlugin)
         .add_plugins(screenshot::ScreenshotPlugin)
         .insert_resource(ClearColor(Color::srgb(
             0x1a as f32 / 255.0,
@@ -65,7 +67,7 @@ impl Plugin for ValeVillagePlugin {
         .add_systems(
             Startup,
             (
-                battle_scene::setup_battle_scene,
+                battle_scene::setup_battle_scene.after(sprite_loader::load_sprites),
                 hud::setup_hud,
                 planning::init_planning,
                 planning::setup_planning_panel,

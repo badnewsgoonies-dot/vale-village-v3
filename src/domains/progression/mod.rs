@@ -2,7 +2,8 @@
 //! Progression domain — XP, leveling, stat growth, and ability unlocking.
 
 use crate::shared::{
-    bounded_types::{BaseStat, Hp, Level}, AbilityId, AbilityProgression, GrowthRates, Stats, UnitDef, UnitId,
+    bounded_types::{BaseStat, Hp, Level},
+    AbilityId, AbilityProgression, GrowthRates, Stats, UnitDef, UnitId,
 };
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -73,7 +74,11 @@ pub fn add_xp(progress: &mut UnitProgress, xp: u32) -> Vec<u8> {
 }
 
 /// Calculate stats at a given level: base + growth * (level - 1).
-pub fn calculate_stats_at_level(base_stats: &Stats, growth_rates: &GrowthRates, level: u8) -> Stats {
+pub fn calculate_stats_at_level(
+    base_stats: &Stats,
+    growth_rates: &GrowthRates,
+    level: u8,
+) -> Stats {
     let growth = if level > 1 { (level - 1) as u16 } else { 0 };
     Stats {
         hp: Hp::new_unchecked(
@@ -133,11 +138,8 @@ pub fn apply_battle_rewards(
     let old_level = progress.level;
     let levels_gained = add_xp(progress, xp);
 
-    let new_stats = calculate_stats_at_level(
-        &unit_def.base_stats,
-        &unit_def.growth_rates,
-        progress.level,
-    );
+    let new_stats =
+        calculate_stats_at_level(&unit_def.base_stats, &unit_def.growth_rates, progress.level);
 
     // Abilities that were NOT unlocked before but ARE now
     let old_abilities = unlocked_abilities(&unit_def.abilities, old_level);
@@ -194,13 +196,34 @@ mod tests {
 
     fn test_abilities() -> Vec<AbilityProgression> {
         vec![
-            AbilityProgression { level: Level::new_unchecked(1), ability_id: AbilityId("strike".to_string()) },
-            AbilityProgression { level: Level::new_unchecked(1), ability_id: AbilityId("fireball".to_string()) },
-            AbilityProgression { level: Level::new_unchecked(3), ability_id: AbilityId("heal".to_string()) },
-            AbilityProgression { level: Level::new_unchecked(5), ability_id: AbilityId("earthquake".to_string()) },
-            AbilityProgression { level: Level::new_unchecked(10), ability_id: AbilityId("meteor".to_string()) },
-            AbilityProgression { level: Level::new_unchecked(15), ability_id: AbilityId("ultima".to_string()) },
-            AbilityProgression { level: Level::new_unchecked(20), ability_id: AbilityId("genesis".to_string()) },
+            AbilityProgression {
+                level: Level::new_unchecked(1),
+                ability_id: AbilityId("strike".to_string()),
+            },
+            AbilityProgression {
+                level: Level::new_unchecked(1),
+                ability_id: AbilityId("fireball".to_string()),
+            },
+            AbilityProgression {
+                level: Level::new_unchecked(3),
+                ability_id: AbilityId("heal".to_string()),
+            },
+            AbilityProgression {
+                level: Level::new_unchecked(5),
+                ability_id: AbilityId("earthquake".to_string()),
+            },
+            AbilityProgression {
+                level: Level::new_unchecked(10),
+                ability_id: AbilityId("meteor".to_string()),
+            },
+            AbilityProgression {
+                level: Level::new_unchecked(15),
+                ability_id: AbilityId("ultima".to_string()),
+            },
+            AbilityProgression {
+                level: Level::new_unchecked(20),
+                ability_id: AbilityId("genesis".to_string()),
+            },
         ]
     }
 
@@ -321,11 +344,11 @@ mod tests {
     fn stats_at_level_10_with_growth() {
         let stats = calculate_stats_at_level(&test_base_stats(), &test_growth_rates(), 10);
         // base + growth * 9
-        assert_eq!(stats.hp.get(), 100 + 15 * 9);   // 235
-        assert_eq!(stats.atk.get(), 10 + 3 * 9);    // 37
-        assert_eq!(stats.def.get(), 8 + 2 * 9);     // 26
-        assert_eq!(stats.mag.get(), 12 + 4 * 9);    // 48
-        assert_eq!(stats.spd.get(), 10 + 2 * 9);    // 28
+        assert_eq!(stats.hp.get(), 100 + 15 * 9); // 235
+        assert_eq!(stats.atk.get(), 10 + 3 * 9); // 37
+        assert_eq!(stats.def.get(), 8 + 2 * 9); // 26
+        assert_eq!(stats.mag.get(), 12 + 4 * 9); // 48
+        assert_eq!(stats.spd.get(), 10 + 2 * 9); // 28
     }
 
     // ── unlocked_abilities ───────────────────────────────────────────
@@ -369,17 +392,21 @@ mod tests {
         assert_eq!(progress.level, 5);
 
         // Stats at level 5: base + growth * 4
-        assert_eq!(result.new_stats.hp.get(), 100 + 15 * 4);   // 160
-        assert_eq!(result.new_stats.atk.get(), 10 + 3 * 4);    // 22
-        assert_eq!(result.new_stats.def.get(), 8 + 2 * 4);     // 16
-        assert_eq!(result.new_stats.mag.get(), 12 + 4 * 4);    // 28
-        assert_eq!(result.new_stats.spd.get(), 10 + 2 * 4);    // 18
+        assert_eq!(result.new_stats.hp.get(), 100 + 15 * 4); // 160
+        assert_eq!(result.new_stats.atk.get(), 10 + 3 * 4); // 22
+        assert_eq!(result.new_stats.def.get(), 8 + 2 * 4); // 16
+        assert_eq!(result.new_stats.mag.get(), 12 + 4 * 4); // 28
+        assert_eq!(result.new_stats.spd.get(), 10 + 2 * 4); // 18
 
         // New abilities: heal (lv3) and earthquake (lv5)
         // (strike and fireball were already unlocked at lv1)
         assert_eq!(result.new_abilities.len(), 2);
-        assert!(result.new_abilities.contains(&AbilityId("heal".to_string())));
-        assert!(result.new_abilities.contains(&AbilityId("earthquake".to_string())));
+        assert!(result
+            .new_abilities
+            .contains(&AbilityId("heal".to_string())));
+        assert!(result
+            .new_abilities
+            .contains(&AbilityId("earthquake".to_string())));
     }
 
     #[test]

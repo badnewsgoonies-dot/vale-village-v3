@@ -2,8 +2,8 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{
     bracketed,
-    parse2,
     parse::{Parse, ParseStream},
+    parse2,
     punctuated::Punctuated,
     Ident, ItemStruct, Result, Token,
 };

@@ -15,7 +15,11 @@ fn main() {
     if let Ok(content) = fs::read_to_string("status/draft-enemy-manifest.toml") {
         for line in content.lines() {
             let line = line.trim();
-            if line.starts_with("sprite_idle") || line.starts_with("sprite_attack") || line.starts_with("sprite_hit") || line.starts_with("sprite =") {
+            if line.starts_with("sprite_idle")
+                || line.starts_with("sprite_attack")
+                || line.starts_with("sprite_hit")
+                || line.starts_with("sprite =")
+            {
                 if let Some(path) = line.split('"').nth(1) {
                     expected += 1;
                     if Path::new(path).exists() {
@@ -46,7 +50,10 @@ fn main() {
     }
 
     if expected > 0 {
-        println!("cargo:warning=Sprites: {found}/{expected} present ({} missing)", missing.len());
+        println!(
+            "cargo:warning=Sprites: {found}/{expected} present ({} missing)",
+            missing.len()
+        );
         if missing.len() <= 10 {
             for m in &missing {
                 println!("cargo:warning=  Missing: {m}");

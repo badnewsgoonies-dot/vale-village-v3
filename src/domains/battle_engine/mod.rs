@@ -7,8 +7,8 @@ use std::collections::HashMap;
 use crate::shared::{
     bounded_types::{BasePower, BaseStat, EffectDuration, HitCount, Hp, Level, ManaCost},
     AbilityDef, AbilityId, BattleAction, BattlePhase, CombatConfig, DamageDealt, DamageType,
-    DjinnDef, DjinnId, DjinnState, DjinnStateChanged, EnemyDef, HealingDone, ManaPoolChanged,
-    Side, Stats, StatusApplied, StatusEffectType, TargetRef, UnitDefeated,
+    DjinnDef, DjinnId, DjinnState, DjinnStateChanged, EnemyDef, HealingDone, ManaPoolChanged, Side,
+    Stats, StatusApplied, StatusEffectType, TargetRef, UnitDefeated,
 };
 
 use crate::domains::ai::{self, AiSelfView, AiStrategy, AiUnitView};
@@ -1173,7 +1173,11 @@ fn resolve_djinn_activation_damage(
                 };
                 let (is_alive, current_hp, max_hp) = {
                     let unit = get_unit(battle, target_ref).unwrap();
-                    (unit.unit.is_alive, unit.unit.current_hp, unit.unit.stats.hp.get())
+                    (
+                        unit.unit.is_alive,
+                        unit.unit.current_hp,
+                        unit.unit.stats.hp.get(),
+                    )
                 };
                 if !is_alive || current_hp >= max_hp {
                     continue;
@@ -1201,8 +1205,8 @@ fn resolve_djinn_activation_damage(
                         def: crate::shared::bounded_types::StatMod::new_unchecked(0),
                         mag: crate::shared::bounded_types::StatMod::new_unchecked(0),
                         spd: crate::shared::bounded_types::StatMod::new_unchecked(0),
-                    hp: crate::shared::bounded_types::StatMod::new_unchecked(0),
-                },
+                        hp: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                    },
                     duration: EffectDuration::new_unchecked(3),
                     shield_charges: None,
                     grant_immunity: false,
@@ -1795,14 +1799,10 @@ mod tests {
     fn test_stats(hp: u16, atk: u16, def: u16, mag: u16, spd: u16) -> Stats {
         Stats {
             hp: Hp::new(hp).unwrap_or_else(|_| Hp::new_unchecked(hp.clamp(1, 9999))),
-            atk: BaseStat::new(atk)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(atk.clamp(0, 9999))),
-            def: BaseStat::new(def)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(def.clamp(0, 9999))),
-            mag: BaseStat::new(mag)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(mag.clamp(0, 9999))),
-            spd: BaseStat::new(spd)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(spd.clamp(0, 9999))),
+            atk: BaseStat::new(atk).unwrap_or_else(|_| BaseStat::new_unchecked(atk.clamp(0, 9999))),
+            def: BaseStat::new(def).unwrap_or_else(|_| BaseStat::new_unchecked(def.clamp(0, 9999))),
+            mag: BaseStat::new(mag).unwrap_or_else(|_| BaseStat::new_unchecked(mag.clamp(0, 9999))),
+            spd: BaseStat::new(spd).unwrap_or_else(|_| BaseStat::new_unchecked(spd.clamp(0, 9999))),
         }
     }
 
@@ -2381,20 +2381,9 @@ mod tests {
 
     #[test]
     fn test_any_player_can_activate_team_djinn_pool() {
-        let p1 = make_player(
-            "adept",
-            test_stats(100, 10, 10, 10, 10),
-            2,
-        );
-        let p2 = make_player(
-            "blaze",
-            test_stats(100, 12, 8, 12, 12),
-            2,
-        );
-        let enemy = make_enemy(
-            "goblin",
-            test_stats(100, 10, 10, 5, 5),
-        );
+        let p1 = make_player("adept", test_stats(100, 10, 10, 10, 10), 2);
+        let p2 = make_player("blaze", test_stats(100, 12, 8, 12, 12), 2);
+        let enemy = make_enemy("goblin", test_stats(100, 10, 10, 5, 5));
 
         let (djinn_id, djinn_def) = make_djinn_def("flint", Element::Venus, 50);
         let mut djinn_defs = HashMap::new();
@@ -2777,8 +2766,8 @@ mod tests {
                         def: crate::shared::bounded_types::StatMod::new_unchecked(0),
                         mag: crate::shared::bounded_types::StatMod::new_unchecked(0),
                         spd: crate::shared::bounded_types::StatMod::new_unchecked(0),
-                    hp: crate::shared::bounded_types::StatMod::new_unchecked(0),
-                },
+                        hp: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                    },
                     duration: EffectDuration::new_unchecked(2),
                     shield_charges: None,
                     grant_immunity: false,
@@ -2821,7 +2810,11 @@ mod tests {
             &battle.player_units[0].status_state.buffs,
             &battle.player_units[0].status_state.debuffs,
         );
-        assert_eq!(buff_mods.atk.get(), 2, "Activation buff should grant ATK +2");
+        assert_eq!(
+            buff_mods.atk.get(),
+            2,
+            "Activation buff should grant ATK +2"
+        );
         assert_eq!(battle.player_units[0].status_state.buffs.len(), 1);
     }
 
@@ -3503,7 +3496,11 @@ mod tests {
             })
             .collect();
 
-        assert_eq!(chain_damage_events.len(), 2, "Chain should hit both secondary enemies");
+        assert_eq!(
+            chain_damage_events.len(),
+            2,
+            "Chain should hit both secondary enemies"
+        );
         assert!(
             chain_damage_events.iter().all(|damage| damage.is_crit),
             "Chain hit events should preserve the primary crit flag",
@@ -4223,26 +4220,11 @@ mod tests {
         // Expected order: 1 (18), 2 (13), 0 (10)
         let battle = new_battle(
             vec![
-                make_player(
-                    "slow",
-                    test_stats(100, 20, 10, 10, 10),
-                    1,
-                ),
-                make_player(
-                    "fast",
-                    test_stats(100, 20, 10, 10, 18),
-                    1,
-                ),
-                make_player(
-                    "mid",
-                    test_stats(100, 20, 10, 10, 13),
-                    1,
-                ),
+                make_player("slow", test_stats(100, 20, 10, 10, 10), 1),
+                make_player("fast", test_stats(100, 20, 10, 10, 18), 1),
+                make_player("mid", test_stats(100, 20, 10, 10, 13), 1),
             ],
-            vec![make_enemy(
-                "foe",
-                test_stats(80, 15, 8, 5, 10),
-            )],
+            vec![make_enemy("foe", test_stats(80, 15, 8, 5, 10))],
             test_config(),
             HashMap::new(),
             HashMap::new(),
@@ -4260,26 +4242,11 @@ mod tests {
     fn test_planning_order_skips_dead() {
         let mut battle = new_battle(
             vec![
-                make_player(
-                    "alive_slow",
-                    test_stats(100, 20, 10, 10, 5),
-                    1,
-                ),
-                make_player(
-                    "dead_fast",
-                    test_stats(100, 20, 10, 10, 20),
-                    1,
-                ),
-                make_player(
-                    "alive_fast",
-                    test_stats(100, 20, 10, 10, 15),
-                    1,
-                ),
+                make_player("alive_slow", test_stats(100, 20, 10, 10, 5), 1),
+                make_player("dead_fast", test_stats(100, 20, 10, 10, 20), 1),
+                make_player("alive_fast", test_stats(100, 20, 10, 10, 15), 1),
             ],
-            vec![make_enemy(
-                "foe",
-                test_stats(80, 15, 8, 5, 10),
-            )],
+            vec![make_enemy("foe", test_stats(80, 15, 8, 5, 10))],
             test_config(),
             HashMap::new(),
             HashMap::new(),
@@ -4302,26 +4269,11 @@ mod tests {
         // If base SPD also ties, lower index wins — tested by unit 2.
         let mut battle = new_battle(
             vec![
-                make_player(
-                    "low_base",
-                    test_stats(100, 20, 10, 10, 10),
-                    1,
-                ),
-                make_player(
-                    "high_base",
-                    test_stats(100, 20, 10, 10, 15),
-                    1,
-                ),
-                make_player(
-                    "also_15",
-                    test_stats(100, 20, 10, 10, 15),
-                    1,
-                ),
+                make_player("low_base", test_stats(100, 20, 10, 10, 10), 1),
+                make_player("high_base", test_stats(100, 20, 10, 10, 15), 1),
+                make_player("also_15", test_stats(100, 20, 10, 10, 15), 1),
             ],
-            vec![make_enemy(
-                "foe",
-                test_stats(80, 15, 8, 5, 10),
-            )],
+            vec![make_enemy("foe", test_stats(80, 15, 8, 5, 10))],
             test_config(),
             HashMap::new(),
             HashMap::new(),

@@ -81,7 +81,6 @@ pub struct SavedEquipment {
     pub accessory: Option<EquipmentId>,
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SavedDjinn {
     pub djinn_id: DjinnId,

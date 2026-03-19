@@ -23,6 +23,13 @@ pub struct SpriteRegistry {
 }
 
 impl SpriteRegistry {
+    pub fn get_unit_portrait(&self, id: &str) -> Handle<Image> {
+        self.unit_portraits
+            .get(id)
+            .cloned()
+            .unwrap_or_else(|| self.fallback.clone())
+    }
+
     pub fn get_enemy_idle(&self, id: &str) -> Handle<Image> {
         self.enemy_idle
             .get(id)

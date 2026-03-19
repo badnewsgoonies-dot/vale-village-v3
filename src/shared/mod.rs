@@ -3,14 +3,14 @@
 //! Shapes only — tuning values live in data/tuning.
 #![allow(dead_code)]
 pub mod bounded_types;
-pub mod lifecycle_types;
 pub mod entity_types;
+pub mod lifecycle_types;
 
-use serde::{Deserialize, Serialize};
 use crate::shared::bounded_types::{
     BasePower, BaseStat, DjinnTier, EffectDuration, Gold, GrowthRate, HitCount, Hp, Level,
     ManaCost, MaxBuffStacks, MaxEquippedDjinn, MaxPartySize, StatMod, Xp,
 };
+use serde::{Deserialize, Serialize};
 
 // ── ID Types (string-branded for stable serialization) ──────────────
 
@@ -413,10 +413,19 @@ pub enum Side {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BattleAction {
-    Attack { target: TargetRef },
-    UseAbility { ability_id: AbilityId, targets: Vec<TargetRef> },
-    ActivateDjinn { djinn_index: u8 },
-    Summon { djinn_indices: Vec<u8> },
+    Attack {
+        target: TargetRef,
+    },
+    UseAbility {
+        ability_id: AbilityId,
+        targets: Vec<TargetRef>,
+    },
+    ActivateDjinn {
+        djinn_index: u8,
+    },
+    Summon {
+        djinn_indices: Vec<u8>,
+    },
 }
 
 // ── Events (cross-domain messages) ──────────────────────────────────

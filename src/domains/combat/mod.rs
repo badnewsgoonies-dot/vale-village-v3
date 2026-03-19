@@ -99,7 +99,10 @@ impl BattleState {
             if unit.is_alive {
                 let effective_spd = unit.stats.spd.get() as i32 + unit.equipment_speed_bonus as i32;
                 actors.push((
-                    TargetRef { side: Side::Player, index: i as u8 },
+                    TargetRef {
+                        side: Side::Player,
+                        index: i as u8,
+                    },
                     effective_spd,
                     unit.stats.spd.get(),
                 ));
@@ -110,7 +113,10 @@ impl BattleState {
             if unit.is_alive {
                 let effective_spd = unit.stats.spd.get() as i32 + unit.equipment_speed_bonus as i32;
                 actors.push((
-                    TargetRef { side: Side::Enemy, index: i as u8 },
+                    TargetRef {
+                        side: Side::Enemy,
+                        index: i as u8,
+                    },
                     effective_spd,
                     unit.stats.spd.get(),
                 ));
@@ -118,9 +124,7 @@ impl BattleState {
         }
 
         // Sort descending by effective SPD, then by base SPD as tiebreaker
-        actors.sort_by(|a, b| {
-            b.1.cmp(&a.1).then_with(|| b.2.cmp(&a.2))
-        });
+        actors.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| b.2.cmp(&a.2)));
 
         self.execution_order = actors.into_iter().map(|(tr, _, _)| tr).collect();
     }
@@ -191,9 +195,7 @@ pub fn resolve_targets(
                 Side::Enemy => enemy_count,
                 Side::Player => party_size,
             };
-            (0..count)
-                .map(|i| TargetRef { side, index: i })
-                .collect()
+            (0..count).map(|i| TargetRef { side, index: i }).collect()
         }
         TargetMode::AllAllies => {
             let count = match source.side {
@@ -201,7 +203,10 @@ pub fn resolve_targets(
                 Side::Enemy => enemy_count,
             };
             (0..count)
-                .map(|i| TargetRef { side: source.side, index: i })
+                .map(|i| TargetRef {
+                    side: source.side,
+                    index: i,
+                })
                 .collect()
         }
         TargetMode::SelfOnly => {
@@ -284,14 +289,10 @@ mod tests {
     fn test_stats(hp: u16, atk: u16, def: u16, mag: u16, spd: u16) -> Stats {
         Stats {
             hp: Hp::new(hp).unwrap_or_else(|_| Hp::new_unchecked(hp.clamp(1, 9999))),
-            atk: BaseStat::new(atk)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(atk.clamp(0, 9999))),
-            def: BaseStat::new(def)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(def.clamp(0, 9999))),
-            mag: BaseStat::new(mag)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(mag.clamp(0, 9999))),
-            spd: BaseStat::new(spd)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(spd.clamp(0, 9999))),
+            atk: BaseStat::new(atk).unwrap_or_else(|_| BaseStat::new_unchecked(atk.clamp(0, 9999))),
+            def: BaseStat::new(def).unwrap_or_else(|_| BaseStat::new_unchecked(def.clamp(0, 9999))),
+            mag: BaseStat::new(mag).unwrap_or_else(|_| BaseStat::new_unchecked(mag.clamp(0, 9999))),
+            spd: BaseStat::new(spd).unwrap_or_else(|_| BaseStat::new_unchecked(spd.clamp(0, 9999))),
         }
     }
 
@@ -366,8 +367,14 @@ mod tests {
 
     #[test]
     fn targeting_single_enemy() {
-        let source = TargetRef { side: Side::Player, index: 0 };
-        let chosen = TargetRef { side: Side::Enemy, index: 2 };
+        let source = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let chosen = TargetRef {
+            side: Side::Enemy,
+            index: 2,
+        };
         let targets = resolve_targets(TargetMode::SingleEnemy, source, Some(chosen), 4, 3);
         assert_eq!(targets, vec![chosen]);
     }
@@ -376,8 +383,14 @@ mod tests {
 
     #[test]
     fn targeting_single_ally() {
-        let source = TargetRef { side: Side::Player, index: 0 };
-        let chosen = TargetRef { side: Side::Player, index: 1 };
+        let source = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
+        let chosen = TargetRef {
+            side: Side::Player,
+            index: 1,
+        };
         let targets = resolve_targets(TargetMode::SingleAlly, source, Some(chosen), 4, 3);
         assert_eq!(targets, vec![chosen]);
     }
@@ -386,23 +399,53 @@ mod tests {
 
     #[test]
     fn targeting_all_enemies() {
-        let source = TargetRef { side: Side::Player, index: 0 };
+        let source = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         let targets = resolve_targets(TargetMode::AllEnemies, source, None, 4, 3);
         assert_eq!(targets.len(), 3);
-        assert_eq!(targets[0], TargetRef { side: Side::Enemy, index: 0 });
-        assert_eq!(targets[1], TargetRef { side: Side::Enemy, index: 1 });
-        assert_eq!(targets[2], TargetRef { side: Side::Enemy, index: 2 });
+        assert_eq!(
+            targets[0],
+            TargetRef {
+                side: Side::Enemy,
+                index: 0
+            }
+        );
+        assert_eq!(
+            targets[1],
+            TargetRef {
+                side: Side::Enemy,
+                index: 1
+            }
+        );
+        assert_eq!(
+            targets[2],
+            TargetRef {
+                side: Side::Enemy,
+                index: 2
+            }
+        );
     }
 
     // ── S02: Targeting — AllAllies ──────────────────────────────────
 
     #[test]
     fn targeting_all_allies() {
-        let source = TargetRef { side: Side::Player, index: 0 };
+        let source = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         let targets = resolve_targets(TargetMode::AllAllies, source, None, 4, 3);
         assert_eq!(targets.len(), 4);
         for i in 0..4 {
-            assert_eq!(targets[i], TargetRef { side: Side::Player, index: i as u8 });
+            assert_eq!(
+                targets[i],
+                TargetRef {
+                    side: Side::Player,
+                    index: i as u8
+                }
+            );
         }
     }
 
@@ -410,7 +453,10 @@ mod tests {
 
     #[test]
     fn targeting_self_only() {
-        let source = TargetRef { side: Side::Player, index: 2 };
+        let source = TargetRef {
+            side: Side::Player,
+            index: 2,
+        };
         let targets = resolve_targets(TargetMode::SelfOnly, source, None, 4, 3);
         assert_eq!(targets, vec![source]);
     }
@@ -459,7 +505,7 @@ mod tests {
         assert!(results[0].is_crit);
         assert_eq!(results[0].damage, 100); // 50 * 2.0
         assert_eq!(results[0].crit_counter_after, 0); // reset
-        // Second hit: counter goes 0->1, normal
+                                                      // Second hit: counter goes 0->1, normal
         assert!(!results[1].is_crit);
         assert_eq!(results[1].damage, 50);
         assert_eq!(results[1].crit_counter_after, 1);
@@ -564,16 +610,14 @@ mod tests {
                     equipment_speed_bonus: 0,
                 },
             ],
-            enemies: vec![
-                BattleUnit {
-                    id: "medium".into(),
-                    stats: test_stats(100, 10, 10, 10, 12),
-                    current_hp: 100,
-                    is_alive: true,
-                    crit_counter: 0,
-                    equipment_speed_bonus: 0,
-                },
-            ],
+            enemies: vec![BattleUnit {
+                id: "medium".into(),
+                stats: test_stats(100, 10, 10, 10, 12),
+                current_hp: 100,
+                is_alive: true,
+                crit_counter: 0,
+                equipment_speed_bonus: 0,
+            }],
             planned_actions: vec![],
             mana_pool: ManaPool::new(5),
             execution_order: vec![],
@@ -583,9 +627,27 @@ mod tests {
 
         // fast(20) > medium(12) > slow(5)
         assert_eq!(state.execution_order.len(), 3);
-        assert_eq!(state.execution_order[0], TargetRef { side: Side::Player, index: 1 }); // fast
-        assert_eq!(state.execution_order[1], TargetRef { side: Side::Enemy, index: 0 });  // medium
-        assert_eq!(state.execution_order[2], TargetRef { side: Side::Player, index: 0 }); // slow
+        assert_eq!(
+            state.execution_order[0],
+            TargetRef {
+                side: Side::Player,
+                index: 1
+            }
+        ); // fast
+        assert_eq!(
+            state.execution_order[1],
+            TargetRef {
+                side: Side::Enemy,
+                index: 0
+            }
+        ); // medium
+        assert_eq!(
+            state.execution_order[2],
+            TargetRef {
+                side: Side::Player,
+                index: 0
+            }
+        ); // slow
     }
 
     // ── S04: SPD ordering — tiebreaker by base SPD ──────────────────
@@ -623,8 +685,20 @@ mod tests {
 
         // Both have effective SPD 15, but unit_b has base SPD 15 > unit_a base SPD 10
         assert_eq!(state.execution_order.len(), 2);
-        assert_eq!(state.execution_order[0], TargetRef { side: Side::Player, index: 1 }); // unit_b
-        assert_eq!(state.execution_order[1], TargetRef { side: Side::Player, index: 0 }); // unit_a
+        assert_eq!(
+            state.execution_order[0],
+            TargetRef {
+                side: Side::Player,
+                index: 1
+            }
+        ); // unit_b
+        assert_eq!(
+            state.execution_order[1],
+            TargetRef {
+                side: Side::Player,
+                index: 0
+            }
+        ); // unit_a
     }
 
     // ── S04: Dead units excluded from execution order ───────────────
@@ -660,6 +734,12 @@ mod tests {
 
         state.compute_execution_order();
         assert_eq!(state.execution_order.len(), 1);
-        assert_eq!(state.execution_order[0], TargetRef { side: Side::Player, index: 0 });
+        assert_eq!(
+            state.execution_order[0],
+            TargetRef {
+                side: Side::Player,
+                index: 0
+            }
+        );
     }
 }

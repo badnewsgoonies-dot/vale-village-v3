@@ -8,6 +8,7 @@ use bevy::window::PrimaryWindow;
 use crate::domains::battle_engine::Battle;
 use crate::domains::data_loader::GameData;
 use crate::domains::djinn::{self, DjinnInstance};
+use crate::domains::sprite_loader::SpriteRegistry;
 use crate::shared::{BattlePhase, DjinnState, Element, EnemyId, UnitId};
 
 use super::planning;
@@ -123,6 +124,7 @@ pub fn setup_battle_scene(
     mut commands: Commands,
     battle: Res<BattleRes>,
     game_data: Res<GameDataRes>,
+    sprite_registry: Res<SpriteRegistry>,
 ) {
     let battle = &battle.0;
 
@@ -147,10 +149,15 @@ pub fn setup_battle_scene(
         let element = lookup_element(&unit.unit.id, &game_data);
         let color = element_color(element);
         let name = lookup_name(&unit.unit.id, &game_data);
+        let sprite = battle_unit_sprite(
+            sprite_registry.get_unit_portrait(&unit.unit.id),
+            color,
+            &sprite_registry,
+        );
 
         // Unit sprite
         commands.spawn((
-            Sprite::from_color(color, PLAYER_SPRITE_SIZE),
+            sprite,
             Transform::from_xyz(PLAYER_X, y, 0.0),
             PlayerUnit { index: i as u8 },
         ));
@@ -187,10 +194,15 @@ pub fn setup_battle_scene(
         let element = lookup_element(&unit.unit.id, &game_data);
         let color = element_color(element);
         let name = lookup_name(&unit.unit.id, &game_data);
+        let sprite = battle_unit_sprite(
+            sprite_registry.get_enemy_idle(&unit.unit.id),
+            color,
+            &sprite_registry,
+        );
 
         // Unit sprite
         commands.spawn((
-            Sprite::from_color(color, PLAYER_SPRITE_SIZE),
+            sprite,
             Transform::from_xyz(ENEMY_X, y, 0.0),
             EnemyUnit { index: i as u8 },
         ));
@@ -219,6 +231,22 @@ pub fn setup_battle_scene(
         TextColor(Color::srgb(0.6, 0.6, 0.6)),
         Transform::from_xyz(0.0, 300.0, 1.0),
     ));
+}
+
+fn battle_unit_sprite(
+    handle: Handle<Image>,
+    fallback_color: Color,
+    sprite_registry: &SpriteRegistry,
+) -> Sprite {
+    if handle == sprite_registry.fallback {
+        Sprite::from_color(fallback_color, PLAYER_SPRITE_SIZE)
+    } else {
+        Sprite {
+            image: handle,
+            custom_size: Some(PLAYER_SPRITE_SIZE),
+            ..default()
+        }
+    }
 }
 
 /// Keep the battle-scene djinn markers and summon controls in sync with planning state.
@@ -291,7 +319,9 @@ fn spawn_active_unit_frame(
             },
             BackgroundColor(Color::srgba(0.95, 0.88, 0.45, 0.14)),
             BorderRadius::all(Val::Px(14.0)),
-            ActiveUnitFrame { unit_index: unit_idx },
+            ActiveUnitFrame {
+                unit_index: unit_idx,
+            },
         ))
         .with_children(|frame| {
             frame.spawn((

@@ -2,9 +2,9 @@
 //! Renders battle scenes, HUD, menus via Bevy 2D.
 //! Imports from crate::shared, never redefines types locally.
 
-pub mod plugin;
+pub mod animation;
 pub mod battle_scene;
 pub mod hud;
 pub mod planning;
-pub mod animation;
+pub mod plugin;
 pub mod screenshot;

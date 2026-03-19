@@ -822,11 +822,7 @@ fn compact_ability_preview(ability_names: &[String]) -> Option<String> {
         return None;
     }
 
-    let shown: Vec<&str> = ability_names
-        .iter()
-        .take(4)
-        .map(String::as_str)
-        .collect();
+    let shown: Vec<&str> = ability_names.iter().take(4).map(String::as_str).collect();
     let remainder = ability_names.len().saturating_sub(shown.len());
 
     let text = if remainder > 0 {

@@ -1,8 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{
-    parse2, parse::Parse, parse::ParseStream, Ident, ItemStruct, LitInt, Result, Token,
-};
+use syn::{parse::Parse, parse::ParseStream, parse2, Ident, ItemStruct, LitInt, Result, Token};
 
 struct GameValueArgs {
     min: i64,

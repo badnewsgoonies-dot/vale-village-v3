@@ -1,6 +1,8 @@
 //! Tuning values — mutable coefficients, NOT frozen.
+use crate::shared::bounded_types::{
+    Level, ManaCost, MaxBuffStacks, MaxEquippedDjinn, MaxPartySize,
+};
 use crate::shared::CombatConfig;
-use crate::shared::bounded_types::{Level, ManaCost, MaxBuffStacks, MaxEquippedDjinn, MaxPartySize};
 
 pub fn default_combat_config() -> CombatConfig {
     CombatConfig {

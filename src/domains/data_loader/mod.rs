@@ -233,8 +233,7 @@ pub fn load_game_data(data_dir: &Path) -> Result<GameData, Vec<LoadError>> {
     let djinn_list: Vec<DjinnDef> = load_ron_file(&data_dir.join("djinn.ron"), &mut errors);
     let encounters_list: Vec<EncounterDef> =
         load_ron_file(&data_dir.join("encounters.ron"), &mut errors);
-    let config: Option<CombatConfig> =
-        load_ron_single(&data_dir.join("config.ron"), &mut errors);
+    let config: Option<CombatConfig> = load_ron_single(&data_dir.join("config.ron"), &mut errors);
 
     // Build HashMaps keyed by ID
     let abilities: HashMap<AbilityId, AbilityDef> = abilities_list
@@ -290,7 +289,9 @@ mod tests {
 
     fn sample_dir() -> PathBuf {
         // Navigate from workspace root to data/sample
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data").join("sample")
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("data")
+            .join("sample")
     }
 
     #[test]
@@ -304,7 +305,10 @@ mod tests {
                 assert!(!data.enemies.is_empty(), "enemies should not be empty");
                 assert!(!data.equipment.is_empty(), "equipment should not be empty");
                 assert!(!data.djinn.is_empty(), "djinn should not be empty");
-                assert!(!data.encounters.is_empty(), "encounters should not be empty");
+                assert!(
+                    !data.encounters.is_empty(),
+                    "encounters should not be empty"
+                );
             }
             Err(errors) => {
                 for e in errors {
@@ -374,10 +378,7 @@ mod tests {
             LoadError::ValidationError(msg) => msg.contains("djinn reward"),
             _ => false,
         });
-        assert!(
-            has_djinn_err,
-            "Should have a djinn-reward validation error"
-        );
+        assert!(has_djinn_err, "Should have a djinn-reward validation error");
     }
 
     #[test]
@@ -440,7 +441,9 @@ mod tests {
         let result = load_game_data(dir);
         assert!(result.is_err(), "Should fail on malformed RON");
         let errors = result.unwrap_err();
-        let has_parse = errors.iter().any(|e| matches!(e, LoadError::ParseError(_, _)));
+        let has_parse = errors
+            .iter()
+            .any(|e| matches!(e, LoadError::ParseError(_, _)));
         assert!(has_parse, "Should contain a ParseError");
     }
 
@@ -452,7 +455,9 @@ mod tests {
         let result = load_game_data(dir);
         assert!(result.is_err(), "Should fail when files are missing");
         let errors = result.unwrap_err();
-        let has_fnf = errors.iter().any(|e| matches!(e, LoadError::FileNotFound(_)));
+        let has_fnf = errors
+            .iter()
+            .any(|e| matches!(e, LoadError::FileNotFound(_)));
         assert!(has_fnf, "Should contain a FileNotFound error");
     }
 
@@ -518,10 +523,7 @@ mod tests {
             LoadError::ValidationError(msg) => msg.contains("recruit"),
             _ => false,
         });
-        assert!(
-            has_recruit_err,
-            "Should have a recruit validation error"
-        );
+        assert!(has_recruit_err, "Should have a recruit validation error");
     }
 
     #[test]

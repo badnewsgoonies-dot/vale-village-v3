@@ -39,7 +39,11 @@ pub fn apply_splash_damage(primary_damage: u16, splash_percent: f32) -> u16 {
         return 0;
     }
     let raw = (primary_damage as f32 * splash_percent) as u16;
-    if raw < 1 { 1 } else { raw }
+    if raw < 1 {
+        1
+    } else {
+        raw
+    }
 }
 
 /// S16: Determine chain-damage targets.
@@ -82,7 +86,11 @@ pub fn apply_all_modifiers(
     };
 
     let raw = base_damage as f32 + offense - (effective_def as f32 * config_def_mult);
-    if raw < 1.0 { 1 } else { raw as u16 }
+    if raw < 1.0 {
+        1
+    } else {
+        raw as u16
+    }
 }
 
 // ── Tests ────────────────────────────────────────────────────────────
@@ -96,14 +104,10 @@ mod tests {
     fn test_stats(hp: u16, atk: u16, def: u16, mag: u16, spd: u16) -> Stats {
         Stats {
             hp: Hp::new(hp).unwrap_or_else(|_| Hp::new_unchecked(hp.clamp(1, 9999))),
-            atk: BaseStat::new(atk)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(atk.clamp(0, 9999))),
-            def: BaseStat::new(def)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(def.clamp(0, 9999))),
-            mag: BaseStat::new(mag)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(mag.clamp(0, 9999))),
-            spd: BaseStat::new(spd)
-                .unwrap_or_else(|_| BaseStat::new_unchecked(spd.clamp(0, 9999))),
+            atk: BaseStat::new(atk).unwrap_or_else(|_| BaseStat::new_unchecked(atk.clamp(0, 9999))),
+            def: BaseStat::new(def).unwrap_or_else(|_| BaseStat::new_unchecked(def.clamp(0, 9999))),
+            mag: BaseStat::new(mag).unwrap_or_else(|_| BaseStat::new_unchecked(mag.clamp(0, 9999))),
+            spd: BaseStat::new(spd).unwrap_or_else(|_| BaseStat::new_unchecked(spd.clamp(0, 9999))),
         }
     }
 
@@ -134,33 +138,65 @@ mod tests {
 
     #[test]
     fn splash_excludes_primary_includes_others() {
-        let primary = TargetRef { side: Side::Enemy, index: 1 };
+        let primary = TargetRef {
+            side: Side::Enemy,
+            index: 1,
+        };
         let all = vec![
-            TargetRef { side: Side::Enemy, index: 0 },
-            TargetRef { side: Side::Enemy, index: 1 },
-            TargetRef { side: Side::Enemy, index: 2 },
+            TargetRef {
+                side: Side::Enemy,
+                index: 0,
+            },
+            TargetRef {
+                side: Side::Enemy,
+                index: 1,
+            },
+            TargetRef {
+                side: Side::Enemy,
+                index: 2,
+            },
         ];
         let result = calculate_splash_targets(primary, 0.5, &all);
         assert_eq!(result.len(), 2);
         assert!(result.iter().all(|(t, _)| t.index != 1));
-        assert!(result.iter().all(|(_, pct)| (*pct - 0.5).abs() < f32::EPSILON));
+        assert!(result
+            .iter()
+            .all(|(_, pct)| (*pct - 0.5).abs() < f32::EPSILON));
     }
 
     #[test]
     fn splash_single_enemy_no_targets() {
-        let primary = TargetRef { side: Side::Enemy, index: 0 };
-        let all = vec![TargetRef { side: Side::Enemy, index: 0 }];
+        let primary = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
+        let all = vec![TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        }];
         let result = calculate_splash_targets(primary, 0.5, &all);
         assert!(result.is_empty());
     }
 
     #[test]
     fn splash_ignores_allies() {
-        let primary = TargetRef { side: Side::Enemy, index: 0 };
+        let primary = TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        };
         let all = vec![
-            TargetRef { side: Side::Enemy, index: 0 },
-            TargetRef { side: Side::Player, index: 0 },
-            TargetRef { side: Side::Player, index: 1 },
+            TargetRef {
+                side: Side::Enemy,
+                index: 0,
+            },
+            TargetRef {
+                side: Side::Player,
+                index: 0,
+            },
+            TargetRef {
+                side: Side::Player,
+                index: 1,
+            },
         ];
         let result = calculate_splash_targets(primary, 0.3, &all);
         assert!(result.is_empty());
@@ -189,12 +225,27 @@ mod tests {
 
     #[test]
     fn chain_targets_returns_all_enemies() {
-        let source = TargetRef { side: Side::Player, index: 0 };
+        let source = TargetRef {
+            side: Side::Player,
+            index: 0,
+        };
         let all = vec![
-            TargetRef { side: Side::Player, index: 0 },
-            TargetRef { side: Side::Enemy, index: 2 },
-            TargetRef { side: Side::Enemy, index: 0 },
-            TargetRef { side: Side::Enemy, index: 1 },
+            TargetRef {
+                side: Side::Player,
+                index: 0,
+            },
+            TargetRef {
+                side: Side::Enemy,
+                index: 2,
+            },
+            TargetRef {
+                side: Side::Enemy,
+                index: 0,
+            },
+            TargetRef {
+                side: Side::Enemy,
+                index: 1,
+            },
         ];
         let result = calculate_chain_targets(source, &all);
         assert_eq!(result.len(), 3);

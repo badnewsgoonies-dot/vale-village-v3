@@ -18,13 +18,15 @@ use vale_village::domains::equipment::{self, EquipmentLoadout};
 use vale_village::domains::status;
 use vale_village::shared::{
     AbilityCategory, AbilityDef, AbilityId, BattleAction, CombatConfig, DamageType, Element,
-    EnemyId, EncounterId, Side, Stats, StatusEffectType, TargetMode, TargetRef,
+    EncounterId, EnemyId, Side, Stats, StatusEffectType, TargetMode, TargetRef,
 };
 
 // ── Helpers ────────────────────────────────────────────────────────
 
 fn full_data_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data").join("full")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("data")
+        .join("full")
 }
 
 fn config() -> CombatConfig {
@@ -112,21 +114,45 @@ fn test_full_data_loads_without_error() {
 fn test_battle_completes_to_victory_or_defeat() {
     let p1 = player(
         "hero",
-        Stats { hp: 120, atk: 30, def: 20, mag: 25, spd: 15 },
+        Stats {
+            hp: 120,
+            atk: 30,
+            def: 20,
+            mag: 25,
+            spd: 15,
+        },
         5,
     );
     let p2 = player(
         "mage",
-        Stats { hp: 100, atk: 20, def: 15, mag: 35, spd: 13 },
+        Stats {
+            hp: 100,
+            atk: 20,
+            def: 15,
+            mag: 35,
+            spd: 13,
+        },
         5,
     );
     let e1 = enemy(
         "goblin-a",
-        Stats { hp: 60, atk: 15, def: 10, mag: 5, spd: 8 },
+        Stats {
+            hp: 60,
+            atk: 15,
+            def: 10,
+            mag: 5,
+            spd: 8,
+        },
     );
     let e2 = enemy(
         "goblin-b",
-        Stats { hp: 50, atk: 12, def: 8, mag: 5, spd: 7 },
+        Stats {
+            hp: 50,
+            atk: 12,
+            def: 8,
+            mag: 5,
+            spd: 7,
+        },
     );
 
     let (aid, adef) = basic_ability("quake", 3, 40);
@@ -148,19 +174,22 @@ fn test_battle_completes_to_victory_or_defeat() {
             if !battle.player_units[pi].unit.is_alive {
                 continue;
             }
-            let target_idx = battle
-                .enemies
-                .iter()
-                .position(|e| e.unit.is_alive);
+            let target_idx = battle.enemies.iter().position(|e| e.unit.is_alive);
             let target_idx = match target_idx {
                 Some(i) => i,
                 None => break,
             };
             let _ = battle_engine::plan_action(
                 &mut battle,
-                TargetRef { side: Side::Player, index: pi as u8 },
+                TargetRef {
+                    side: Side::Player,
+                    index: pi as u8,
+                },
                 BattleAction::Attack {
-                    target: TargetRef { side: Side::Enemy, index: target_idx as u8 },
+                    target: TargetRef {
+                        side: Side::Enemy,
+                        index: target_idx as u8,
+                    },
                 },
             );
         }
@@ -181,7 +210,7 @@ fn test_battle_completes_to_victory_or_defeat() {
     assert!(result.is_some(), "battle must end within 30 rounds");
     match result.unwrap() {
         BattleResult::Victory { .. } => {} // ok
-        BattleResult::Defeat => {}          // ok
+        BattleResult::Defeat => {}         // ok
     }
 }
 
@@ -192,8 +221,20 @@ fn test_battle_completes_to_victory_or_defeat() {
 #[test]
 fn test_physical_damage_formula_is_deterministic() {
     let cfg = config();
-    let attacker = Stats { hp: 100, atk: 30, def: 10, mag: 5, spd: 10 };
-    let defender = Stats { hp: 100, atk: 10, def: 20, mag: 5, spd: 10 };
+    let attacker = Stats {
+        hp: 100,
+        atk: 30,
+        def: 10,
+        mag: 5,
+        spd: 10,
+    };
+    let defender = Stats {
+        hp: 100,
+        atk: 10,
+        def: 20,
+        mag: 5,
+        spd: 10,
+    };
 
     let dmg1 = combat::calculate_damage(50, DamageType::Physical, &attacker, &defender, &cfg);
     let dmg2 = combat::calculate_damage(50, DamageType::Physical, &attacker, &defender, &cfg);
@@ -252,19 +293,32 @@ fn test_crit_triggers_on_tenth_hit() {
 fn test_dead_unit_cannot_act() {
     let p = player(
         "hero",
-        Stats { hp: 100, atk: 30, def: 20, mag: 25, spd: 15 },
+        Stats {
+            hp: 100,
+            atk: 30,
+            def: 20,
+            mag: 25,
+            spd: 15,
+        },
         5,
     );
     let e = enemy(
         "goblin",
-        Stats { hp: 80, atk: 20, def: 15, mag: 10, spd: 10 },
+        Stats {
+            hp: 80,
+            atk: 20,
+            def: 15,
+            mag: 10,
+            spd: 10,
+        },
     );
 
     let (aid, adef) = basic_ability("quake", 3, 40);
     let mut abilities = HashMap::new();
     abilities.insert(aid, adef);
 
-    let mut battle = battle_engine::new_battle(vec![p], vec![e], config(), abilities, HashMap::new());
+    let mut battle =
+        battle_engine::new_battle(vec![p], vec![e], config(), abilities, HashMap::new());
 
     // Kill the player unit
     battle.player_units[0].unit.current_hp = 0;
@@ -272,9 +326,15 @@ fn test_dead_unit_cannot_act() {
 
     let result = battle_engine::plan_action(
         &mut battle,
-        TargetRef { side: Side::Player, index: 0 },
+        TargetRef {
+            side: Side::Player,
+            index: 0,
+        },
         BattleAction::Attack {
-            target: TargetRef { side: Side::Enemy, index: 0 },
+            target: TargetRef {
+                side: Side::Enemy,
+                index: 0,
+            },
         },
     );
 
@@ -320,19 +380,32 @@ fn test_burn_deals_percent_of_max_hp() {
 fn test_barrier_blocks_damage_instance() {
     let p = player(
         "hero",
-        Stats { hp: 100, atk: 30, def: 20, mag: 25, spd: 15 },
+        Stats {
+            hp: 100,
+            atk: 30,
+            def: 20,
+            mag: 25,
+            spd: 15,
+        },
         5,
     );
     let e = enemy(
         "goblin",
-        Stats { hp: 80, atk: 20, def: 15, mag: 10, spd: 10 },
+        Stats {
+            hp: 80,
+            atk: 20,
+            def: 15,
+            mag: 10,
+            spd: 10,
+        },
     );
 
     let mut abilities = HashMap::new();
     let (aid, adef) = basic_ability("quake", 3, 40);
     abilities.insert(aid, adef);
 
-    let mut battle = battle_engine::new_battle(vec![p], vec![e], config(), abilities, HashMap::new());
+    let mut battle =
+        battle_engine::new_battle(vec![p], vec![e], config(), abilities, HashMap::new());
 
     // Give player unit a barrier with 1 charge
     status::apply_barrier(&mut battle.player_units[0].status_state, 1, 5);
@@ -342,16 +415,25 @@ fn test_barrier_blocks_damage_instance() {
     // Enemy attacks the player
     let _ = battle_engine::plan_action(
         &mut battle,
-        TargetRef { side: Side::Enemy, index: 0 },
+        TargetRef {
+            side: Side::Enemy,
+            index: 0,
+        },
         BattleAction::Attack {
-            target: TargetRef { side: Side::Player, index: 0 },
+            target: TargetRef {
+                side: Side::Player,
+                index: 0,
+            },
         },
     );
 
     battle_engine::execute_round(&mut battle);
 
     let hp_after = battle.player_units[0].unit.current_hp;
-    assert_eq!(hp_after, hp_before, "HP must be unchanged when barrier absorbs the hit");
+    assert_eq!(
+        hp_after, hp_before,
+        "HP must be unchanged when barrier absorbs the hit"
+    );
 
     // Barrier charge consumed
     let charges: u8 = battle.player_units[0]
@@ -371,16 +453,29 @@ fn test_barrier_blocks_damage_instance() {
 fn test_enemies_attack_player_units() {
     let p = player(
         "hero",
-        Stats { hp: 200, atk: 10, def: 10, mag: 10, spd: 5 },
+        Stats {
+            hp: 200,
+            atk: 10,
+            def: 10,
+            mag: 10,
+            spd: 5,
+        },
         5,
     );
     let e = enemy(
         "strong-goblin",
-        Stats { hp: 200, atk: 30, def: 10, mag: 5, spd: 20 },
+        Stats {
+            hp: 200,
+            atk: 30,
+            def: 10,
+            mag: 5,
+            spd: 20,
+        },
     );
 
     let abilities = HashMap::new();
-    let mut battle = battle_engine::new_battle(vec![p], vec![e], config(), abilities, HashMap::new());
+    let mut battle =
+        battle_engine::new_battle(vec![p], vec![e], config(), abilities, HashMap::new());
 
     let hp_before = battle.player_units[0].unit.current_hp;
 
@@ -405,8 +500,7 @@ fn test_enemies_attack_player_units() {
 
 #[test]
 fn test_encounter_data_loads_house_02() {
-    let data = data_loader::load_game_data(&full_data_dir())
-        .expect("full data should load");
+    let data = data_loader::load_game_data(&full_data_dir()).expect("full data should load");
 
     let enc_id = EncounterId("house-02".to_string());
     let encounter = data

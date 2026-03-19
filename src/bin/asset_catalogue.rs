@@ -87,10 +87,26 @@ fn spawn_characters(mut commands: Commands) {
         &mut commands,
         CatalogueState::Characters,
         &[
-            (Vec3::new(-360.0, 0.0, 0.0), Vec2::new(180.0, 300.0), Color::srgb(0.86, 0.32, 0.27)),
-            (Vec3::new(-120.0, 0.0, 0.0), Vec2::new(180.0, 300.0), Color::srgb(0.92, 0.66, 0.24)),
-            (Vec3::new(120.0, 0.0, 0.0), Vec2::new(180.0, 300.0), Color::srgb(0.24, 0.68, 0.57)),
-            (Vec3::new(360.0, 0.0, 0.0), Vec2::new(180.0, 300.0), Color::srgb(0.26, 0.50, 0.78)),
+            (
+                Vec3::new(-360.0, 0.0, 0.0),
+                Vec2::new(180.0, 300.0),
+                Color::srgb(0.86, 0.32, 0.27),
+            ),
+            (
+                Vec3::new(-120.0, 0.0, 0.0),
+                Vec2::new(180.0, 300.0),
+                Color::srgb(0.92, 0.66, 0.24),
+            ),
+            (
+                Vec3::new(120.0, 0.0, 0.0),
+                Vec2::new(180.0, 300.0),
+                Color::srgb(0.24, 0.68, 0.57),
+            ),
+            (
+                Vec3::new(360.0, 0.0, 0.0),
+                Vec2::new(180.0, 300.0),
+                Color::srgb(0.26, 0.50, 0.78),
+            ),
         ],
     );
 }
@@ -100,11 +116,31 @@ fn spawn_enemies(mut commands: Commands) {
         &mut commands,
         CatalogueState::Enemies,
         &[
-            (Vec3::new(-280.0, 110.0, 0.0), Vec2::new(220.0, 180.0), Color::srgb(0.77, 0.18, 0.18)),
-            (Vec3::new(0.0, 110.0, 0.0), Vec2::new(220.0, 180.0), Color::srgb(0.52, 0.22, 0.65)),
-            (Vec3::new(280.0, 110.0, 0.0), Vec2::new(220.0, 180.0), Color::srgb(0.81, 0.42, 0.16)),
-            (Vec3::new(-160.0, -150.0, 0.0), Vec2::new(260.0, 140.0), Color::srgb(0.26, 0.36, 0.67)),
-            (Vec3::new(160.0, -150.0, 0.0), Vec2::new(260.0, 140.0), Color::srgb(0.20, 0.58, 0.37)),
+            (
+                Vec3::new(-280.0, 110.0, 0.0),
+                Vec2::new(220.0, 180.0),
+                Color::srgb(0.77, 0.18, 0.18),
+            ),
+            (
+                Vec3::new(0.0, 110.0, 0.0),
+                Vec2::new(220.0, 180.0),
+                Color::srgb(0.52, 0.22, 0.65),
+            ),
+            (
+                Vec3::new(280.0, 110.0, 0.0),
+                Vec2::new(220.0, 180.0),
+                Color::srgb(0.81, 0.42, 0.16),
+            ),
+            (
+                Vec3::new(-160.0, -150.0, 0.0),
+                Vec2::new(260.0, 140.0),
+                Color::srgb(0.26, 0.36, 0.67),
+            ),
+            (
+                Vec3::new(160.0, -150.0, 0.0),
+                Vec2::new(260.0, 140.0),
+                Color::srgb(0.20, 0.58, 0.37),
+            ),
         ],
     );
 }
@@ -114,10 +150,26 @@ fn spawn_environment(mut commands: Commands) {
         &mut commands,
         CatalogueState::Environment,
         &[
-            (Vec3::new(0.0, -150.0, 0.0), Vec2::new(920.0, 180.0), Color::srgb(0.31, 0.53, 0.27)),
-            (Vec3::new(-320.0, 80.0, 0.0), Vec2::new(220.0, 320.0), Color::srgb(0.58, 0.44, 0.29)),
-            (Vec3::new(0.0, 70.0, 0.0), Vec2::new(260.0, 220.0), Color::srgb(0.40, 0.62, 0.78)),
-            (Vec3::new(320.0, 90.0, 0.0), Vec2::new(240.0, 340.0), Color::srgb(0.73, 0.68, 0.42)),
+            (
+                Vec3::new(0.0, -150.0, 0.0),
+                Vec2::new(920.0, 180.0),
+                Color::srgb(0.31, 0.53, 0.27),
+            ),
+            (
+                Vec3::new(-320.0, 80.0, 0.0),
+                Vec2::new(220.0, 320.0),
+                Color::srgb(0.58, 0.44, 0.29),
+            ),
+            (
+                Vec3::new(0.0, 70.0, 0.0),
+                Vec2::new(260.0, 220.0),
+                Color::srgb(0.40, 0.62, 0.78),
+            ),
+            (
+                Vec3::new(320.0, 90.0, 0.0),
+                Vec2::new(240.0, 340.0),
+                Color::srgb(0.73, 0.68, 0.42),
+            ),
         ],
     );
 }
@@ -127,10 +179,26 @@ fn spawn_ui(mut commands: Commands) {
         &mut commands,
         CatalogueState::Ui,
         &[
-            (Vec3::new(0.0, 210.0, 0.0), Vec2::new(920.0, 110.0), Color::srgb(0.14, 0.23, 0.37)),
-            (Vec3::new(-330.0, -10.0, 0.0), Vec2::new(300.0, 260.0), Color::srgb(0.60, 0.26, 0.19)),
-            (Vec3::new(40.0, -30.0, 0.0), Vec2::new(520.0, 220.0), Color::srgb(0.18, 0.45, 0.51)),
-            (Vec3::new(0.0, -245.0, 0.0), Vec2::new(980.0, 90.0), Color::srgb(0.24, 0.28, 0.32)),
+            (
+                Vec3::new(0.0, 210.0, 0.0),
+                Vec2::new(920.0, 110.0),
+                Color::srgb(0.14, 0.23, 0.37),
+            ),
+            (
+                Vec3::new(-330.0, -10.0, 0.0),
+                Vec2::new(300.0, 260.0),
+                Color::srgb(0.60, 0.26, 0.19),
+            ),
+            (
+                Vec3::new(40.0, -30.0, 0.0),
+                Vec2::new(520.0, 220.0),
+                Color::srgb(0.18, 0.45, 0.51),
+            ),
+            (
+                Vec3::new(0.0, -245.0, 0.0),
+                Vec2::new(980.0, 90.0),
+                Color::srgb(0.24, 0.28, 0.32),
+            ),
         ],
     );
 }

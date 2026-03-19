@@ -14,9 +14,9 @@ use crate::domains::battle_engine::{
     PlayerUnitData,
 };
 use crate::domains::data_loader::GameData;
+use crate::domains::djinn;
 use crate::domains::djinn::DjinnSlots;
 use crate::domains::equipment::{self, EquipmentEffects, EquipmentLoadout};
-use crate::domains::djinn;
 use crate::shared::{
     bounded_types::EffectDuration, AbilityCategory, AbilityId, BattleAction, DjinnId, DjinnState,
     EncounterId, EnemyId, EquipmentId, EquipmentSlot, Side, TargetMode, TargetRef, UnitDef, UnitId,
@@ -691,9 +691,7 @@ fn plan_interactive_action_for_player(
             }
             5 => {
                 // SUMMON -> use Good djinn for a summon
-                let good_count = battle.player_units[player_index]
-                    .djinn_slots
-                    .good_count();
+                let good_count = battle.player_units[player_index].djinn_slots.good_count();
                 let tiers = djinn::get_available_summons(good_count);
 
                 if tiers.is_empty() {
@@ -709,8 +707,7 @@ fn plan_interactive_action_for_player(
                     );
                 }
 
-                let selected =
-                    prompt_for_usize("Choose summon tier: ", 0, tiers.len() - 1, 0);
+                let selected = prompt_for_usize("Choose summon tier: ", 0, tiers.len() - 1, 0);
                 let chosen_tier = &tiers[selected];
                 let needed = chosen_tier.required_good as usize;
 
@@ -742,10 +739,7 @@ fn plan_interactive_action_for_player(
                     .take(needed)
                     .map(|(_, name)| name.as_str())
                     .collect();
-                println!(
-                    "  >> Summoning with: {}!",
-                    selected_names.join(" + ")
-                );
+                println!("  >> Summoning with: {}!", selected_names.join(" + "));
 
                 let unit_name = battle.player_units[player_index].unit.id.clone();
                 if try_plan_action(
@@ -821,7 +815,11 @@ pub fn run_demo_battle(game_data: &GameData, encounter_id: &str) -> BattleResult
     let encounter = game_data
         .encounters
         .get(&EncounterId(encounter_id.to_string()))
-        .or_else(|| game_data.encounters.get(&EncounterId("house-02".to_string())));
+        .or_else(|| {
+            game_data
+                .encounters
+                .get(&EncounterId("house-02".to_string()))
+        });
 
     let enemy_data: Vec<EnemyUnitData> = if let Some(enc) = encounter {
         enc.enemies
@@ -929,10 +927,7 @@ pub fn run_demo_battle(game_data: &GameData, encounter_id: &str) -> BattleResult
                 format!("{}({})", pu.unit.id, effective_spd)
             })
             .collect();
-        println!(
-            "Planning order (by SPD): {}",
-            order_display.join(" → ")
-        );
+        println!("Planning order (by SPD): {}", order_display.join(" → "));
 
         for &pi in &planning_order {
             if auto_mode {
@@ -1063,10 +1058,8 @@ pub fn format_event(event: &BattleEvent, battle: &Battle) -> String {
             targets,
         } => {
             let actor_name = format_target(actor, battle);
-            let target_names: Vec<String> = targets
-                .iter()
-                .map(|t| format_target(t, battle))
-                .collect();
+            let target_names: Vec<String> =
+                targets.iter().map(|t| format_target(t, battle)).collect();
             format!(
                 "{} uses {} on {}!",
                 actor_name,
@@ -1430,7 +1423,9 @@ mod tests {
         );
 
         // Verify DjinnChanged event was emitted
-        let has_djinn_event = events.iter().any(|e| matches!(e, BattleEvent::DjinnChanged(_)));
+        let has_djinn_event = events
+            .iter()
+            .any(|e| matches!(e, BattleEvent::DjinnChanged(_)));
         assert!(has_djinn_event, "Should have DjinnChanged event");
 
         // Verify the event formats correctly
@@ -1473,9 +1468,7 @@ mod tests {
                 mana_contribution: adept.mana_contribution.get(),
                 equipment_effects: EquipmentEffects::default(),
             }],
-            vec![EnemyUnitData {
-                enemy_def: tanky,
-            }],
+            vec![EnemyUnitData { enemy_def: tanky }],
             game_data.config.clone(),
             game_data.abilities.clone(),
             game_data.djinn.clone(),
@@ -1586,9 +1579,7 @@ mod tests {
                 mana_contribution: adept.mana_contribution.get(),
                 equipment_effects: EquipmentEffects::default(),
             }],
-            vec![EnemyUnitData {
-                enemy_def: tanky,
-            }],
+            vec![EnemyUnitData { enemy_def: tanky }],
             game_data.config.clone(),
             game_data.abilities.clone(),
             game_data.djinn.clone(),

@@ -1,9 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{
-    parse::ParseStream, parse2, Ident, ItemStruct, Result,
-    Token,
-};
+use syn::{parse::ParseStream, parse2, Ident, ItemStruct, Result, Token};
 
 struct States {
     names: Vec<Ident>,
