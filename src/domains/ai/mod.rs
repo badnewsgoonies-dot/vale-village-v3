@@ -56,7 +56,7 @@ pub fn choose_target(units: &[AiUnitView], criteria: TargetCriteria) -> Option<T
             .unwrap(),
         TargetCriteria::HighestAtk => alive
             .iter()
-            .max_by_key(|u| u.stats.atk)
+            .max_by_key(|u| u.stats.atk.get())
             .unwrap(),
         TargetCriteria::FirstAlive => alive.first().unwrap(),
     };

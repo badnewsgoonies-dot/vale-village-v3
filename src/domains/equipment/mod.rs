@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use crate::shared::{
     AbilityId, Element, EquipmentDef, EquipmentId, EquipmentSlot, SetId, StatBonus,
 };
+use crate::shared::bounded_types::StatMod;
 
 // ── Structs ──────────────────────────────────────────────────────────
 
@@ -129,11 +130,11 @@ pub fn compute_equipment_effects(
     for eq_id in &equipped {
         if let Some(def) = defs.get(eq_id) {
             // Stat bonuses
-            effects.total_stat_bonus.atk += def.stat_bonus.atk;
-            effects.total_stat_bonus.def += def.stat_bonus.def;
-            effects.total_stat_bonus.mag += def.stat_bonus.mag;
-            effects.total_stat_bonus.spd += def.stat_bonus.spd;
-            effects.total_stat_bonus.hp += def.stat_bonus.hp;
+            effects.total_stat_bonus.atk = StatMod::new_unchecked(effects.total_stat_bonus.atk.get() + def.stat_bonus.atk.get());
+            effects.total_stat_bonus.def = StatMod::new_unchecked(effects.total_stat_bonus.def.get() + def.stat_bonus.def.get());
+            effects.total_stat_bonus.mag = StatMod::new_unchecked(effects.total_stat_bonus.mag.get() + def.stat_bonus.mag.get());
+            effects.total_stat_bonus.spd = StatMod::new_unchecked(effects.total_stat_bonus.spd.get() + def.stat_bonus.spd.get());
+            effects.total_stat_bonus.hp = StatMod::new_unchecked(effects.total_stat_bonus.hp.get() + def.stat_bonus.hp.get());
 
             // Ability unlock
             if let Some(ref ability_id) = def.unlocks_ability {
@@ -267,9 +268,9 @@ mod tests {
     fn test_stat_bonus_computation_two_items() {
         let mut loadout = EquipmentLoadout::default();
         let mut def_w = make_def("sword1", EquipmentSlot::Weapon, vec![Element::Venus]);
-        def_w.stat_bonus = StatBonus { atk: 10, def: 0, mag: 0, spd: 5, hp: 0 };
+        def_w.stat_bonus = StatBonus { atk: StatMod::new_unchecked(10), def: StatMod::new_unchecked(0), mag: StatMod::new_unchecked(0), spd: StatMod::new_unchecked(5), hp: StatMod::new_unchecked(0) };
         let mut def_h = make_def("helm1", EquipmentSlot::Helm, vec![Element::Venus]);
-        def_h.stat_bonus = StatBonus { atk: 0, def: 8, mag: 0, spd: 0, hp: 20 };
+        def_h.stat_bonus = StatBonus { atk: StatMod::new_unchecked(0), def: StatMod::new_unchecked(8), mag: StatMod::new_unchecked(0), spd: StatMod::new_unchecked(0), hp: StatMod::new_unchecked(20) };
 
         loadout.weapon = Some(EquipmentId("sword1".into()));
         loadout.helm = Some(EquipmentId("helm1".into()));
@@ -279,10 +280,10 @@ mod tests {
         defs.insert(EquipmentId("helm1".into()), def_h);
 
         let effects = compute_equipment_effects(&loadout, &defs);
-        assert_eq!(effects.total_stat_bonus.atk, 10);
-        assert_eq!(effects.total_stat_bonus.def, 8);
-        assert_eq!(effects.total_stat_bonus.spd, 5);
-        assert_eq!(effects.total_stat_bonus.hp, 20);
+        assert_eq!(effects.total_stat_bonus.atk.get(), 10);
+        assert_eq!(effects.total_stat_bonus.def.get(), 8);
+        assert_eq!(effects.total_stat_bonus.spd.get(), 5);
+        assert_eq!(effects.total_stat_bonus.hp.get(), 20);
     }
 
     #[test]
@@ -376,11 +377,11 @@ mod tests {
         let defs: HashMap<EquipmentId, EquipmentDef> = HashMap::new();
         let effects = compute_equipment_effects(&loadout, &defs);
 
-        assert_eq!(effects.total_stat_bonus.atk, 0);
-        assert_eq!(effects.total_stat_bonus.def, 0);
-        assert_eq!(effects.total_stat_bonus.mag, 0);
-        assert_eq!(effects.total_stat_bonus.spd, 0);
-        assert_eq!(effects.total_stat_bonus.hp, 0);
+        assert_eq!(effects.total_stat_bonus.atk.get(), 0);
+        assert_eq!(effects.total_stat_bonus.def.get(), 0);
+        assert_eq!(effects.total_stat_bonus.mag.get(), 0);
+        assert_eq!(effects.total_stat_bonus.spd.get(), 0);
+        assert_eq!(effects.total_stat_bonus.hp.get(), 0);
         assert!(effects.unlocked_abilities.is_empty());
         assert_eq!(effects.total_mana_bonus, 0);
         assert_eq!(effects.total_hit_count_bonus, 0);

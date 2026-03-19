@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 
 use crate::shared::{
-    bounded_types::{BasePower, EffectDuration, HitCount, Level, ManaCost},
+    bounded_types::{BasePower, BaseStat, EffectDuration, HitCount, Hp, Level, ManaCost},
     AbilityDef, AbilityId, BattleAction, BattlePhase, CombatConfig, DamageDealt, DamageType,
     DjinnDef, DjinnId, DjinnState, DjinnStateChanged, EnemyDef, HealingDone, ManaPoolChanged,
     Side, Stats, StatusApplied, StatusEffectType, TargetRef, UnitDefeated,
@@ -133,15 +133,15 @@ pub fn new_battle(
         .map(|pd| {
             let eq_effects = &pd.equipment_effects;
             let stats = Stats {
-                hp: (pd.base_stats.hp as i32 + eq_effects.total_stat_bonus.hp as i32).max(1) as u16,
-                atk: (pd.base_stats.atk as i32 + eq_effects.total_stat_bonus.atk as i32).max(0)
-                    as u16,
-                def: (pd.base_stats.def as i32 + eq_effects.total_stat_bonus.def as i32).max(0)
-                    as u16,
-                mag: (pd.base_stats.mag as i32 + eq_effects.total_stat_bonus.mag as i32).max(0)
-                    as u16,
-                spd: (pd.base_stats.spd as i32 + eq_effects.total_stat_bonus.spd as i32).max(0)
-                    as u16,
+                hp: Hp::new_unchecked((pd.base_stats.hp.get() as i32 + eq_effects.total_stat_bonus.hp.get() as i32).max(1) as u16),
+                atk: BaseStat::new_unchecked((pd.base_stats.atk.get() as i32 + eq_effects.total_stat_bonus.atk.get() as i32).max(0)
+                    as u16),
+                def: BaseStat::new_unchecked((pd.base_stats.def.get() as i32 + eq_effects.total_stat_bonus.def.get() as i32).max(0)
+                    as u16),
+                mag: BaseStat::new_unchecked((pd.base_stats.mag.get() as i32 + eq_effects.total_stat_bonus.mag.get() as i32).max(0)
+                    as u16),
+                spd: BaseStat::new_unchecked((pd.base_stats.spd.get() as i32 + eq_effects.total_stat_bonus.spd.get() as i32).max(0)
+                    as u16),
             };
             let mana = pd
                 .mana_contribution
@@ -152,10 +152,10 @@ pub fn new_battle(
                 unit: BattleUnit {
                     id: pd.id,
                     stats,
-                    current_hp: stats.hp,
+                    current_hp: stats.hp.get(),
                     is_alive: true,
                     crit_counter: 0,
-                    equipment_speed_bonus: eq_effects.total_stat_bonus.spd,
+                    equipment_speed_bonus: eq_effects.total_stat_bonus.spd.get(),
                 },
                 status_state: UnitStatusState::new(),
                 djinn_slots: team_djinn_slots.clone(),
@@ -180,7 +180,7 @@ pub fn new_battle(
                 unit: BattleUnit {
                     id: ed.enemy_def.id.0.clone(),
                     stats,
-                    current_hp: stats.hp,
+                    current_hp: stats.hp.get(),
                     is_alive: true,
                     crit_counter: 0,
                     equipment_speed_bonus: 0,
@@ -231,8 +231,8 @@ pub fn get_planning_order(battle: &Battle) -> Vec<usize> {
         if !pu.unit.is_alive {
             continue;
         }
-        let effective_spd = pu.unit.stats.spd as i32 + pu.unit.equipment_speed_bonus as i32;
-        let base_spd = pu.unit.stats.spd;
+        let effective_spd = pu.unit.stats.spd.get() as i32 + pu.unit.equipment_speed_bonus as i32;
+        let base_spd = pu.unit.stats.spd.get();
         entries.push((i, effective_spd, base_spd));
     }
 
@@ -427,7 +427,7 @@ pub fn plan_enemy_actions_with_ai(battle: &mut Battle, strategy: AiStrategy) {
             index: i as u8,
             stats: pu.unit.stats,
             current_hp: pu.unit.current_hp,
-            max_hp: pu.unit.stats.hp,
+            max_hp: pu.unit.stats.hp.get(),
             is_alive: pu.unit.is_alive,
         })
         .collect();
@@ -449,7 +449,7 @@ pub fn plan_enemy_actions_with_ai(battle: &mut Battle, strategy: AiStrategy) {
         let self_view = AiSelfView {
             index: ei as u8,
             current_hp: enemy.unit.current_hp,
-            max_hp: enemy.unit.stats.hp,
+            max_hp: enemy.unit.stats.hp.get(),
             mana_available: ENEMY_MANA_BUDGET,
         };
 
@@ -627,17 +627,17 @@ fn execute_attack(
     // Effective stats with buff/debuff modifiers
     let effective_attacker = Stats {
         hp: attacker_stats.hp,
-        atk: (attacker_stats.atk as i32 + attacker_buff_mods.atk as i32).max(0) as u16,
-        def: (attacker_stats.def as i32 + attacker_buff_mods.def as i32).max(0) as u16,
-        mag: (attacker_stats.mag as i32 + attacker_buff_mods.mag as i32).max(0) as u16,
-        spd: (attacker_stats.spd as i32 + attacker_buff_mods.spd as i32).max(0) as u16,
+        atk: BaseStat::new_unchecked((attacker_stats.atk.get() as i32 + attacker_buff_mods.atk.get() as i32).max(0) as u16),
+        def: BaseStat::new_unchecked((attacker_stats.def.get() as i32 + attacker_buff_mods.def.get() as i32).max(0) as u16),
+        mag: BaseStat::new_unchecked((attacker_stats.mag.get() as i32 + attacker_buff_mods.mag.get() as i32).max(0) as u16),
+        spd: BaseStat::new_unchecked((attacker_stats.spd.get() as i32 + attacker_buff_mods.spd.get() as i32).max(0) as u16),
     };
     let effective_target = Stats {
         hp: target_stats.hp,
-        atk: (target_stats.atk as i32 + target_buff_mods.atk as i32).max(0) as u16,
-        def: (target_stats.def as i32 + target_buff_mods.def as i32).max(0) as u16,
-        mag: (target_stats.mag as i32 + target_buff_mods.mag as i32).max(0) as u16,
-        spd: (target_stats.spd as i32 + target_buff_mods.spd as i32).max(0) as u16,
+        atk: BaseStat::new_unchecked((target_stats.atk.get() as i32 + target_buff_mods.atk.get() as i32).max(0) as u16),
+        def: BaseStat::new_unchecked((target_stats.def.get() as i32 + target_buff_mods.def.get() as i32).max(0) as u16),
+        mag: BaseStat::new_unchecked((target_stats.mag.get() as i32 + target_buff_mods.mag.get() as i32).max(0) as u16),
+        spd: BaseStat::new_unchecked((target_stats.spd.get() as i32 + target_buff_mods.spd.get() as i32).max(0) as u16),
     };
 
     // Base hit count is 1 + equipment bonus
@@ -776,10 +776,10 @@ fn execute_ability(
     };
     let effective_attacker = Stats {
         hp: attacker_stats.hp,
-        atk: (attacker_stats.atk as i32 + attacker_buff_mods.atk as i32).max(0) as u16,
-        def: (attacker_stats.def as i32 + attacker_buff_mods.def as i32).max(0) as u16,
-        mag: (attacker_stats.mag as i32 + attacker_buff_mods.mag as i32).max(0) as u16,
-        spd: (attacker_stats.spd as i32 + attacker_buff_mods.spd as i32).max(0) as u16,
+        atk: BaseStat::new_unchecked((attacker_stats.atk.get() as i32 + attacker_buff_mods.atk.get() as i32).max(0) as u16),
+        def: BaseStat::new_unchecked((attacker_stats.def.get() as i32 + attacker_buff_mods.def.get() as i32).max(0) as u16),
+        mag: BaseStat::new_unchecked((attacker_stats.mag.get() as i32 + attacker_buff_mods.mag.get() as i32).max(0) as u16),
+        spd: BaseStat::new_unchecked((attacker_stats.spd.get() as i32 + attacker_buff_mods.spd.get() as i32).max(0) as u16),
     };
 
     // Process each target
@@ -797,10 +797,10 @@ fn execute_ability(
         // Handle healing abilities
         // FIX 6: heal_amount = base_power + attacker MAG, floor 1
         if ability.category == crate::shared::AbilityCategory::Healing {
-            let heal_amount = (ability.base_power.get() + effective_attacker.mag).max(1);
+            let heal_amount = (ability.base_power.get() + effective_attacker.mag.get()).max(1);
             {
                 let target = get_unit_mut(battle, target_ref).unwrap();
-                let max_hp = target.unit.stats.hp;
+                let max_hp = target.unit.stats.hp.get();
                 target.unit.current_hp = (target.unit.current_hp + heal_amount).min(max_hp);
             }
             events.push(BattleEvent::HealingDone(HealingDone {
@@ -823,21 +823,21 @@ fn execute_ability(
             };
             let effective_target_base = Stats {
                 hp: target_stats.hp,
-                atk: (target_stats.atk as i32 + target_buff_mods.atk as i32).max(0) as u16,
-                def: (target_stats.def as i32 + target_buff_mods.def as i32).max(0) as u16,
-                mag: (target_stats.mag as i32 + target_buff_mods.mag as i32).max(0) as u16,
-                spd: (target_stats.spd as i32 + target_buff_mods.spd as i32).max(0) as u16,
+                atk: BaseStat::new_unchecked((target_stats.atk.get() as i32 + target_buff_mods.atk.get() as i32).max(0) as u16),
+                def: BaseStat::new_unchecked((target_stats.def.get() as i32 + target_buff_mods.def.get() as i32).max(0) as u16),
+                mag: BaseStat::new_unchecked((target_stats.mag.get() as i32 + target_buff_mods.mag.get() as i32).max(0) as u16),
+                spd: BaseStat::new_unchecked((target_stats.spd.get() as i32 + target_buff_mods.spd.get() as i32).max(0) as u16),
             };
 
             // Apply defense penetration if applicable
             let effective_def = if let Some(pen_pct) = ability.ignore_defense_percent {
-                damage_mods::apply_defense_penetration(effective_target_base.def, pen_pct)
+                damage_mods::apply_defense_penetration(effective_target_base.def.get(), pen_pct)
             } else {
-                effective_target_base.def
+                effective_target_base.def.get()
             };
 
             let modified_target_stats = Stats {
-                def: effective_def,
+                def: BaseStat::new_unchecked(effective_def),
                 ..effective_target_base
             };
 
@@ -1020,7 +1020,7 @@ fn execute_ability(
                 };
                 let (is_dead, max_hp) = {
                     let ally = get_unit(battle, ally_ref).unwrap();
-                    (!ally.unit.is_alive, ally.unit.stats.hp)
+                    (!ally.unit.is_alive, ally.unit.stats.hp.get())
                 };
                 if is_dead {
                     let revive_hp = ((max_hp as f32 * pct) as u16).max(1);
@@ -1093,7 +1093,7 @@ fn resolve_djinn_activation_damage(
                 };
                 let (is_alive, current_hp, max_hp) = {
                     let unit = get_unit(battle, target_ref).unwrap();
-                    (unit.unit.is_alive, unit.unit.current_hp, unit.unit.stats.hp)
+                    (unit.unit.is_alive, unit.unit.current_hp, unit.unit.stats.hp.get())
                 };
                 if !is_alive || current_hp >= max_hp {
                     continue;
@@ -1117,11 +1117,11 @@ fn resolve_djinn_activation_damage(
                 &mut actor.status_state,
                 &crate::shared::BuffEffect {
                     stat_modifiers: crate::shared::StatBonus {
-                        atk: 2,
-                        def: 0,
-                        mag: 0,
-                        spd: 0,
-                    hp: 0,
+                        atk: crate::shared::bounded_types::StatMod::new_unchecked(2),
+                        def: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                        mag: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                        spd: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                    hp: crate::shared::bounded_types::StatMod::new_unchecked(0),
                 },
                     duration: EffectDuration::new_unchecked(3),
                     shield_charges: None,
@@ -1152,10 +1152,10 @@ fn resolve_djinn_activation_damage(
     };
     let effective_attacker = Stats {
         hp: attacker_stats.hp,
-        atk: (attacker_stats.atk as i32 + attacker_buff_mods.atk as i32).max(0) as u16,
-        def: (attacker_stats.def as i32 + attacker_buff_mods.def as i32).max(0) as u16,
-        mag: (attacker_stats.mag as i32 + attacker_buff_mods.mag as i32).max(0) as u16,
-        spd: (attacker_stats.spd as i32 + attacker_buff_mods.spd as i32).max(0) as u16,
+        atk: BaseStat::new_unchecked((attacker_stats.atk.get() as i32 + attacker_buff_mods.atk.get() as i32).max(0) as u16),
+        def: BaseStat::new_unchecked((attacker_stats.def.get() as i32 + attacker_buff_mods.def.get() as i32).max(0) as u16),
+        mag: BaseStat::new_unchecked((attacker_stats.mag.get() as i32 + attacker_buff_mods.mag.get() as i32).max(0) as u16),
+        spd: BaseStat::new_unchecked((attacker_stats.spd.get() as i32 + attacker_buff_mods.spd.get() as i32).max(0) as u16),
     };
 
     let (target_stats, target_buff_mods) = {
@@ -1168,10 +1168,10 @@ fn resolve_djinn_activation_damage(
     };
     let effective_target = Stats {
         hp: target_stats.hp,
-        atk: (target_stats.atk as i32 + target_buff_mods.atk as i32).max(0) as u16,
-        def: (target_stats.def as i32 + target_buff_mods.def as i32).max(0) as u16,
-        mag: (target_stats.mag as i32 + target_buff_mods.mag as i32).max(0) as u16,
-        spd: (target_stats.spd as i32 + target_buff_mods.spd as i32).max(0) as u16,
+        atk: BaseStat::new_unchecked((target_stats.atk.get() as i32 + target_buff_mods.atk.get() as i32).max(0) as u16),
+        def: BaseStat::new_unchecked((target_stats.def.get() as i32 + target_buff_mods.def.get() as i32).max(0) as u16),
+        mag: BaseStat::new_unchecked((target_stats.mag.get() as i32 + target_buff_mods.mag.get() as i32).max(0) as u16),
+        spd: BaseStat::new_unchecked((target_stats.spd.get() as i32 + target_buff_mods.spd.get() as i32).max(0) as u16),
     };
 
     let damage = combat::calculate_damage(
@@ -1420,7 +1420,7 @@ fn tick_all_units_statuses(battle: &mut Battle, events: &mut Vec<BattleEvent>) {
             continue;
         }
         let result = status::tick_statuses(
-            unit.unit.stats.hp,
+            unit.unit.stats.hp.get(),
             unit.unit.current_hp,
             &mut unit.status_state.statuses,
         );
@@ -1450,7 +1450,7 @@ fn tick_all_units_statuses(battle: &mut Battle, events: &mut Vec<BattleEvent>) {
             continue;
         }
         let result = status::tick_statuses(
-            unit.unit.stats.hp,
+            unit.unit.stats.hp.get(),
             unit.unit.current_hp,
             &mut unit.status_state.statuses,
         );
@@ -1482,7 +1482,7 @@ fn tick_all_units_hots(battle: &mut Battle, events: &mut Vec<BattleEvent>) {
         }
         let healing = status::tick_hots(&mut unit.status_state.hots);
         if healing > 0 {
-            let max_hp = unit.unit.stats.hp;
+            let max_hp = unit.unit.stats.hp.get();
             let old_hp = unit.unit.current_hp;
             unit.unit.current_hp = (unit.unit.current_hp + healing).min(max_hp);
             let actual = unit.unit.current_hp - old_hp;
@@ -1506,7 +1506,7 @@ fn tick_all_units_hots(battle: &mut Battle, events: &mut Vec<BattleEvent>) {
         }
         let healing = status::tick_hots(&mut unit.status_state.hots);
         if healing > 0 {
-            let max_hp = unit.unit.stats.hp;
+            let max_hp = unit.unit.stats.hp.get();
             let old_hp = unit.unit.current_hp;
             unit.unit.current_hp = (unit.unit.current_hp + healing).min(max_hp);
             let actual = unit.unit.current_hp - old_hp;
@@ -2770,11 +2770,11 @@ mod tests {
                 damage: 0,
                 buff: Some(crate::shared::BuffEffect {
                     stat_modifiers: crate::shared::StatBonus {
-                        atk: 5,
-                        def: 0,
-                        mag: 0,
-                        spd: 0,
-                    hp: 0,
+                        atk: crate::shared::bounded_types::StatMod::new_unchecked(5),
+                        def: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                        mag: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                        spd: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                    hp: crate::shared::bounded_types::StatMod::new_unchecked(0),
                 },
                     duration: EffectDuration::new_unchecked(2),
                     shield_charges: None,
@@ -4270,11 +4270,11 @@ mod tests {
         // Now apply a strong ATK buff to the player
         let atk_buff = crate::shared::BuffEffect {
             stat_modifiers: crate::shared::StatBonus {
-                atk: 20,
-                def: 0,
-                mag: 0,
-                spd: 0,
-                hp: 0,
+                atk: crate::shared::bounded_types::StatMod::new_unchecked(20),
+                def: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                mag: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                spd: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                hp: crate::shared::bounded_types::StatMod::new_unchecked(0),
             },
             duration: EffectDuration::new_unchecked(5),
             shield_charges: None,

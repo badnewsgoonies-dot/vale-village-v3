@@ -77,8 +77,8 @@ pub fn apply_all_modifiers(
     };
 
     let offense = match damage_type {
-        DamageType::Physical => attacker_stats.atk as f32,
-        DamageType::Psynergy => attacker_stats.mag as f32,
+        DamageType::Physical => attacker_stats.atk.get() as f32,
+        DamageType::Psynergy => attacker_stats.mag.get() as f32,
     };
 
     let raw = base_damage as f32 + offense - (effective_def as f32 * config_def_mult);

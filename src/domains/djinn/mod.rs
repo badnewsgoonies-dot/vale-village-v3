@@ -6,6 +6,7 @@ use crate::shared::{
     AbilityId, DjinnCompatibility, DjinnDef, DjinnId, DjinnState, DjinnStateChanged, Element,
     StatBonus, SummonEffect, TargetRef,
 };
+use crate::shared::bounded_types::StatMod;
 
 // ── Structs ─────────────────────────────────────────────────────────
 
@@ -194,11 +195,11 @@ pub fn compute_djinn_stat_bonus(slots: &DjinnSlots, djinn_defs: &[DjinnDef]) -> 
             continue;
         }
         if let Some(def) = djinn_defs.iter().find(|d| d.id == inst.djinn_id) {
-            bonus.atk += def.stat_bonus.atk;
-            bonus.def += def.stat_bonus.def;
-            bonus.mag += def.stat_bonus.mag;
-            bonus.spd += def.stat_bonus.spd;
-            bonus.hp += def.stat_bonus.hp;
+            bonus.atk = StatMod::new_unchecked(bonus.atk.get() + def.stat_bonus.atk.get());
+            bonus.def = StatMod::new_unchecked(bonus.def.get() + def.stat_bonus.def.get());
+            bonus.mag = StatMod::new_unchecked(bonus.mag.get() + def.stat_bonus.mag.get());
+            bonus.spd = StatMod::new_unchecked(bonus.spd.get() + def.stat_bonus.spd.get());
+            bonus.hp = StatMod::new_unchecked(bonus.hp.get() + def.stat_bonus.hp.get());
         }
     }
     bonus
@@ -337,11 +338,11 @@ mod tests {
             element,
             tier: 1,
             stat_bonus: StatBonus {
-                atk: 5,
-                def: 3,
-                mag: 2,
-                spd: 1,
-                hp: 10,
+                atk: StatMod::new_unchecked(5),
+                def: StatMod::new_unchecked(3),
+                mag: StatMod::new_unchecked(2),
+                spd: StatMod::new_unchecked(1),
+                hp: StatMod::new_unchecked(10),
             },
             summon_effect: None,
             ability_pairs: DjinnAbilityPairs {
@@ -571,14 +572,14 @@ mod tests {
 
         // Both Good: both contribute
         let bonus = compute_djinn_stat_bonus(&slots, &defs);
-        assert_eq!(bonus.atk, 10);
-        assert_eq!(bonus.def, 6);
+        assert_eq!(bonus.atk.get(), 10);
+        assert_eq!(bonus.def.get(), 6);
 
         // Set one to Recovery
         slots.slots[1].state = DjinnState::Recovery;
         let bonus = compute_djinn_stat_bonus(&slots, &defs);
-        assert_eq!(bonus.atk, 5);
-        assert_eq!(bonus.def, 3);
+        assert_eq!(bonus.atk.get(), 5);
+        assert_eq!(bonus.def.get(), 3);
     }
 
     #[test]
@@ -586,8 +587,8 @@ mod tests {
         let slots = DjinnSlots::new();
         let defs: Vec<DjinnDef> = vec![];
         let bonus = compute_djinn_stat_bonus(&slots, &defs);
-        assert_eq!(bonus.atk, 0);
-        assert_eq!(bonus.def, 0);
+        assert_eq!(bonus.atk.get(), 0);
+        assert_eq!(bonus.def.get(), 0);
     }
 
     // ── Summon availability tests ──

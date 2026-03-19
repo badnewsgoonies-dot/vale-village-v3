@@ -8,7 +8,8 @@ pub mod entity_types;
 
 use serde::{Deserialize, Serialize};
 use crate::shared::bounded_types::{
-    BasePower, DjinnTier, EffectDuration, Gold, HitCount, Level, ManaCost, Xp,
+    BasePower, BaseStat, DjinnTier, EffectDuration, Gold, GrowthRate, HitCount, Hp, Level,
+    ManaCost, StatMod, Xp,
 };
 
 // ── ID Types (string-branded for stable serialization) ──────────────
@@ -162,13 +163,25 @@ pub struct DjinnAbilityPairs {
 
 // ── Buff / Debuff (S08) ─────────────────────────────────────────────
 
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct StatBonus {
-    pub atk: i16,
-    pub def: i16,
-    pub mag: i16,
-    pub spd: i16,
-    pub hp: i16,
+    pub atk: StatMod,
+    pub def: StatMod,
+    pub mag: StatMod,
+    pub spd: StatMod,
+    pub hp: StatMod,
+}
+
+impl Default for StatBonus {
+    fn default() -> Self {
+        StatBonus {
+            atk: StatMod::new_unchecked(0),
+            def: StatMod::new_unchecked(0),
+            mag: StatMod::new_unchecked(0),
+            spd: StatMod::new_unchecked(0),
+            hp: StatMod::new_unchecked(0),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -213,22 +226,46 @@ pub enum CleanseType {
 
 // ── Stats ───────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Stats {
-    pub hp: u16,
-    pub atk: u16,
-    pub def: u16,
-    pub mag: u16,
-    pub spd: u16,
+    pub hp: Hp,
+    pub atk: BaseStat,
+    pub def: BaseStat,
+    pub mag: BaseStat,
+    pub spd: BaseStat,
 }
 
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
+impl Default for Stats {
+    fn default() -> Self {
+        Stats {
+            hp: Hp::new_unchecked(1),
+            atk: BaseStat::new_unchecked(0),
+            def: BaseStat::new_unchecked(0),
+            mag: BaseStat::new_unchecked(0),
+            spd: BaseStat::new_unchecked(0),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct GrowthRates {
-    pub hp: u16,
-    pub atk: u16,
-    pub def: u16,
-    pub mag: u16,
-    pub spd: u16,
+    pub hp: GrowthRate,
+    pub atk: GrowthRate,
+    pub def: GrowthRate,
+    pub mag: GrowthRate,
+    pub spd: GrowthRate,
+}
+
+impl Default for GrowthRates {
+    fn default() -> Self {
+        GrowthRates {
+            hp: GrowthRate::new_unchecked(0),
+            atk: GrowthRate::new_unchecked(0),
+            def: GrowthRate::new_unchecked(0),
+            mag: GrowthRate::new_unchecked(0),
+            spd: GrowthRate::new_unchecked(0),
+        }
+    }
 }
 
 // ── Data Definitions (loaded from RON at runtime) ───────────────────

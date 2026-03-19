@@ -97,22 +97,22 @@ impl BattleState {
 
         for (i, unit) in self.player_units.iter().enumerate() {
             if unit.is_alive {
-                let effective_spd = unit.stats.spd as i32 + unit.equipment_speed_bonus as i32;
+                let effective_spd = unit.stats.spd.get() as i32 + unit.equipment_speed_bonus as i32;
                 actors.push((
                     TargetRef { side: Side::Player, index: i as u8 },
                     effective_spd,
-                    unit.stats.spd,
+                    unit.stats.spd.get(),
                 ));
             }
         }
 
         for (i, unit) in self.enemies.iter().enumerate() {
             if unit.is_alive {
-                let effective_spd = unit.stats.spd as i32 + unit.equipment_speed_bonus as i32;
+                let effective_spd = unit.stats.spd.get() as i32 + unit.equipment_speed_bonus as i32;
                 actors.push((
                     TargetRef { side: Side::Enemy, index: i as u8 },
                     effective_spd,
-                    unit.stats.spd,
+                    unit.stats.spd.get(),
                 ));
             }
         }
@@ -140,13 +140,13 @@ pub fn calculate_damage(
 ) -> u16 {
     let raw = match damage_type {
         DamageType::Physical => {
-            let offense = base_power as f32 + attacker_stats.atk as f32;
-            let defense = defender_stats.def as f32 * config.physical_def_multiplier;
+            let offense = base_power as f32 + attacker_stats.atk.get() as f32;
+            let defense = defender_stats.def.get() as f32 * config.physical_def_multiplier;
             offense - defense
         }
         DamageType::Psynergy => {
-            let offense = base_power as f32 + attacker_stats.mag as f32;
-            let defense = defender_stats.def as f32 * config.psynergy_def_multiplier;
+            let offense = base_power as f32 + attacker_stats.mag.get() as f32;
+            let defense = defender_stats.def.get() as f32 * config.psynergy_def_multiplier;
             offense - defense
         }
     };
@@ -161,7 +161,7 @@ pub fn calculate_damage(
 /// Calculate healing given base power and healer stats.
 /// Healing: base_power + mag, floor 1
 pub fn calculate_healing(base_power: u16, healer_stats: &Stats) -> u16 {
-    (base_power + healer_stats.mag).max(1)
+    (base_power + healer_stats.mag.get()).max(1)
 }
 
 // ── S02 — Targeting ─────────────────────────────────────────────────

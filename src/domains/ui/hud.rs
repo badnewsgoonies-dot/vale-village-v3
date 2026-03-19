@@ -203,10 +203,10 @@ fn player_unit(
 pub fn refresh_hud(battle: &Battle, state: &PlanningState, queries: &mut HudSyncQueries) {
     for (marker, mut node, mut background) in &mut queries.hp_bars {
         if let Some(unit) = player_unit(battle, marker.side, marker.index) {
-            let hp_pct = if unit.unit.stats.hp == 0 {
+            let hp_pct = if unit.unit.stats.hp.get() == 0 {
                 0.0
             } else {
-                unit.unit.current_hp as f32 / unit.unit.stats.hp as f32
+                unit.unit.current_hp as f32 / unit.unit.stats.hp.get() as f32
             };
             node.width = Val::Percent(hp_pct * 100.0);
             background.0 = hp_bar_color(hp_pct);
@@ -279,7 +279,7 @@ pub fn setup_hud(mut commands: Commands, battle: Res<BattleRes>, game_data: Res<
                 for (i, unit) in battle.player_units.iter().enumerate() {
                     let element = lookup_element(&unit.unit.id, &game_data);
                     let name = lookup_name(&unit.unit.id, &game_data);
-                    let hp_pct = unit.unit.current_hp as f32 / unit.unit.stats.hp as f32;
+                    let hp_pct = unit.unit.current_hp as f32 / unit.unit.stats.hp.get() as f32;
 
                     spawn_unit_card(
                         panel,
@@ -288,7 +288,7 @@ pub fn setup_hud(mut commands: Commands, battle: Res<BattleRes>, game_data: Res<
                             element,
                             hp_pct,
                             current_hp: unit.unit.current_hp,
-                            max_hp: unit.unit.stats.hp,
+                            max_hp: unit.unit.stats.hp.get(),
                             crit_counter: unit.unit.crit_counter,
                             index: i,
                             side: HudSide::Player,

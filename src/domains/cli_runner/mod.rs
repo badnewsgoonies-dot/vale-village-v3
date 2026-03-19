@@ -258,11 +258,11 @@ fn target_hp_snapshot(battle: &Battle, target: TargetRef) -> Option<(u16, u16)> 
         Side::Player => battle
             .player_units
             .get(target.index as usize)
-            .map(|unit| (unit.unit.current_hp, unit.unit.stats.hp)),
+            .map(|unit| (unit.unit.current_hp, unit.unit.stats.hp.get())),
         Side::Enemy => battle
             .enemies
             .get(target.index as usize)
-            .map(|unit| (unit.unit.current_hp, unit.unit.stats.hp)),
+            .map(|unit| (unit.unit.current_hp, unit.unit.stats.hp.get())),
     }
 }
 
@@ -316,7 +316,7 @@ fn print_planning_overview(battle: &Battle, current_player_index: usize, game_da
             unit.unit.id,
             unit.unit.current_hp,
             unit.unit.stats.hp,
-            hp_bar(unit.unit.current_hp, unit.unit.stats.hp),
+            hp_bar(unit.unit.current_hp, unit.unit.stats.hp.get()),
             format_djinn_states(&unit.djinn_slots, game_data)
         );
     }
@@ -333,7 +333,7 @@ fn print_planning_overview(battle: &Battle, current_player_index: usize, game_da
             unit.unit.id,
             unit.unit.current_hp,
             unit.unit.stats.hp,
-            hp_bar(unit.unit.current_hp, unit.unit.stats.hp)
+            hp_bar(unit.unit.current_hp, unit.unit.stats.hp.get())
         );
     }
 }
@@ -794,8 +794,8 @@ pub fn run_demo_battle(game_data: &GameData, encounter_id: &str) -> BattleResult
     let blaze_ability = find_first_psynergy_ability(blaze, game_data);
 
     // Stash gear info before moving into battle
-    let adept_hp = (adept_data.base_stats.hp as i32
-        + adept_data.equipment_effects.total_stat_bonus.hp as i32)
+    let adept_hp = (adept_data.base_stats.hp.get() as i32
+        + adept_data.equipment_effects.total_stat_bonus.hp.get() as i32)
         .max(1) as u16;
     let adept_gear_info = format_unit_gear(
         &adept_data.id,
@@ -804,8 +804,8 @@ pub fn run_demo_battle(game_data: &GameData, encounter_id: &str) -> BattleResult
         &team_djinn_slots,
         game_data,
     );
-    let blaze_hp = (blaze_data.base_stats.hp as i32
-        + blaze_data.equipment_effects.total_stat_bonus.hp as i32)
+    let blaze_hp = (blaze_data.base_stats.hp.get() as i32
+        + blaze_data.equipment_effects.total_stat_bonus.hp.get() as i32)
         .max(1) as u16;
     let blaze_gear_info = format_unit_gear(
         &blaze_data.id,
@@ -925,7 +925,7 @@ pub fn run_demo_battle(game_data: &GameData, encounter_id: &str) -> BattleResult
             .map(|&pi| {
                 let pu = &battle.player_units[pi];
                 let effective_spd =
-                    pu.unit.stats.spd as i32 + pu.unit.equipment_speed_bonus as i32;
+                    pu.unit.stats.spd.get() as i32 + pu.unit.equipment_speed_bonus as i32;
                 format!("{}({})", pu.unit.id, effective_spd)
             })
             .collect();
@@ -1101,7 +1101,7 @@ pub fn format_target(target: &TargetRef, battle: &Battle) -> String {
 pub fn format_battle_state(battle: &Battle) {
     println!("  ┌─ Party ─────────────────────────");
     for (i, u) in battle.player_units.iter().enumerate() {
-        let bar = hp_bar(u.unit.current_hp, u.unit.stats.hp);
+        let bar = hp_bar(u.unit.current_hp, u.unit.stats.hp.get());
         let alive_mark = if u.unit.is_alive { " " } else { "X" };
         println!(
             "  │ [{}] {} {}: {}/{} {}",
@@ -1110,7 +1110,7 @@ pub fn format_battle_state(battle: &Battle) {
     }
     println!("  ├─ Enemies ─────────────────────────");
     for (i, e) in battle.enemies.iter().enumerate() {
-        let bar = hp_bar(e.unit.current_hp, e.unit.stats.hp);
+        let bar = hp_bar(e.unit.current_hp, e.unit.stats.hp.get());
         let alive_mark = if e.unit.is_alive { " " } else { "X" };
         println!(
             "  │ [{}] {} {}: {}/{} {}",

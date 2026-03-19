@@ -2,7 +2,7 @@
 //! Progression domain — XP, leveling, stat growth, and ability unlocking.
 
 use crate::shared::{
-    bounded_types::Level, AbilityId, AbilityProgression, GrowthRates, Stats, UnitDef, UnitId,
+    bounded_types::{BaseStat, Hp, Level}, AbilityId, AbilityProgression, GrowthRates, Stats, UnitDef, UnitId,
 };
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -76,11 +76,11 @@ pub fn add_xp(progress: &mut UnitProgress, xp: u32) -> Vec<u8> {
 pub fn calculate_stats_at_level(base_stats: &Stats, growth_rates: &GrowthRates, level: u8) -> Stats {
     let growth = if level > 1 { (level - 1) as u16 } else { 0 };
     Stats {
-        hp: base_stats.hp + growth_rates.hp * growth,
-        atk: base_stats.atk + growth_rates.atk * growth,
-        def: base_stats.def + growth_rates.def * growth,
-        mag: base_stats.mag + growth_rates.mag * growth,
-        spd: base_stats.spd + growth_rates.spd * growth,
+        hp: Hp::new_unchecked(base_stats.hp.get() + growth_rates.hp.get() * growth),
+        atk: BaseStat::new_unchecked(base_stats.atk.get() + growth_rates.atk.get() * growth),
+        def: BaseStat::new_unchecked(base_stats.def.get() + growth_rates.def.get() * growth),
+        mag: BaseStat::new_unchecked(base_stats.mag.get() + growth_rates.mag.get() * growth),
+        spd: BaseStat::new_unchecked(base_stats.spd.get() + growth_rates.spd.get() * growth),
     }
 }
 

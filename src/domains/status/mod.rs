@@ -6,6 +6,7 @@
 use crate::shared::{
     BuffEffect, CleanseType, DebuffEffect, Immunity, StatBonus, StatusEffect, StatusEffectType,
 };
+use crate::shared::bounded_types::StatMod;
 
 // ── S07 — Active Status ─────────────────────────────────────────────
 
@@ -215,11 +216,11 @@ pub fn tick_buffs(buffs: &mut Vec<ActiveBuff>) {
 pub fn compute_stat_modifiers(buffs: &[ActiveBuff], debuffs: &[ActiveBuff]) -> StatBonus {
     let mut total = StatBonus::default();
     for b in buffs.iter().chain(debuffs.iter()) {
-        total.atk += b.stat_modifiers.atk;
-        total.def += b.stat_modifiers.def;
-        total.mag += b.stat_modifiers.mag;
-        total.spd += b.stat_modifiers.spd;
-        total.hp += b.stat_modifiers.hp;
+        total.atk = StatMod::new_unchecked(total.atk.get() + b.stat_modifiers.atk.get());
+        total.def = StatMod::new_unchecked(total.def.get() + b.stat_modifiers.def.get());
+        total.mag = StatMod::new_unchecked(total.mag.get() + b.stat_modifiers.mag.get());
+        total.spd = StatMod::new_unchecked(total.spd.get() + b.stat_modifiers.spd.get());
+        total.hp = StatMod::new_unchecked(total.hp.get() + b.stat_modifiers.hp.get());
     }
     total
 }
@@ -443,11 +444,11 @@ mod tests {
     fn buff(atk: i16, def: i16, dur: u8) -> BuffEffect {
         BuffEffect {
             stat_modifiers: StatBonus {
-                atk,
-                def,
-                mag: 0,
-                spd: 0,
-                hp: 0,
+                atk: StatMod::new_unchecked(atk),
+                def: StatMod::new_unchecked(def),
+                mag: StatMod::new_unchecked(0),
+                spd: StatMod::new_unchecked(0),
+                hp: StatMod::new_unchecked(0),
             },
             duration: EffectDuration::new_unchecked(dur),
             shield_charges: None,
@@ -458,11 +459,11 @@ mod tests {
     fn debuff(atk: i16, def: i16, dur: u8) -> DebuffEffect {
         DebuffEffect {
             stat_modifiers: StatBonus {
-                atk,
-                def,
-                mag: 0,
-                spd: 0,
-                hp: 0,
+                atk: StatMod::new_unchecked(atk),
+                def: StatMod::new_unchecked(def),
+                mag: StatMod::new_unchecked(0),
+                spd: StatMod::new_unchecked(0),
+                hp: StatMod::new_unchecked(0),
             },
             duration: EffectDuration::new_unchecked(dur),
         }
@@ -635,22 +636,22 @@ mod tests {
     fn test_buff_stat_modifier_computation() {
         let buffs = vec![
             ActiveBuff {
-                stat_modifiers: StatBonus { atk: 5, def: 3, mag: 0, spd: 0, hp: 0 },
+                stat_modifiers: StatBonus { atk: StatMod::new_unchecked(5), def: StatMod::new_unchecked(3), mag: StatMod::new_unchecked(0), spd: StatMod::new_unchecked(0), hp: StatMod::new_unchecked(0) },
                 remaining_turns: 2,
             },
             ActiveBuff {
-                stat_modifiers: StatBonus { atk: 10, def: 0, mag: 2, spd: 0, hp: 0 },
+                stat_modifiers: StatBonus { atk: StatMod::new_unchecked(10), def: StatMod::new_unchecked(0), mag: StatMod::new_unchecked(2), spd: StatMod::new_unchecked(0), hp: StatMod::new_unchecked(0) },
                 remaining_turns: 3,
             },
         ];
         let debuffs = vec![ActiveBuff {
-            stat_modifiers: StatBonus { atk: -4, def: -2, mag: 0, spd: 0, hp: 0 },
+            stat_modifiers: StatBonus { atk: StatMod::new_unchecked(-4), def: StatMod::new_unchecked(-2), mag: StatMod::new_unchecked(0), spd: StatMod::new_unchecked(0), hp: StatMod::new_unchecked(0) },
             remaining_turns: 1,
         }];
         let total = compute_stat_modifiers(&buffs, &debuffs);
-        assert_eq!(total.atk, 11); // 5 + 10 - 4
-        assert_eq!(total.def, 1);  // 3 + 0 - 2
-        assert_eq!(total.mag, 2);
+        assert_eq!(total.atk.get(), 11); // 5 + 10 - 4
+        assert_eq!(total.def.get(), 1);  // 3 + 0 - 2
+        assert_eq!(total.mag.get(), 2);
     }
 
     // ── S08: Buff tick expires ──────────────────────────────────────
