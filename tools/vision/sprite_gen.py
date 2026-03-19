@@ -155,7 +155,18 @@ def generate_from_manifest(manifest_path, asset_root, target_size=(64, 64),
         raw_path = full_path.replace(".png", "_raw.png")
 
         try:
-            generate_sprite(prompt, raw_path)
+            for attempt in range(3):
+                try:
+                    generate_sprite(prompt, raw_path)
+                    break
+                except Exception as e:
+                    if "429" in str(e) and attempt < 2:
+                        import time
+                        wait = 15 * (attempt + 1)
+                        print(f"  Rate limited, waiting {wait}s...")
+                        time.sleep(wait)
+                    else:
+                        raise
 
             # Remove background
             rgba_path = full_path.replace(".png", "_rgba.png")
@@ -182,6 +193,10 @@ def generate_from_manifest(manifest_path, asset_root, target_size=(64, 64),
                     os.remove(tmp)
 
             print(f"  → {eval_result.get('verdict', '?')} (quality: {eval_result.get('quality_score', '?')})")
+
+            # Rate limit: 5s between generations
+            import time
+            time.sleep(5)
 
         except Exception as e:
             results.append({"id": entry["id"], "status": "error", "error": str(e)})
