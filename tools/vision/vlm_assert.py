@@ -193,7 +193,8 @@ def _call_vertex(image_b64: str, media_type: str, prompt: str,
         f.write(base64.b64decode(image_b64))
         tmp = f.name
     try:
-        return _gv(tmp, prompt, model=model)
+        full_prompt = SYSTEM_PROMPT + "\n\n" + prompt
+        return _gv(tmp, full_prompt, model=model)
     finally:
         os.unlink(tmp)
 
