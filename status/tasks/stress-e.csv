@@ -1,0 +1,4 @@
+task_name,scope,prompt
+good-task,src/domains/combat/,"Count lines in src/domains/combat/mod.rs. Report the number."
+impossible-task,src/nonexistent/,"Read src/domains/nonexistent/mod.rs and fix all bugs in it."
+good-task-2,src/domains/djinn/,"Count lines in src/domains/djinn/mod.rs. Report the number."

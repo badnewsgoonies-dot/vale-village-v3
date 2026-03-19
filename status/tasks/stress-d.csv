@@ -1,0 +1,3 @@
+task_name,scope,prompt
+tiny-prompt,src/domains/combat/,"Fix the healing formula."
+detailed-prompt,src/domains/combat/,"docs/spec.md:100 defines Healing as basePower + MAG floor 1. Currently calculate_damage in src/domains/combat/mod.rs has Physical and Psynergy but not Healing. Add DamageType::Healing match arm using attacker_stats.mag with no DEF subtraction. Floor to 1. Add test test_healing_uses_mag with basePower=10 mag=8 expecting 18. Do not edit shared/mod.rs."

@@ -1,0 +1,6 @@
+task_name,scope,prompt
+count-combat,src/domains/combat/,"Count #[test] in src/domains/combat/mod.rs. Report just the number."
+count-djinn,src/domains/djinn/,"Count #[test] in src/domains/djinn/mod.rs. Report just the number."
+count-battle,src/domains/battle_engine/,"Count #[test] in src/domains/battle_engine/mod.rs. Report just the number."
+count-save,src/domains/save/,"Count #[test] in src/domains/save/mod.rs. Report just the number."
+count-all,src/,"Count total #[test] across all .rs files in src/. Report the number."
