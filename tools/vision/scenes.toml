@@ -1,0 +1,50 @@
+# Vale Village v3 — Visual Verification Manifest
+# Used by: godogen_loop.py, batch_verify.py
+# Run: python3 tools/vision/batch_verify.py --manifest tools/vision/scenes.toml --mode tier3
+
+[project]
+name = "vale-village-v3"
+engine = "bevy"
+pixel_art = true  # enables zero-tolerance pixel comparison
+
+[scenes.battle_planning]
+capture_cmd = "cargo run --bin asset_catalogue -- --scene battle_planning --output {output}"
+reference = "screenshots/ref/battle_planning.png"
+assertions = [
+    "A battle scene is rendered with enemy and player positions",
+    "UI elements for action selection are visible",
+    "Health or mana indicators are present",
+]
+
+[scenes.battle_execution]
+capture_cmd = "cargo run --bin asset_catalogue -- --scene battle_execution --output {output}"
+reference = "screenshots/ref/battle_execution.png"
+assertions = [
+    "Damage numbers or combat effects are visible",
+    "Character sprites show action animations",
+]
+
+[scenes.djinn_activation]
+capture_cmd = "cargo run --bin asset_catalogue -- --scene djinn_activation --output {output}"
+reference = "screenshots/ref/djinn_activation.png"
+assertions = [
+    "Djinn icon or effect is visible",
+    "The activating character is highlighted or animated",
+]
+
+[scenes.placeholder_enemies]
+capture_cmd = "cargo run --bin asset_catalogue -- --scene enemies --output {output}"
+reference = "screenshots/ref/placeholder_enemies.png"
+assertions = [
+    "Multiple enemy placeholder sprites are visible",
+    "Each enemy has a distinct color or label",
+    "Enemies are arranged in a battle formation",
+]
+
+[scenes.placeholder_characters]
+capture_cmd = "cargo run --bin asset_catalogue -- --scene characters --output {output}"
+reference = "screenshots/ref/placeholder_characters.png"
+assertions = [
+    "Player party characters are visible",
+    "Each character is distinct",
+]
