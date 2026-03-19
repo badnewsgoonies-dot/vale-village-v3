@@ -275,9 +275,20 @@ pub fn resolve_multi_hit(
 mod tests {
     use super::*;
     use crate::data::default_combat_config;
+    use crate::shared::bounded_types::{BaseStat, Hp};
 
     fn test_config() -> CombatConfig {
         default_combat_config()
+    }
+
+    fn test_stats(hp: u16, atk: u16, def: u16, mag: u16, spd: u16) -> Stats {
+        Stats {
+            hp: Hp::new_unchecked(hp),
+            atk: BaseStat::new_unchecked(atk),
+            def: BaseStat::new_unchecked(def),
+            mag: BaseStat::new_unchecked(mag),
+            spd: BaseStat::new_unchecked(spd),
+        }
     }
 
     // ── S01: Physical damage — normal case ──────────────────────────
@@ -285,8 +296,8 @@ mod tests {
     #[test]
     fn physical_damage_normal() {
         let cfg = test_config();
-        let attacker = Stats { hp: 100, atk: 30, def: 10, mag: 5, spd: 10 };
-        let defender = Stats { hp: 100, atk: 10, def: 20, mag: 5, spd: 10 };
+        let attacker = test_stats(100, 30, 10, 5, 10);
+        let defender = test_stats(100, 10, 20, 5, 10);
         // base_power(50) + atk(30) - def(20)*0.5 = 80 - 10 = 70
         let dmg = calculate_damage(50, DamageType::Physical, &attacker, &defender, &cfg);
         assert_eq!(dmg, 70);
@@ -297,8 +308,8 @@ mod tests {
     #[test]
     fn physical_damage_high_defense() {
         let cfg = test_config();
-        let attacker = Stats { hp: 100, atk: 20, def: 10, mag: 5, spd: 10 };
-        let defender = Stats { hp: 100, atk: 10, def: 80, mag: 5, spd: 10 };
+        let attacker = test_stats(100, 20, 10, 5, 10);
+        let defender = test_stats(100, 10, 80, 5, 10);
         // base_power(10) + atk(20) - def(80)*0.5 = 30 - 40 = -10 -> floor 1
         let dmg = calculate_damage(10, DamageType::Physical, &attacker, &defender, &cfg);
         assert_eq!(dmg, 1);
@@ -309,8 +320,8 @@ mod tests {
     #[test]
     fn physical_damage_floor_at_one() {
         let cfg = test_config();
-        let attacker = Stats { hp: 100, atk: 1, def: 10, mag: 5, spd: 10 };
-        let defender = Stats { hp: 100, atk: 10, def: 200, mag: 5, spd: 10 };
+        let attacker = test_stats(100, 1, 10, 5, 10);
+        let defender = test_stats(100, 10, 200, 5, 10);
         // base_power(0) + atk(1) - def(200)*0.5 = 1 - 100 = -99 -> floor 1
         let dmg = calculate_damage(0, DamageType::Physical, &attacker, &defender, &cfg);
         assert_eq!(dmg, 1);
@@ -321,8 +332,8 @@ mod tests {
     #[test]
     fn psynergy_damage_normal() {
         let cfg = test_config();
-        let attacker = Stats { hp: 100, atk: 10, def: 10, mag: 40, spd: 10 };
-        let defender = Stats { hp: 100, atk: 10, def: 30, mag: 5, spd: 10 };
+        let attacker = test_stats(100, 10, 10, 40, 10);
+        let defender = test_stats(100, 10, 30, 5, 10);
         // base_power(60) + mag(40) - def(30)*0.3 = 100 - 9 = 91
         let dmg = calculate_damage(60, DamageType::Psynergy, &attacker, &defender, &cfg);
         assert_eq!(dmg, 91);
@@ -333,8 +344,8 @@ mod tests {
     #[test]
     fn psynergy_damage_floor_at_one() {
         let cfg = test_config();
-        let attacker = Stats { hp: 100, atk: 10, def: 10, mag: 1, spd: 10 };
-        let defender = Stats { hp: 100, atk: 10, def: 200, mag: 5, spd: 10 };
+        let attacker = test_stats(100, 10, 10, 1, 10);
+        let defender = test_stats(100, 10, 200, 5, 10);
         // base_power(0) + mag(1) - def(200)*0.3 = 1 - 60 = -59 -> floor 1
         let dmg = calculate_damage(0, DamageType::Psynergy, &attacker, &defender, &cfg);
         assert_eq!(dmg, 1);
@@ -342,7 +353,7 @@ mod tests {
 
     #[test]
     fn test_healing_uses_mag() {
-        let healer = Stats { hp: 100, atk: 10, def: 10, mag: 8, spd: 10 };
+        let healer = test_stats(100, 10, 10, 8, 10);
         let healing = calculate_healing(10, &healer);
         assert_eq!(healing, 18);
     }
@@ -534,7 +545,7 @@ mod tests {
             player_units: vec![
                 BattleUnit {
                     id: "slow".into(),
-                    stats: Stats { hp: 100, atk: 10, def: 10, mag: 10, spd: 5 },
+                    stats: test_stats(100, 10, 10, 10, 5),
                     current_hp: 100,
                     is_alive: true,
                     crit_counter: 0,
@@ -542,7 +553,7 @@ mod tests {
                 },
                 BattleUnit {
                     id: "fast".into(),
-                    stats: Stats { hp: 100, atk: 10, def: 10, mag: 10, spd: 20 },
+                    stats: test_stats(100, 10, 10, 10, 20),
                     current_hp: 100,
                     is_alive: true,
                     crit_counter: 0,
@@ -552,7 +563,7 @@ mod tests {
             enemies: vec![
                 BattleUnit {
                     id: "medium".into(),
-                    stats: Stats { hp: 100, atk: 10, def: 10, mag: 10, spd: 12 },
+                    stats: test_stats(100, 10, 10, 10, 12),
                     current_hp: 100,
                     is_alive: true,
                     crit_counter: 0,
@@ -583,7 +594,7 @@ mod tests {
             player_units: vec![
                 BattleUnit {
                     id: "unit_a".into(),
-                    stats: Stats { hp: 100, atk: 10, def: 10, mag: 10, spd: 10 },
+                    stats: test_stats(100, 10, 10, 10, 10),
                     current_hp: 100,
                     is_alive: true,
                     crit_counter: 0,
@@ -591,7 +602,7 @@ mod tests {
                 },
                 BattleUnit {
                     id: "unit_b".into(),
-                    stats: Stats { hp: 100, atk: 10, def: 10, mag: 10, spd: 15 },
+                    stats: test_stats(100, 10, 10, 10, 15),
                     current_hp: 100,
                     is_alive: true,
                     crit_counter: 0,
@@ -622,7 +633,7 @@ mod tests {
             player_units: vec![
                 BattleUnit {
                     id: "alive".into(),
-                    stats: Stats { hp: 100, atk: 10, def: 10, mag: 10, spd: 10 },
+                    stats: test_stats(100, 10, 10, 10, 10),
                     current_hp: 100,
                     is_alive: true,
                     crit_counter: 0,
@@ -630,7 +641,7 @@ mod tests {
                 },
                 BattleUnit {
                     id: "dead".into(),
-                    stats: Stats { hp: 100, atk: 10, def: 10, mag: 10, spd: 50 },
+                    stats: test_stats(100, 10, 10, 10, 50),
                     current_hp: 0,
                     is_alive: false,
                     crit_counter: 0,

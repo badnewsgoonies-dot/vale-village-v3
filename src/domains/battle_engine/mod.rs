@@ -971,6 +971,7 @@ fn execute_ability(
 
         // Apply buff/debuff
         let max_stacks = battle.config.max_buff_stacks.get() as usize;
+        if let Some(ref buff_effect) = ability.buff_effect {
             let target = get_unit_mut(battle, target_ref).unwrap();
             status::apply_buff(&mut target.status_state, buff_effect, max_stacks);
         }
@@ -1667,6 +1668,7 @@ fn get_unit_mut(battle: &mut Battle, target_ref: TargetRef) -> Option<&mut Battl
 mod tests {
     use super::*;
     use crate::data::default_combat_config;
+    use crate::shared::bounded_types::*;
     use crate::shared::{
         AbilityCategory, CleanseType, DjinnId, Element, EnemyId, Immunity, StatusEffect,
         StatusEffectType, TargetMode,
@@ -1676,6 +1678,16 @@ mod tests {
 
     fn test_config() -> CombatConfig {
         default_combat_config()
+    }
+
+    fn test_stats(hp: u16, atk: u16, def: u16, mag: u16, spd: u16) -> Stats {
+        Stats {
+            hp: Hp::new_unchecked(hp),
+            atk: BaseStat::new_unchecked(atk),
+            def: BaseStat::new_unchecked(def),
+            mag: BaseStat::new_unchecked(mag),
+            spd: BaseStat::new_unchecked(spd),
+        }
     }
 
     fn make_player(id: &str, stats: Stats, mana: u8) -> PlayerUnitData {
@@ -1762,20 +1774,8 @@ mod tests {
     }
 
     fn setup_basic_battle() -> Battle {
-        let player_stats = Stats {
-            hp: 100,
-            atk: 30,
-            def: 20,
-            mag: 25,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 80,
-            atk: 20,
-            def: 15,
-            mag: 10,
-            spd: 10,
-        };
+        let player_stats = test_stats(100, 30, 20, 25, 15);
+        let enemy_stats = test_stats(80, 20, 15, 10, 10);
 
         let player = make_player("hero", player_stats, 5);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -1810,14 +1810,14 @@ mod tests {
     fn test_new_battle_stats_initialized() {
         let battle = setup_basic_battle();
         let player = &battle.player_units[0];
-        assert_eq!(player.unit.stats.hp, 100);
-        assert_eq!(player.unit.stats.atk, 30);
+        assert_eq!(player.unit.stats.hp.get(), 100);
+        assert_eq!(player.unit.stats.atk.get(), 30);
         assert_eq!(player.unit.current_hp, 100);
         assert!(player.unit.is_alive);
         assert_eq!(player.unit.crit_counter, 0);
 
         let enemy = &battle.enemies[0];
-        assert_eq!(enemy.unit.stats.hp, 80);
+        assert_eq!(enemy.unit.stats.hp.get(), 80);
         assert_eq!(enemy.unit.current_hp, 80);
         assert!(enemy.unit.is_alive);
     }
@@ -1842,20 +1842,8 @@ mod tests {
 
     #[test]
     fn test_planned_attack_adds_projected_mana() {
-        let player_stats = Stats {
-            hp: 100,
-            atk: 30,
-            def: 20,
-            mag: 25,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 80,
-            atk: 20,
-            def: 15,
-            mag: 10,
-            spd: 10,
-        };
+        let player_stats = test_stats(100, 30, 20, 25, 15);
+        let enemy_stats = test_stats(80, 20, 15, 10, 10);
 
         let mut player = make_player("hero", player_stats, 5);
         player.equipment_effects.total_hit_count_bonus = 2;
@@ -2039,20 +2027,8 @@ mod tests {
 
     #[test]
     fn test_multi_hit_generates_mana() {
-        let player_stats = Stats {
-            hp: 100,
-            atk: 30,
-            def: 20,
-            mag: 25,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 200,
-            atk: 20,
-            def: 15,
-            mag: 10,
-            spd: 10,
-        };
+        let player_stats = test_stats(100, 30, 20, 25, 15);
+        let enemy_stats = test_stats(200, 20, 15, 10, 10);
 
         let mut player = make_player("hero", player_stats, 5);
         player.equipment_effects.total_hit_count_bonus = 0;
@@ -2153,20 +2129,8 @@ mod tests {
 
     #[test]
     fn test_unit_death_from_damage() {
-        let player_stats = Stats {
-            hp: 100,
-            atk: 200,
-            def: 20,
-            mag: 25,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 30,
-            atk: 20,
-            def: 5,
-            mag: 10,
-            spd: 10,
-        };
+        let player_stats = test_stats(100, 200, 20, 25, 15);
+        let enemy_stats = test_stats(30, 20, 5, 10, 10);
 
         let player = make_player("hero", player_stats, 5);
         let enemy = make_enemy("weak_goblin", enemy_stats);
@@ -2301,35 +2265,17 @@ mod tests {
     fn test_any_player_can_activate_team_djinn_pool() {
         let p1 = make_player(
             "adept",
-            Stats {
-                hp: 100,
-                atk: 10,
-                def: 10,
-                mag: 10,
-                spd: 10,
-            },
+            test_stats(100, 10, 10, 10, 10),
             2,
         );
         let p2 = make_player(
             "blaze",
-            Stats {
-                hp: 100,
-                atk: 12,
-                def: 8,
-                mag: 12,
-                spd: 12,
-            },
+            test_stats(100, 12, 8, 12, 12),
             2,
         );
         let enemy = make_enemy(
             "goblin",
-            Stats {
-                hp: 100,
-                atk: 10,
-                def: 10,
-                mag: 5,
-                spd: 5,
-            },
+            test_stats(100, 10, 10, 5, 5),
         );
 
         let (djinn_id, djinn_def) = make_djinn_def("flint", Element::Venus, 50);
@@ -2377,20 +2323,8 @@ mod tests {
 
     #[test]
     fn test_full_two_round_scenario() {
-        let player_stats = Stats {
-            hp: 200,
-            atk: 40,
-            def: 20,
-            mag: 30,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 50,
-            atk: 15,
-            def: 10,
-            mag: 10,
-            spd: 8,
-        };
+        let player_stats = test_stats(200, 40, 20, 30, 15);
+        let enemy_stats = test_stats(50, 15, 10, 10, 8);
 
         let player = make_player("hero", player_stats, 5);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -2487,13 +2421,7 @@ mod tests {
 
     #[test]
     fn test_multi_player_mana_pool() {
-        let stats = Stats {
-            hp: 100,
-            atk: 20,
-            def: 15,
-            mag: 10,
-            spd: 10,
-        };
+        let stats = test_stats(100, 20, 15, 10, 10);
         let p1 = make_player("hero1", stats, 3);
         let p2 = make_player("hero2", stats, 4);
         let enemy = make_enemy("goblin", stats);
@@ -2513,20 +2441,8 @@ mod tests {
 
     #[test]
     fn test_djinn_activation_deals_damage() {
-        let player_stats = Stats {
-            hp: 100,
-            atk: 30,
-            def: 20,
-            mag: 25,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 80,
-            atk: 20,
-            def: 15,
-            mag: 10,
-            spd: 10,
-        };
+        let player_stats = test_stats(100, 30, 20, 25, 15);
+        let enemy_stats = test_stats(80, 20, 15, 10, 10);
 
         let player = make_player("hero", player_stats, 5);
         let first_enemy = make_enemy("fallen-goblin", enemy_stats);
@@ -2622,27 +2538,9 @@ mod tests {
 
     #[test]
     fn test_djinn_activation_heal_restores_caster_team() {
-        let player_stats = Stats {
-            hp: 100,
-            atk: 30,
-            def: 20,
-            mag: 25,
-            spd: 15,
-        };
-        let ally_stats = Stats {
-            hp: 90,
-            atk: 18,
-            def: 14,
-            mag: 12,
-            spd: 11,
-        };
-        let enemy_stats = Stats {
-            hp: 80,
-            atk: 20,
-            def: 15,
-            mag: 10,
-            spd: 10,
-        };
+        let player_stats = test_stats(100, 30, 20, 25, 15);
+        let ally_stats = test_stats(90, 18, 14, 12, 11);
+        let enemy_stats = test_stats(80, 20, 15, 10, 10);
 
         let player = make_player("hero", player_stats, 5);
         let ally = make_player("ally", ally_stats, 3);
@@ -2700,11 +2598,11 @@ mod tests {
 
         assert_eq!(
             battle.player_units[0].unit.current_hp,
-            battle.player_units[0].unit.stats.hp
+            battle.player_units[0].unit.stats.hp.get()
         );
         assert_eq!(
             battle.player_units[1].unit.current_hp,
-            battle.player_units[1].unit.stats.hp
+            battle.player_units[1].unit.stats.hp.get()
         );
         assert!(
             events.iter().any(|event| matches!(
@@ -2736,20 +2634,8 @@ mod tests {
 
     #[test]
     fn test_djinn_activation_buff_applies_atk_to_caster() {
-        let player_stats = Stats {
-            hp: 100,
-            atk: 30,
-            def: 20,
-            mag: 25,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 80,
-            atk: 20,
-            def: 15,
-            mag: 10,
-            spd: 10,
-        };
+        let player_stats = test_stats(100, 30, 20, 25, 15);
+        let enemy_stats = test_stats(80, 20, 15, 10, 10);
 
         let player = make_player("hero", player_stats, 5);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -2817,7 +2703,7 @@ mod tests {
             &battle.player_units[0].status_state.buffs,
             &battle.player_units[0].status_state.debuffs,
         );
-        assert_eq!(buff_mods.atk, 2, "Activation buff should grant ATK +2");
+        assert_eq!(buff_mods.atk.get(), 2, "Activation buff should grant ATK +2");
         assert_eq!(battle.player_units[0].status_state.buffs.len(), 1);
     }
 
@@ -2825,20 +2711,8 @@ mod tests {
 
     #[test]
     fn test_plan_enemy_actions_targets_first_alive_player() {
-        let player_stats = Stats {
-            hp: 100,
-            atk: 20,
-            def: 15,
-            mag: 10,
-            spd: 10,
-        };
-        let enemy_stats = Stats {
-            hp: 80,
-            atk: 25,
-            def: 10,
-            mag: 10,
-            spd: 12,
-        };
+        let player_stats = test_stats(100, 20, 15, 10, 10);
+        let enemy_stats = test_stats(80, 25, 10, 10, 12);
 
         let p1 = make_player("hero1", player_stats, 3);
         let p2 = make_player("hero2", player_stats, 3);
@@ -2877,13 +2751,7 @@ mod tests {
 
     #[test]
     fn test_plan_enemy_actions_skips_dead_enemies() {
-        let stats = Stats {
-            hp: 100,
-            atk: 20,
-            def: 15,
-            mag: 10,
-            spd: 10,
-        };
+        let stats = test_stats(100, 20, 15, 10, 10);
         let p1 = make_player("hero", stats, 3);
         let e1 = make_enemy("dead-goblin", stats);
         let e2 = make_enemy("live-goblin", stats);
@@ -2916,13 +2784,7 @@ mod tests {
 
     #[test]
     fn test_plan_enemy_actions_targets_second_player_if_first_dead() {
-        let stats = Stats {
-            hp: 100,
-            atk: 20,
-            def: 15,
-            mag: 10,
-            spd: 10,
-        };
+        let stats = test_stats(100, 20, 15, 10, 10);
         let p1 = make_player("dead-hero", stats, 3);
         let p2 = make_player("alive-hero", stats, 3);
         let e1 = make_enemy("goblin", stats);
@@ -2953,20 +2815,8 @@ mod tests {
 
     #[test]
     fn test_enemy_deals_damage_to_player() {
-        let player_stats = Stats {
-            hp: 100,
-            atk: 20,
-            def: 10,
-            mag: 10,
-            spd: 8,
-        };
-        let enemy_stats = Stats {
-            hp: 80,
-            atk: 30,
-            def: 10,
-            mag: 10,
-            spd: 12,
-        };
+        let player_stats = test_stats(100, 20, 10, 10, 8);
+        let enemy_stats = test_stats(80, 30, 10, 10, 12);
 
         let p1 = make_player("hero", player_stats, 3);
         let e1 = make_enemy("strong-goblin", enemy_stats);
@@ -3008,20 +2858,8 @@ mod tests {
     #[test]
     fn test_player_death_leads_to_defeat() {
         // Give enemy massive ATK so it kills the player in one round
-        let player_stats = Stats {
-            hp: 30,
-            atk: 5,
-            def: 2,
-            mag: 5,
-            spd: 5,
-        };
-        let enemy_stats = Stats {
-            hp: 500,
-            atk: 200,
-            def: 50,
-            mag: 10,
-            spd: 20,
-        };
+        let player_stats = test_stats(30, 5, 2, 5, 5);
+        let enemy_stats = test_stats(500, 200, 50, 10, 20);
 
         let p1 = make_player("fragile-hero", player_stats, 1);
         let e1 = make_enemy("boss-goblin", enemy_stats);
@@ -3079,20 +2917,8 @@ mod tests {
 
     #[test]
     fn test_two_sided_combat_round() {
-        let player_stats = Stats {
-            hp: 200,
-            atk: 25,
-            def: 15,
-            mag: 10,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 150,
-            atk: 20,
-            def: 12,
-            mag: 10,
-            spd: 10,
-        };
+        let player_stats = test_stats(200, 25, 15, 10, 15);
+        let enemy_stats = test_stats(150, 20, 12, 10, 10);
 
         let p1 = make_player("hero", player_stats, 3);
         let e1 = make_enemy("goblin", enemy_stats);
@@ -3146,20 +2972,8 @@ mod tests {
 
     #[test]
     fn test_ai_enemy_uses_ability_when_mana_available() {
-        let player_stats = Stats {
-            hp: 100,
-            atk: 20,
-            def: 10,
-            mag: 10,
-            spd: 10,
-        };
-        let enemy_stats = Stats {
-            hp: 80,
-            atk: 25,
-            def: 10,
-            mag: 15,
-            spd: 12,
-        };
+        let player_stats = test_stats(100, 20, 10, 10, 10);
+        let enemy_stats = test_stats(80, 25, 10, 15, 12);
 
         let player = make_player("hero", player_stats, 5);
         let mut enemy_data = make_enemy("smart-goblin", enemy_stats);
@@ -3220,20 +3034,8 @@ mod tests {
 
     #[test]
     fn test_ai_enemy_targets_lowest_hp_player_when_aggressive() {
-        let player_stats = Stats {
-            hp: 100,
-            atk: 20,
-            def: 10,
-            mag: 10,
-            spd: 10,
-        };
-        let enemy_stats = Stats {
-            hp: 80,
-            atk: 25,
-            def: 10,
-            mag: 10,
-            spd: 12,
-        };
+        let player_stats = test_stats(100, 20, 10, 10, 10);
+        let enemy_stats = test_stats(80, 25, 10, 10, 12);
 
         let p1 = make_player("hero-a", player_stats, 3);
         let p2 = make_player("hero-b", player_stats, 3);
@@ -3269,20 +3071,8 @@ mod tests {
 
     #[test]
     fn test_ai_fallback_to_basic_attack_when_no_abilities() {
-        let player_stats = Stats {
-            hp: 100,
-            atk: 20,
-            def: 10,
-            mag: 10,
-            spd: 10,
-        };
-        let enemy_stats = Stats {
-            hp: 80,
-            atk: 25,
-            def: 10,
-            mag: 10,
-            spd: 12,
-        };
+        let player_stats = test_stats(100, 20, 10, 10, 10);
+        let enemy_stats = test_stats(80, 25, 10, 10, 12);
 
         let player = make_player("hero", player_stats, 5);
         let enemy = make_enemy("dumb-goblin", enemy_stats);
@@ -3324,27 +3114,9 @@ mod tests {
         // Set up: 2 players with different SPD, slower one planned first.
         // Under the old SPD-sort the faster unit would execute first.
         // Under the fix, the planning order is preserved.
-        let slow_stats = Stats {
-            hp: 200,
-            atk: 30,
-            def: 20,
-            mag: 10,
-            spd: 5,
-        };
-        let fast_stats = Stats {
-            hp: 200,
-            atk: 30,
-            def: 20,
-            mag: 10,
-            spd: 50,
-        };
-        let enemy_stats = Stats {
-            hp: 500,
-            atk: 10,
-            def: 5,
-            mag: 5,
-            spd: 1,
-        };
+        let slow_stats = test_stats(200, 30, 20, 10, 5);
+        let fast_stats = test_stats(200, 30, 20, 10, 50);
+        let enemy_stats = test_stats(500, 10, 5, 5, 1);
 
         let p1 = make_player("slow-hero", slow_stats, 3);
         let p2 = make_player("fast-hero", fast_stats, 3);
@@ -3412,20 +3184,8 @@ mod tests {
 
     #[test]
     fn test_freeze_broken_by_damage() {
-        let player_stats = Stats {
-            hp: 200,
-            atk: 50,
-            def: 20,
-            mag: 10,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 300,
-            atk: 10,
-            def: 5,
-            mag: 5,
-            spd: 5,
-        };
+        let player_stats = test_stats(200, 50, 20, 10, 15);
+        let enemy_stats = test_stats(300, 10, 5, 5, 5);
 
         let player = make_player("hero", player_stats, 5);
         let enemy = make_enemy("frozen-goblin", enemy_stats);
@@ -3488,20 +3248,8 @@ mod tests {
 
     #[test]
     fn test_chain_damage_hits_all_enemies() {
-        let player_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 20,
-            mag: 40,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 5,
-            mag: 5,
-            spd: 5,
-        };
+        let player_stats = test_stats(200, 10, 20, 40, 15);
+        let enemy_stats = test_stats(200, 10, 5, 5, 5);
 
         let player = make_player("hero", player_stats, 10);
         let e1 = make_enemy("goblin-a", enemy_stats);
@@ -3589,20 +3337,8 @@ mod tests {
 
     #[test]
     fn test_chain_hit_preserves_crit_flag() {
-        let player_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 20,
-            mag: 40,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 5,
-            mag: 5,
-            spd: 5,
-        };
+        let player_stats = test_stats(200, 10, 20, 40, 15);
+        let enemy_stats = test_stats(200, 10, 5, 5, 5);
 
         let player = make_player("hero", player_stats, 10);
         let e1 = make_enemy("goblin-a", enemy_stats);
@@ -3660,20 +3396,8 @@ mod tests {
 
     #[test]
     fn test_immunity_blocks_status() {
-        let player_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 20,
-            mag: 30,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 200,
-            atk: 20,
-            def: 5,
-            mag: 5,
-            spd: 5,
-        };
+        let player_stats = test_stats(200, 10, 20, 30, 15);
+        let enemy_stats = test_stats(200, 20, 5, 5, 5);
 
         let player = make_player("hero", player_stats, 10);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -3764,20 +3488,8 @@ mod tests {
 
     #[test]
     fn test_cleanse_removes_statuses() {
-        let player_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 20,
-            mag: 30,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 5,
-            mag: 5,
-            spd: 5,
-        };
+        let player_stats = test_stats(200, 10, 20, 30, 15);
+        let enemy_stats = test_stats(200, 10, 5, 5, 5);
 
         let player = make_player("hero", player_stats, 10);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -3867,20 +3579,8 @@ mod tests {
 
     #[test]
     fn test_revive_dead_ally() {
-        let player_stats = Stats {
-            hp: 100,
-            atk: 10,
-            def: 20,
-            mag: 30,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 5,
-            mag: 5,
-            spd: 5,
-        };
+        let player_stats = test_stats(100, 10, 20, 30, 15);
+        let enemy_stats = test_stats(200, 10, 5, 5, 5);
 
         let p1 = make_player("healer", player_stats, 10);
         let p2 = make_player("dead-ally", player_stats, 0);
@@ -3974,20 +3674,8 @@ mod tests {
 
     #[test]
     fn test_healing_includes_mag_stat() {
-        let player_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 20,
-            mag: 30,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 5,
-            mag: 5,
-            spd: 5,
-        };
+        let player_stats = test_stats(200, 10, 20, 30, 15);
+        let enemy_stats = test_stats(200, 10, 5, 5, 5);
 
         let player = make_player("healer", player_stats, 10);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -4075,20 +3763,8 @@ mod tests {
 
     #[test]
     fn test_barrier_ability_without_duration_uses_default() {
-        let player_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 20,
-            mag: 30,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 5,
-            mag: 5,
-            spd: 5,
-        };
+        let player_stats = test_stats(200, 10, 20, 30, 15);
+        let enemy_stats = test_stats(200, 10, 5, 5, 5);
 
         let player = make_player("hero", player_stats, 10);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -4169,20 +3845,8 @@ mod tests {
 
     #[test]
     fn test_immunity_expires_after_duration() {
-        let player_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 20,
-            mag: 30,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 5,
-            mag: 5,
-            spd: 5,
-        };
+        let player_stats = test_stats(200, 10, 20, 30, 15);
+        let enemy_stats = test_stats(200, 10, 5, 5, 5);
 
         let player = make_player("hero", player_stats, 10);
         let enemy = make_enemy("goblin", enemy_stats);
@@ -4226,20 +3890,8 @@ mod tests {
 
     #[test]
     fn test_buffs_affect_damage_calculation() {
-        let player_stats = Stats {
-            hp: 200,
-            atk: 30,
-            def: 20,
-            mag: 10,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 300,
-            atk: 10,
-            def: 15,
-            mag: 10,
-            spd: 5,
-        };
+        let player_stats = test_stats(200, 30, 20, 10, 15);
+        let enemy_stats = test_stats(300, 10, 15, 10, 5);
 
         let player = make_player("hero", player_stats, 10);
         let e1 = make_enemy("goblin-a", enemy_stats);
@@ -4302,13 +3954,7 @@ mod tests {
 
     #[test]
     fn test_enemy_xp_gold_used_in_rewards() {
-        let player_stats = Stats {
-            hp: 200,
-            atk: 200,
-            def: 20,
-            mag: 10,
-            spd: 15,
-        };
+        let player_stats = test_stats(200, 200, 20, 10, 15);
 
         let player = make_player("hero", player_stats, 5);
 
@@ -4319,13 +3965,7 @@ mod tests {
                 name: "Weak A".to_string(),
                 element: Element::Venus,
                 level: Level::new_unchecked(1),
-                stats: Stats {
-                    hp: 10,
-                    atk: 1,
-                    def: 1,
-                    mag: 1,
-                    spd: 1,
-                },
+                stats: test_stats(10, 1, 1, 1, 1),
                 xp: crate::shared::bounded_types::Xp::new_unchecked(25),
                 gold: crate::shared::bounded_types::Gold::new_unchecked(15),
                 abilities: vec![],
@@ -4337,13 +3977,7 @@ mod tests {
                 name: "Weak B".to_string(),
                 element: Element::Mars,
                 level: Level::new_unchecked(1),
-                stats: Stats {
-                    hp: 10,
-                    atk: 1,
-                    def: 1,
-                    mag: 1,
-                    spd: 1,
-                },
+                stats: test_stats(10, 1, 1, 1, 1),
                 xp: crate::shared::bounded_types::Xp::new_unchecked(40),
                 gold: crate::shared::bounded_types::Gold::new_unchecked(20),
                 abilities: vec![],
@@ -4378,20 +4012,8 @@ mod tests {
 
     #[test]
     fn test_summon_damage_respects_barriers() {
-        let player_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 20,
-            mag: 30,
-            spd: 15,
-        };
-        let enemy_stats = Stats {
-            hp: 200,
-            atk: 10,
-            def: 5,
-            mag: 5,
-            spd: 5,
-        };
+        let player_stats = test_stats(200, 10, 20, 30, 15);
+        let enemy_stats = test_stats(200, 10, 5, 5, 5);
 
         let player = make_player("hero", player_stats, 10);
         let e1 = make_enemy("barrier-goblin", enemy_stats);
@@ -4485,47 +4107,23 @@ mod tests {
             vec![
                 make_player(
                     "slow",
-                    Stats {
-                        hp: 100,
-                        atk: 20,
-                        def: 10,
-                        mag: 10,
-                        spd: 10,
-                    },
+                    test_stats(100, 20, 10, 10, 10),
                     1,
                 ),
                 make_player(
                     "fast",
-                    Stats {
-                        hp: 100,
-                        atk: 20,
-                        def: 10,
-                        mag: 10,
-                        spd: 18,
-                    },
+                    test_stats(100, 20, 10, 10, 18),
                     1,
                 ),
                 make_player(
                     "mid",
-                    Stats {
-                        hp: 100,
-                        atk: 20,
-                        def: 10,
-                        mag: 10,
-                        spd: 13,
-                    },
+                    test_stats(100, 20, 10, 10, 13),
                     1,
                 ),
             ],
             vec![make_enemy(
                 "foe",
-                Stats {
-                    hp: 80,
-                    atk: 15,
-                    def: 8,
-                    mag: 5,
-                    spd: 10,
-                },
+                test_stats(80, 15, 8, 5, 10),
             )],
             test_config(),
             HashMap::new(),
@@ -4546,47 +4144,23 @@ mod tests {
             vec![
                 make_player(
                     "alive_slow",
-                    Stats {
-                        hp: 100,
-                        atk: 20,
-                        def: 10,
-                        mag: 10,
-                        spd: 5,
-                    },
+                    test_stats(100, 20, 10, 10, 5),
                     1,
                 ),
                 make_player(
                     "dead_fast",
-                    Stats {
-                        hp: 100,
-                        atk: 20,
-                        def: 10,
-                        mag: 10,
-                        spd: 20,
-                    },
+                    test_stats(100, 20, 10, 10, 20),
                     1,
                 ),
                 make_player(
                     "alive_fast",
-                    Stats {
-                        hp: 100,
-                        atk: 20,
-                        def: 10,
-                        mag: 10,
-                        spd: 15,
-                    },
+                    test_stats(100, 20, 10, 10, 15),
                     1,
                 ),
             ],
             vec![make_enemy(
                 "foe",
-                Stats {
-                    hp: 80,
-                    atk: 15,
-                    def: 8,
-                    mag: 5,
-                    spd: 10,
-                },
+                test_stats(80, 15, 8, 5, 10),
             )],
             test_config(),
             HashMap::new(),
@@ -4612,47 +4186,23 @@ mod tests {
             vec![
                 make_player(
                     "low_base",
-                    Stats {
-                        hp: 100,
-                        atk: 20,
-                        def: 10,
-                        mag: 10,
-                        spd: 10,
-                    },
+                    test_stats(100, 20, 10, 10, 10),
                     1,
                 ),
                 make_player(
                     "high_base",
-                    Stats {
-                        hp: 100,
-                        atk: 20,
-                        def: 10,
-                        mag: 10,
-                        spd: 15,
-                    },
+                    test_stats(100, 20, 10, 10, 15),
                     1,
                 ),
                 make_player(
                     "also_15",
-                    Stats {
-                        hp: 100,
-                        atk: 20,
-                        def: 10,
-                        mag: 10,
-                        spd: 15,
-                    },
+                    test_stats(100, 20, 10, 10, 15),
                     1,
                 ),
             ],
             vec![make_enemy(
                 "foe",
-                Stats {
-                    hp: 80,
-                    atk: 15,
-                    def: 8,
-                    mag: 5,
-                    spd: 10,
-                },
+                test_stats(80, 15, 8, 5, 10),
             )],
             test_config(),
             HashMap::new(),

@@ -178,6 +178,7 @@ pub fn compute_equipment_effects(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::shared::bounded_types::*;
     use crate::shared::{EquipmentTier, SetId};
 
     /// Helper: build a minimal EquipmentDef for testing.
@@ -191,7 +192,7 @@ mod tests {
             name: id.to_string(),
             slot,
             tier: EquipmentTier::Basic,
-            cost: 100,
+            cost: Gold::new_unchecked(100),
             allowed_elements: elements,
             stat_bonus: StatBonus::default(),
             unlocks_ability: None,

@@ -130,7 +130,7 @@ pub fn apply_battle_rewards(
 mod tests {
     use super::*;
     use crate::shared::{
-        bounded_types::Level, AbilityId, AbilityProgression, Element, GrowthRates, Stats, UnitDef,
+        bounded_types::*, AbilityId, AbilityProgression, Element, GrowthRates, Stats, UnitDef,
         UnitId,
     };
 
@@ -143,11 +143,23 @@ mod tests {
     }
 
     fn test_base_stats() -> Stats {
-        Stats { hp: 100, atk: 10, def: 8, mag: 12, spd: 10 }
+        Stats {
+            hp: Hp::new_unchecked(100),
+            atk: BaseStat::new_unchecked(10),
+            def: BaseStat::new_unchecked(8),
+            mag: BaseStat::new_unchecked(12),
+            spd: BaseStat::new_unchecked(10),
+        }
     }
 
     fn test_growth_rates() -> GrowthRates {
-        GrowthRates { hp: 15, atk: 3, def: 2, mag: 4, spd: 2 }
+        GrowthRates {
+            hp: GrowthRate::new_unchecked(15),
+            atk: GrowthRate::new_unchecked(3),
+            def: GrowthRate::new_unchecked(2),
+            mag: GrowthRate::new_unchecked(4),
+            spd: GrowthRate::new_unchecked(2),
+        }
     }
 
     fn test_abilities() -> Vec<AbilityProgression> {
@@ -268,22 +280,22 @@ mod tests {
     #[test]
     fn stats_at_level_1_equals_base() {
         let stats = calculate_stats_at_level(&test_base_stats(), &test_growth_rates(), 1);
-        assert_eq!(stats.hp, 100);
-        assert_eq!(stats.atk, 10);
-        assert_eq!(stats.def, 8);
-        assert_eq!(stats.mag, 12);
-        assert_eq!(stats.spd, 10);
+        assert_eq!(stats.hp.get(), 100);
+        assert_eq!(stats.atk.get(), 10);
+        assert_eq!(stats.def.get(), 8);
+        assert_eq!(stats.mag.get(), 12);
+        assert_eq!(stats.spd.get(), 10);
     }
 
     #[test]
     fn stats_at_level_10_with_growth() {
         let stats = calculate_stats_at_level(&test_base_stats(), &test_growth_rates(), 10);
         // base + growth * 9
-        assert_eq!(stats.hp, 100 + 15 * 9);   // 235
-        assert_eq!(stats.atk, 10 + 3 * 9);    // 37
-        assert_eq!(stats.def, 8 + 2 * 9);     // 26
-        assert_eq!(stats.mag, 12 + 4 * 9);    // 48
-        assert_eq!(stats.spd, 10 + 2 * 9);    // 28
+        assert_eq!(stats.hp.get(), 100 + 15 * 9);   // 235
+        assert_eq!(stats.atk.get(), 10 + 3 * 9);    // 37
+        assert_eq!(stats.def.get(), 8 + 2 * 9);     // 26
+        assert_eq!(stats.mag.get(), 12 + 4 * 9);    // 48
+        assert_eq!(stats.spd.get(), 10 + 2 * 9);    // 28
     }
 
     // ── unlocked_abilities ───────────────────────────────────────────
@@ -327,11 +339,11 @@ mod tests {
         assert_eq!(progress.level, 5);
 
         // Stats at level 5: base + growth * 4
-        assert_eq!(result.new_stats.hp, 100 + 15 * 4);   // 160
-        assert_eq!(result.new_stats.atk, 10 + 3 * 4);    // 22
-        assert_eq!(result.new_stats.def, 8 + 2 * 4);     // 16
-        assert_eq!(result.new_stats.mag, 12 + 4 * 4);    // 28
-        assert_eq!(result.new_stats.spd, 10 + 2 * 4);    // 18
+        assert_eq!(result.new_stats.hp.get(), 100 + 15 * 4);   // 160
+        assert_eq!(result.new_stats.atk.get(), 10 + 3 * 4);    // 22
+        assert_eq!(result.new_stats.def.get(), 8 + 2 * 4);     // 16
+        assert_eq!(result.new_stats.mag.get(), 12 + 4 * 4);    // 28
+        assert_eq!(result.new_stats.spd.get(), 10 + 2 * 4);    // 18
 
         // New abilities: heal (lv3) and earthquake (lv5)
         // (strike and fireball were already unlocked at lv1)
@@ -350,6 +362,6 @@ mod tests {
         assert!(result.levels_gained.is_empty());
         assert!(result.new_abilities.is_empty());
         // Stats remain at level 1
-        assert_eq!(result.new_stats.hp, 100);
+        assert_eq!(result.new_stats.hp.get(), 100);
     }
 }

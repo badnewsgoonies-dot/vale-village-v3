@@ -6,7 +6,7 @@ use crate::shared::{
     AbilityId, DjinnCompatibility, DjinnDef, DjinnId, DjinnState, DjinnStateChanged, Element,
     StatBonus, SummonEffect, TargetRef,
 };
-use crate::shared::bounded_types::StatMod;
+    use crate::shared::bounded_types::{DjinnTier, StatMod};
 
 // ── Structs ─────────────────────────────────────────────────────────
 
@@ -215,11 +215,11 @@ pub fn get_available_summons(good_count: usize) -> Vec<SummonTier> {
             required_good: 1,
         });
     }
-    if good_count >= 2 {
-        tiers.push(SummonTier {
-            tier: 2,
-            required_good: 2,
-        });
+        if good_count >= 2 {
+            tiers.push(SummonTier {
+                tier: 2,
+                required_good: 2,
+            });
     }
     if good_count >= 3 {
         tiers.push(SummonTier {
@@ -336,7 +336,7 @@ mod tests {
             id: DjinnId(id.to_string()),
             name: id.to_string(),
             element,
-            tier: 1,
+            tier: DjinnTier::new_unchecked(1),
             stat_bonus: StatBonus {
                 atk: StatMod::new_unchecked(5),
                 def: StatMod::new_unchecked(3),

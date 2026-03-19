@@ -980,7 +980,7 @@ mod tests {
             base_stats: unit_def.base_stats,
             equipment,
             djinn_slots,
-            mana_contribution: unit_def.mana_contribution,
+            mana_contribution: unit_def.mana_contribution.get(),
             equipment_effects,
         }
     }
@@ -1105,7 +1105,8 @@ mod tests {
     fn advance_after_success_enters_executing_until_playback_finishes() {
         let game_data = load_full_game_data();
         let mut battle_res = BattleRes(build_test_battle(&game_data));
-        battle_res.0.enemies[0].unit.stats.hp = 999;
+        battle_res.0.enemies[0].unit.stats.hp =
+            crate::shared::bounded_types::Hp::new_unchecked(999);
         battle_res.0.enemies[0].unit.current_hp = 999;
 
         let actor = TargetRef {

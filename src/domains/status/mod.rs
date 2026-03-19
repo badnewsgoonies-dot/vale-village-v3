@@ -971,8 +971,8 @@ mod tests {
 
         // compute_stat_modifiers should sum them: atk = -5 + 10 = 5, def = -3 + 8 = 5
         let total = compute_stat_modifiers(&state.buffs, &state.debuffs);
-        assert_eq!(total.atk, 5);
-        assert_eq!(total.def, 5);
+        assert_eq!(total.atk.get(), 5);
+        assert_eq!(total.def.get(), 5);
     }
 
     #[test]
@@ -982,8 +982,8 @@ mod tests {
         apply_buff(&mut state, &negative_buff, 3);
 
         let total = compute_stat_modifiers(&state.buffs, &state.debuffs);
-        assert_eq!(total.atk, -7);
-        assert_eq!(total.def, -4);
+        assert_eq!(total.atk.get(), -7);
+        assert_eq!(total.def.get(), -4);
     }
 
     // ── Multiple barriers stack from different sources ───────────────

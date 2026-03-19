@@ -301,6 +301,7 @@ fn choose_balanced(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::shared::bounded_types::*;
     use crate::shared::bounded_types::{BasePower, HitCount, Level, ManaCost};
     use crate::shared::{
         AbilityCategory, AbilityDef, AbilityId, DamageType, TargetMode,
@@ -308,10 +309,20 @@ mod tests {
 
     // ── Helpers ──────────────────────────────────────────────────────
 
+    fn test_stats(hp: u16, atk: u16, def: u16, mag: u16, spd: u16) -> Stats {
+        Stats {
+            hp: Hp::new_unchecked(hp),
+            atk: BaseStat::new_unchecked(atk),
+            def: BaseStat::new_unchecked(def),
+            mag: BaseStat::new_unchecked(mag),
+            spd: BaseStat::new_unchecked(spd),
+        }
+    }
+
     fn make_player_view(index: u8, hp: u16, max_hp: u16, atk: u16) -> AiUnitView {
         AiUnitView {
             index,
-            stats: Stats { hp: max_hp, atk, def: 10, mag: 10, spd: 10 },
+            stats: test_stats(max_hp, atk, 10, 10, 10),
             current_hp: hp,
             max_hp,
             is_alive: hp > 0,

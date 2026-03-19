@@ -90,7 +90,18 @@ pub fn apply_all_modifiers(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::shared::bounded_types::*;
     use crate::shared::{Side, TargetRef};
+
+    fn test_stats(hp: u16, atk: u16, def: u16, mag: u16, spd: u16) -> Stats {
+        Stats {
+            hp: Hp::new_unchecked(hp),
+            atk: BaseStat::new_unchecked(atk),
+            def: BaseStat::new_unchecked(def),
+            mag: BaseStat::new_unchecked(mag),
+            spd: BaseStat::new_unchecked(spd),
+        }
+    }
 
     // ── Defense penetration (S14) ────────────────────────────────────
 
@@ -193,7 +204,7 @@ mod tests {
 
     #[test]
     fn combined_physical_with_pen() {
-        let stats = Stats { hp: 100, atk: 30, def: 10, mag: 5, spd: 10 };
+        let stats = test_stats(100, 30, 10, 5, 10);
         // base 50 + atk 30 - (def 100 * (1 - 0.5) * 0.5) = 80 - 25 = 55
         let dmg = apply_all_modifiers(50, 100, Some(0.5), DamageType::Physical, &stats, 0.5);
         assert_eq!(dmg, 55);
@@ -201,7 +212,7 @@ mod tests {
 
     #[test]
     fn combined_psynergy_no_pen() {
-        let stats = Stats { hp: 100, atk: 10, def: 10, mag: 40, spd: 10 };
+        let stats = test_stats(100, 10, 10, 40, 10);
         // base 60 + mag 40 - (def 50 * 1.0) = 100 - 50 = 50
         let dmg = apply_all_modifiers(60, 50, None, DamageType::Psynergy, &stats, 1.0);
         assert_eq!(dmg, 50);
@@ -209,7 +220,7 @@ mod tests {
 
     #[test]
     fn combined_floor_at_one() {
-        let stats = Stats { hp: 100, atk: 1, def: 10, mag: 1, spd: 10 };
+        let stats = test_stats(100, 1, 10, 1, 10);
         // base 1 + atk 1 - (def 200 * 1.0) = 2 - 200 = -198 -> floor 1
         let dmg = apply_all_modifiers(1, 200, None, DamageType::Physical, &stats, 1.0);
         assert_eq!(dmg, 1);
