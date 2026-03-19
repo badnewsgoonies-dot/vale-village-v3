@@ -13,5 +13,6 @@ pub mod djinn;
 pub mod equipment;
 pub mod progression;
 pub mod save;
+pub mod sprite_loader;
 pub mod status;
 pub mod ui;
