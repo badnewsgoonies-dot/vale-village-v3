@@ -1,7 +1,9 @@
 #![allow(dead_code)]
 //! Progression domain — XP, leveling, stat growth, and ability unlocking.
 
-use crate::shared::{AbilityId, AbilityProgression, GrowthRates, Stats, UnitDef, UnitId};
+use crate::shared::{
+    bounded_types::Level, AbilityId, AbilityProgression, GrowthRates, Stats, UnitDef, UnitId,
+};
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -84,6 +86,7 @@ pub fn calculate_stats_at_level(base_stats: &Stats, growth_rates: &GrowthRates, 
 
 /// All abilities unlocked at or below the given level.
 pub fn unlocked_abilities(abilities: &[AbilityProgression], level: u8) -> Vec<AbilityId> {
+    let level = Level::new_unchecked(level);
     abilities
         .iter()
         .filter(|ap| ap.level <= level)
@@ -126,7 +129,10 @@ pub fn apply_battle_rewards(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::shared::{AbilityId, AbilityProgression, Element, GrowthRates, Stats, UnitDef, UnitId};
+    use crate::shared::{
+        bounded_types::Level, AbilityId, AbilityProgression, Element, GrowthRates, Stats, UnitDef,
+        UnitId,
+    };
 
     fn make_progress(level: u8, xp: u32) -> UnitProgress {
         UnitProgress {
@@ -146,13 +152,13 @@ mod tests {
 
     fn test_abilities() -> Vec<AbilityProgression> {
         vec![
-            AbilityProgression { level: 1, ability_id: AbilityId("strike".to_string()) },
-            AbilityProgression { level: 1, ability_id: AbilityId("fireball".to_string()) },
-            AbilityProgression { level: 3, ability_id: AbilityId("heal".to_string()) },
-            AbilityProgression { level: 5, ability_id: AbilityId("earthquake".to_string()) },
-            AbilityProgression { level: 10, ability_id: AbilityId("meteor".to_string()) },
-            AbilityProgression { level: 15, ability_id: AbilityId("ultima".to_string()) },
-            AbilityProgression { level: 20, ability_id: AbilityId("genesis".to_string()) },
+            AbilityProgression { level: Level::new_unchecked(1), ability_id: AbilityId("strike".to_string()) },
+            AbilityProgression { level: Level::new_unchecked(1), ability_id: AbilityId("fireball".to_string()) },
+            AbilityProgression { level: Level::new_unchecked(3), ability_id: AbilityId("heal".to_string()) },
+            AbilityProgression { level: Level::new_unchecked(5), ability_id: AbilityId("earthquake".to_string()) },
+            AbilityProgression { level: Level::new_unchecked(10), ability_id: AbilityId("meteor".to_string()) },
+            AbilityProgression { level: Level::new_unchecked(15), ability_id: AbilityId("ultima".to_string()) },
+            AbilityProgression { level: Level::new_unchecked(20), ability_id: AbilityId("genesis".to_string()) },
         ]
     }
 

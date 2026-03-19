@@ -10,7 +10,7 @@ pub struct AbilityDefBuilder {
     pub mana_cost: u8,
     pub base_power: u16,
     pub targets: super::TargetMode,
-    pub unlock_level: u8,
+    pub unlock_level: super::bounded_types::Level,
     pub hit_count: u8,
 }
 
@@ -30,10 +30,10 @@ pub struct EnemyDefBuilder {
     pub id: super::EnemyId,
     pub name: String,
     pub element: super::Element,
-    pub level: u8,
+    pub level: super::bounded_types::Level,
     pub stats: super::Stats,
-    pub xp: u32,
-    pub gold: u32,
+    pub xp: super::bounded_types::Xp,
+    pub gold: super::bounded_types::Gold,
     pub abilities: Vec<super::AbilityId>,
 }
 
@@ -43,7 +43,7 @@ pub struct EquipmentDefBuilder {
     pub name: String,
     pub slot: super::EquipmentSlot,
     pub tier: super::EquipmentTier,
-    pub cost: u32,
+    pub cost: super::bounded_types::Gold,
     pub allowed_elements: Vec<super::Element>,
     pub stat_bonus: super::StatBonus,
 }
@@ -53,7 +53,7 @@ pub struct DjinnDefBuilder {
     pub id: super::DjinnId,
     pub name: String,
     pub element: super::Element,
-    pub tier: u8,
+    pub tier: super::bounded_types::DjinnTier,
     pub stat_bonus: super::StatBonus,
     pub summon_effect: Option<super::SummonEffect>,
     pub ability_pairs: super::DjinnAbilityPairs,
@@ -65,6 +65,6 @@ pub struct EncounterDefBuilder {
     pub name: String,
     pub difficulty: super::Difficulty,
     pub enemies: Vec<super::EncounterEnemy>,
-    pub xp_reward: u32,
-    pub gold_reward: u32,
+    pub xp_reward: super::bounded_types::Xp,
+    pub gold_reward: super::bounded_types::Gold,
 }

@@ -7,6 +7,7 @@ pub mod lifecycle_types;
 pub mod entity_types;
 
 use serde::{Deserialize, Serialize};
+use crate::shared::bounded_types::{Level, Gold, Xp, DjinnTier};
 
 // ── ID Types (string-branded for stable serialization) ──────────────
 
@@ -240,7 +241,7 @@ pub struct AbilityDef {
     pub mana_cost: u8,
     pub base_power: u16,
     pub targets: TargetMode,
-    pub unlock_level: u8,
+    pub unlock_level: Level,
     pub hit_count: u8,
     // S07: status
     pub status_effect: Option<StatusEffect>,
@@ -269,7 +270,7 @@ pub struct AbilityDef {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AbilityProgression {
-    pub level: u8,
+    pub level: Level,
     pub ability_id: AbilityId,
 }
 
@@ -289,10 +290,10 @@ pub struct EnemyDef {
     pub id: EnemyId,
     pub name: String,
     pub element: Element,
-    pub level: u8,
+    pub level: Level,
     pub stats: Stats,
-    pub xp: u32,
-    pub gold: u32,
+    pub xp: Xp,
+    pub gold: Gold,
     pub abilities: Vec<AbilityId>,
 }
 
@@ -302,7 +303,7 @@ pub struct EquipmentDef {
     pub name: String,
     pub slot: EquipmentSlot,
     pub tier: EquipmentTier,
-    pub cost: u32,
+    pub cost: Gold,
     pub allowed_elements: Vec<Element>,
     pub stat_bonus: StatBonus,
     pub unlocks_ability: Option<AbilityId>,
@@ -325,7 +326,7 @@ pub struct DjinnDef {
     pub id: DjinnId,
     pub name: String,
     pub element: Element,
-    pub tier: u8,
+    pub tier: DjinnTier,
     pub stat_bonus: StatBonus,
     pub summon_effect: Option<SummonEffect>,
     pub ability_pairs: DjinnAbilityPairs,
@@ -343,8 +344,8 @@ pub struct EncounterDef {
     pub name: String,
     pub difficulty: Difficulty,
     pub enemies: Vec<EncounterEnemy>,
-    pub xp_reward: u32,
-    pub gold_reward: u32,
+    pub xp_reward: Xp,
+    pub gold_reward: Gold,
     pub recruit: Option<UnitId>,
     pub djinn_reward: Option<DjinnId>,
     pub equipment_rewards: Vec<EquipmentId>,

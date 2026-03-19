@@ -38,9 +38,11 @@ pub struct DjinnTier(pub u8);
 
 // ── Economy ─────────────────────────────────────────────────────────
 
+#[derive(Default)]
 #[game_value(min = 0, max = 999999)]
 pub struct Gold(pub u32);
 
+#[derive(Default)]
 #[game_value(min = 0, max = 999999)]
 pub struct Xp(pub u32);
 

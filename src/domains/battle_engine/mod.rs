@@ -190,8 +190,8 @@ pub fn new_battle(
                 mana_contribution: 0,
                 ability_ids,
                 hit_count_bonus: 0,
-                reward_xp: xp,
-                reward_gold: gold,
+                reward_xp: xp.get(),
+                reward_gold: gold.get(),
             }
         })
         .collect();
