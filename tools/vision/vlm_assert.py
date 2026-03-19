@@ -180,8 +180,26 @@ def _call_gemini(image_b64: str, media_type: str, prompt: str,
     return response.text
 
 
+
+def _call_vertex(image_b64: str, media_type: str, prompt: str,
+                 model: str = "gemini-3-flash-preview") -> str:
+    """Call Gemini via Vertex AI (bypasses proxy block)."""
+    import sys, os
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from gemini_vertex import gemini_vision as _gv
+    import tempfile, base64
+    # Write image to temp file (gemini_vertex.py reads from path)
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+        f.write(base64.b64decode(image_b64))
+        tmp = f.name
+    try:
+        return _gv(tmp, prompt, model=model)
+    finally:
+        os.unlink(tmp)
+
 PROVIDERS = {
     "anthropic": _call_anthropic,
+    "vertex": _call_vertex,
     "openai": _call_openai,
     "gemini": _call_gemini,
 }
