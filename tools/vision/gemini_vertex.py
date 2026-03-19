@@ -103,3 +103,48 @@ if __name__ == "__main__":
         print("Vision module ready.")
     else:
         print("Usage: python3 gemini_vertex.py test")
+
+
+def gemini_vision_json(image_path, prompt, schema=None, model="gemini-3-flash-preview", max_tokens=2048):
+    """Send image + prompt, force JSON response via responseMimeType."""
+    token = _get_token()
+    img_data = Path(image_path).read_bytes()
+    b64 = base64.b64encode(img_data).decode()
+    ext = Path(image_path).suffix.lower()
+    mime = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
+            "gif": "image/gif", "webp": "image/webp"}.get(ext.lstrip("."), "image/png")
+
+    gen_config = {"maxOutputTokens": max_tokens, "responseMimeType": "application/json"}
+    if schema:
+        gen_config["responseSchema"] = schema
+
+    body = json.dumps({
+        "contents": [{"role": "user", "parts": [
+            {"inlineData": {"mimeType": mime, "data": b64}},
+            {"text": prompt}
+        ]}],
+        "generationConfig": gen_config
+    }).encode()
+    req = urllib.request.Request(_endpoint(model), data=body, headers={
+        "Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+    resp = urllib.request.urlopen(req)
+    result = json.loads(resp.read())
+    return json.loads(result["candidates"][0]["content"]["parts"][0]["text"])
+
+
+def gemini_generate_json(prompt, schema=None, model="gemini-3-flash-preview", max_tokens=2048):
+    """Generate text with forced JSON response."""
+    token = _get_token()
+    gen_config = {"maxOutputTokens": max_tokens, "responseMimeType": "application/json"}
+    if schema:
+        gen_config["responseSchema"] = schema
+
+    body = json.dumps({
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": gen_config
+    }).encode()
+    req = urllib.request.Request(_endpoint(model), data=body, headers={
+        "Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+    resp = urllib.request.urlopen(req)
+    result = json.loads(resp.read())
+    return json.loads(result["candidates"][0]["content"]["parts"][0]["text"])
