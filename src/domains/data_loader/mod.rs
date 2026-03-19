@@ -319,7 +319,7 @@ mod tests {
     fn test_config_loads_correctly() {
         let dir = sample_dir();
         let data = load_game_data(&dir).expect("sample data should load");
-        assert_eq!(data.config.max_party_size, 4);
+        assert_eq!(data.config.max_party_size.get(), 4);
         assert_eq!(data.config.crit_threshold, 10);
         assert!((data.config.crit_multiplier - 2.0).abs() < f32::EPSILON);
     }

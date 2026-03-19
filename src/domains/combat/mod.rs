@@ -239,7 +239,7 @@ pub fn resolve_multi_hit(
 
         if is_auto_attack {
             counter += 1;
-            mana_generated = config.mana_gain_per_hit;
+            mana_generated = config.mana_gain_per_hit.get();
 
             if counter >= config.crit_threshold {
                 is_crit = true;

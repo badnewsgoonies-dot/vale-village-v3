@@ -50,6 +50,15 @@ pub struct ManaPool(pub u8);
 #[game_value(min = 0, max = 7)]
 pub struct PartyIndex(pub u8);
 
+#[game_value(min = 1, max = 8)]
+pub struct MaxPartySize(pub u8);
+
+#[game_value(min = 0, max = 8)]
+pub struct MaxEquippedDjinn(pub u8);
+
+#[game_value(min = 1, max = 10)]
+pub struct MaxBuffStacks(pub u8);
+
 // Default impls for types used in Default-deriving structs
 impl Default for Hp {
     fn default() -> Self { Self::new_unchecked(1) }

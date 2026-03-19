@@ -970,8 +970,7 @@ fn execute_ability(
         }
 
         // Apply buff/debuff
-        let max_stacks = battle.config.max_buff_stacks as usize;
-        if let Some(ref buff_effect) = ability.buff_effect {
+        let max_stacks = battle.config.max_buff_stacks.get() as usize;
             let target = get_unit_mut(battle, target_ref).unwrap();
             status::apply_buff(&mut target.status_state, buff_effect, max_stacks);
         }
@@ -1111,7 +1110,7 @@ fn resolve_djinn_activation_damage(
             return;
         }
         Some(djinn::DjinnActivationEffectType::Buff) => {
-            let max_stacks = battle.config.max_buff_stacks as usize;
+            let max_stacks = battle.config.max_buff_stacks.get() as usize;
             let actor = get_unit_mut(battle, actor_ref).unwrap();
             status::apply_buff(
                 &mut actor.status_state,

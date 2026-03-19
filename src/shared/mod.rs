@@ -9,7 +9,7 @@ pub mod entity_types;
 use serde::{Deserialize, Serialize};
 use crate::shared::bounded_types::{
     BasePower, BaseStat, DjinnTier, EffectDuration, Gold, GrowthRate, HitCount, Hp, Level,
-    ManaCost, StatMod, Xp,
+    ManaCost, MaxBuffStacks, MaxEquippedDjinn, MaxPartySize, StatMod, Xp,
 };
 
 // ── ID Types (string-branded for stable serialization) ──────────────
@@ -492,12 +492,12 @@ pub struct CombatConfig {
     pub psynergy_def_multiplier: f32,
     pub crit_threshold: u8,
     pub crit_multiplier: f32,
-    pub mana_gain_per_hit: u8,
+    pub mana_gain_per_hit: ManaCost,
     pub mana_resets_each_round: bool,
-    pub max_party_size: u8,
-    pub max_equipped_djinn: u8,
-    pub max_level: u8,
-    pub max_buff_stacks: u8,
+    pub max_party_size: MaxPartySize,
+    pub max_equipped_djinn: MaxEquippedDjinn,
+    pub max_level: Level,
+    pub max_buff_stacks: MaxBuffStacks,
     pub djinn_recovery_start_delay: u8,
     pub djinn_recovery_per_turn: u8,
 }
