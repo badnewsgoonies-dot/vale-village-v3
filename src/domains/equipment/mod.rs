@@ -130,11 +130,21 @@ pub fn compute_equipment_effects(
     for eq_id in &equipped {
         if let Some(def) = defs.get(eq_id) {
             // Stat bonuses
-            effects.total_stat_bonus.atk = StatMod::new_unchecked(effects.total_stat_bonus.atk.get() + def.stat_bonus.atk.get());
-            effects.total_stat_bonus.def = StatMod::new_unchecked(effects.total_stat_bonus.def.get() + def.stat_bonus.def.get());
-            effects.total_stat_bonus.mag = StatMod::new_unchecked(effects.total_stat_bonus.mag.get() + def.stat_bonus.mag.get());
-            effects.total_stat_bonus.spd = StatMod::new_unchecked(effects.total_stat_bonus.spd.get() + def.stat_bonus.spd.get());
-            effects.total_stat_bonus.hp = StatMod::new_unchecked(effects.total_stat_bonus.hp.get() + def.stat_bonus.hp.get());
+            effects.total_stat_bonus.atk = StatMod::new_unchecked(
+                (effects.total_stat_bonus.atk.get() + def.stat_bonus.atk.get()).clamp(-999, 999),
+            );
+            effects.total_stat_bonus.def = StatMod::new_unchecked(
+                (effects.total_stat_bonus.def.get() + def.stat_bonus.def.get()).clamp(-999, 999),
+            );
+            effects.total_stat_bonus.mag = StatMod::new_unchecked(
+                (effects.total_stat_bonus.mag.get() + def.stat_bonus.mag.get()).clamp(-999, 999),
+            );
+            effects.total_stat_bonus.spd = StatMod::new_unchecked(
+                (effects.total_stat_bonus.spd.get() + def.stat_bonus.spd.get()).clamp(-999, 999),
+            );
+            effects.total_stat_bonus.hp = StatMod::new_unchecked(
+                (effects.total_stat_bonus.hp.get() + def.stat_bonus.hp.get()).clamp(-999, 999),
+            );
 
             // Ability unlock
             if let Some(ref ability_id) = def.unlocks_ability {

@@ -133,15 +133,31 @@ pub fn new_battle(
         .map(|pd| {
             let eq_effects = &pd.equipment_effects;
             let stats = Stats {
-                hp: Hp::new_unchecked((pd.base_stats.hp.get() as i32 + eq_effects.total_stat_bonus.hp.get() as i32).max(1) as u16),
-                atk: BaseStat::new_unchecked((pd.base_stats.atk.get() as i32 + eq_effects.total_stat_bonus.atk.get() as i32).max(0)
-                    as u16),
-                def: BaseStat::new_unchecked((pd.base_stats.def.get() as i32 + eq_effects.total_stat_bonus.def.get() as i32).max(0)
-                    as u16),
-                mag: BaseStat::new_unchecked((pd.base_stats.mag.get() as i32 + eq_effects.total_stat_bonus.mag.get() as i32).max(0)
-                    as u16),
-                spd: BaseStat::new_unchecked((pd.base_stats.spd.get() as i32 + eq_effects.total_stat_bonus.spd.get() as i32).max(0)
-                    as u16),
+                hp: Hp::new_unchecked(
+                    (pd.base_stats.hp.get() as i32 + eq_effects.total_stat_bonus.hp.get() as i32)
+                        .max(1)
+                        .min(9999) as u16,
+                ),
+                atk: BaseStat::new_unchecked(
+                    (pd.base_stats.atk.get() as i32 + eq_effects.total_stat_bonus.atk.get() as i32)
+                        .max(0)
+                        .min(9999) as u16,
+                ),
+                def: BaseStat::new_unchecked(
+                    (pd.base_stats.def.get() as i32 + eq_effects.total_stat_bonus.def.get() as i32)
+                        .max(0)
+                        .min(9999) as u16,
+                ),
+                mag: BaseStat::new_unchecked(
+                    (pd.base_stats.mag.get() as i32 + eq_effects.total_stat_bonus.mag.get() as i32)
+                        .max(0)
+                        .min(9999) as u16,
+                ),
+                spd: BaseStat::new_unchecked(
+                    (pd.base_stats.spd.get() as i32 + eq_effects.total_stat_bonus.spd.get() as i32)
+                        .max(0)
+                        .min(9999) as u16,
+                ),
             };
             let mana = pd
                 .mana_contribution
@@ -627,17 +643,49 @@ fn execute_attack(
     // Effective stats with buff/debuff modifiers
     let effective_attacker = Stats {
         hp: attacker_stats.hp,
-        atk: BaseStat::new_unchecked((attacker_stats.atk.get() as i32 + attacker_buff_mods.atk.get() as i32).max(0) as u16),
-        def: BaseStat::new_unchecked((attacker_stats.def.get() as i32 + attacker_buff_mods.def.get() as i32).max(0) as u16),
-        mag: BaseStat::new_unchecked((attacker_stats.mag.get() as i32 + attacker_buff_mods.mag.get() as i32).max(0) as u16),
-        spd: BaseStat::new_unchecked((attacker_stats.spd.get() as i32 + attacker_buff_mods.spd.get() as i32).max(0) as u16),
+        atk: BaseStat::new_unchecked(
+            (attacker_stats.atk.get() as i32 + attacker_buff_mods.atk.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        def: BaseStat::new_unchecked(
+            (attacker_stats.def.get() as i32 + attacker_buff_mods.def.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        mag: BaseStat::new_unchecked(
+            (attacker_stats.mag.get() as i32 + attacker_buff_mods.mag.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        spd: BaseStat::new_unchecked(
+            (attacker_stats.spd.get() as i32 + attacker_buff_mods.spd.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
     };
     let effective_target = Stats {
         hp: target_stats.hp,
-        atk: BaseStat::new_unchecked((target_stats.atk.get() as i32 + target_buff_mods.atk.get() as i32).max(0) as u16),
-        def: BaseStat::new_unchecked((target_stats.def.get() as i32 + target_buff_mods.def.get() as i32).max(0) as u16),
-        mag: BaseStat::new_unchecked((target_stats.mag.get() as i32 + target_buff_mods.mag.get() as i32).max(0) as u16),
-        spd: BaseStat::new_unchecked((target_stats.spd.get() as i32 + target_buff_mods.spd.get() as i32).max(0) as u16),
+        atk: BaseStat::new_unchecked(
+            (target_stats.atk.get() as i32 + target_buff_mods.atk.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        def: BaseStat::new_unchecked(
+            (target_stats.def.get() as i32 + target_buff_mods.def.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        mag: BaseStat::new_unchecked(
+            (target_stats.mag.get() as i32 + target_buff_mods.mag.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        spd: BaseStat::new_unchecked(
+            (target_stats.spd.get() as i32 + target_buff_mods.spd.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
     };
 
     // Base hit count is 1 + equipment bonus
@@ -776,10 +824,26 @@ fn execute_ability(
     };
     let effective_attacker = Stats {
         hp: attacker_stats.hp,
-        atk: BaseStat::new_unchecked((attacker_stats.atk.get() as i32 + attacker_buff_mods.atk.get() as i32).max(0) as u16),
-        def: BaseStat::new_unchecked((attacker_stats.def.get() as i32 + attacker_buff_mods.def.get() as i32).max(0) as u16),
-        mag: BaseStat::new_unchecked((attacker_stats.mag.get() as i32 + attacker_buff_mods.mag.get() as i32).max(0) as u16),
-        spd: BaseStat::new_unchecked((attacker_stats.spd.get() as i32 + attacker_buff_mods.spd.get() as i32).max(0) as u16),
+        atk: BaseStat::new_unchecked(
+            (attacker_stats.atk.get() as i32 + attacker_buff_mods.atk.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        def: BaseStat::new_unchecked(
+            (attacker_stats.def.get() as i32 + attacker_buff_mods.def.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        mag: BaseStat::new_unchecked(
+            (attacker_stats.mag.get() as i32 + attacker_buff_mods.mag.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        spd: BaseStat::new_unchecked(
+            (attacker_stats.spd.get() as i32 + attacker_buff_mods.spd.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
     };
 
     // Process each target
@@ -823,10 +887,26 @@ fn execute_ability(
             };
             let effective_target_base = Stats {
                 hp: target_stats.hp,
-                atk: BaseStat::new_unchecked((target_stats.atk.get() as i32 + target_buff_mods.atk.get() as i32).max(0) as u16),
-                def: BaseStat::new_unchecked((target_stats.def.get() as i32 + target_buff_mods.def.get() as i32).max(0) as u16),
-                mag: BaseStat::new_unchecked((target_stats.mag.get() as i32 + target_buff_mods.mag.get() as i32).max(0) as u16),
-                spd: BaseStat::new_unchecked((target_stats.spd.get() as i32 + target_buff_mods.spd.get() as i32).max(0) as u16),
+                atk: BaseStat::new_unchecked(
+                    (target_stats.atk.get() as i32 + target_buff_mods.atk.get() as i32)
+                        .max(0)
+                        .min(9999) as u16,
+                ),
+                def: BaseStat::new_unchecked(
+                    (target_stats.def.get() as i32 + target_buff_mods.def.get() as i32)
+                        .max(0)
+                        .min(9999) as u16,
+                ),
+                mag: BaseStat::new_unchecked(
+                    (target_stats.mag.get() as i32 + target_buff_mods.mag.get() as i32)
+                        .max(0)
+                        .min(9999) as u16,
+                ),
+                spd: BaseStat::new_unchecked(
+                    (target_stats.spd.get() as i32 + target_buff_mods.spd.get() as i32)
+                        .max(0)
+                        .min(9999) as u16,
+                ),
             };
 
             // Apply defense penetration if applicable
@@ -837,7 +917,7 @@ fn execute_ability(
             };
 
             let modified_target_stats = Stats {
-                def: BaseStat::new_unchecked(effective_def),
+                def: BaseStat::new_unchecked(effective_def.min(9999)),
                 ..effective_target_base
             };
 
@@ -1152,10 +1232,26 @@ fn resolve_djinn_activation_damage(
     };
     let effective_attacker = Stats {
         hp: attacker_stats.hp,
-        atk: BaseStat::new_unchecked((attacker_stats.atk.get() as i32 + attacker_buff_mods.atk.get() as i32).max(0) as u16),
-        def: BaseStat::new_unchecked((attacker_stats.def.get() as i32 + attacker_buff_mods.def.get() as i32).max(0) as u16),
-        mag: BaseStat::new_unchecked((attacker_stats.mag.get() as i32 + attacker_buff_mods.mag.get() as i32).max(0) as u16),
-        spd: BaseStat::new_unchecked((attacker_stats.spd.get() as i32 + attacker_buff_mods.spd.get() as i32).max(0) as u16),
+        atk: BaseStat::new_unchecked(
+            (attacker_stats.atk.get() as i32 + attacker_buff_mods.atk.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        def: BaseStat::new_unchecked(
+            (attacker_stats.def.get() as i32 + attacker_buff_mods.def.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        mag: BaseStat::new_unchecked(
+            (attacker_stats.mag.get() as i32 + attacker_buff_mods.mag.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        spd: BaseStat::new_unchecked(
+            (attacker_stats.spd.get() as i32 + attacker_buff_mods.spd.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
     };
 
     let (target_stats, target_buff_mods) = {
@@ -1168,10 +1264,26 @@ fn resolve_djinn_activation_damage(
     };
     let effective_target = Stats {
         hp: target_stats.hp,
-        atk: BaseStat::new_unchecked((target_stats.atk.get() as i32 + target_buff_mods.atk.get() as i32).max(0) as u16),
-        def: BaseStat::new_unchecked((target_stats.def.get() as i32 + target_buff_mods.def.get() as i32).max(0) as u16),
-        mag: BaseStat::new_unchecked((target_stats.mag.get() as i32 + target_buff_mods.mag.get() as i32).max(0) as u16),
-        spd: BaseStat::new_unchecked((target_stats.spd.get() as i32 + target_buff_mods.spd.get() as i32).max(0) as u16),
+        atk: BaseStat::new_unchecked(
+            (target_stats.atk.get() as i32 + target_buff_mods.atk.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        def: BaseStat::new_unchecked(
+            (target_stats.def.get() as i32 + target_buff_mods.def.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        mag: BaseStat::new_unchecked(
+            (target_stats.mag.get() as i32 + target_buff_mods.mag.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
+        spd: BaseStat::new_unchecked(
+            (target_stats.spd.get() as i32 + target_buff_mods.spd.get() as i32)
+                .max(0)
+                .min(9999) as u16,
+        ),
     };
 
     let damage = combat::calculate_damage(
@@ -1682,11 +1794,15 @@ mod tests {
 
     fn test_stats(hp: u16, atk: u16, def: u16, mag: u16, spd: u16) -> Stats {
         Stats {
-            hp: Hp::new_unchecked(hp),
-            atk: BaseStat::new_unchecked(atk),
-            def: BaseStat::new_unchecked(def),
-            mag: BaseStat::new_unchecked(mag),
-            spd: BaseStat::new_unchecked(spd),
+            hp: Hp::new(hp).unwrap_or_else(|_| Hp::new_unchecked(hp.clamp(1, 9999))),
+            atk: BaseStat::new(atk)
+                .unwrap_or_else(|_| BaseStat::new_unchecked(atk.clamp(0, 9999))),
+            def: BaseStat::new(def)
+                .unwrap_or_else(|_| BaseStat::new_unchecked(def.clamp(0, 9999))),
+            mag: BaseStat::new(mag)
+                .unwrap_or_else(|_| BaseStat::new_unchecked(mag.clamp(0, 9999))),
+            spd: BaseStat::new(spd)
+                .unwrap_or_else(|_| BaseStat::new_unchecked(spd.clamp(0, 9999))),
         }
     }
 
@@ -1724,8 +1840,10 @@ mod tests {
             category: AbilityCategory::Psynergy,
             damage_type: Some(DamageType::Psynergy),
             element: Some(Element::Venus),
-            mana_cost: ManaCost::new_unchecked(cost),
-            base_power: BasePower::new_unchecked(power),
+            mana_cost: ManaCost::new(cost)
+                .unwrap_or_else(|_| ManaCost::new_unchecked(cost.clamp(0, 99))),
+            base_power: BasePower::new(power)
+                .unwrap_or_else(|_| BasePower::new_unchecked(power.clamp(0, 9999))),
             targets: TargetMode::SingleEnemy,
             unlock_level: Level::new_unchecked(1),
             hit_count: HitCount::new_unchecked(1),

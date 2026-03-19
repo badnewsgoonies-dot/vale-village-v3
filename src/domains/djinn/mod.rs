@@ -195,11 +195,11 @@ pub fn compute_djinn_stat_bonus(slots: &DjinnSlots, djinn_defs: &[DjinnDef]) -> 
             continue;
         }
         if let Some(def) = djinn_defs.iter().find(|d| d.id == inst.djinn_id) {
-            bonus.atk = StatMod::new_unchecked(bonus.atk.get() + def.stat_bonus.atk.get());
-            bonus.def = StatMod::new_unchecked(bonus.def.get() + def.stat_bonus.def.get());
-            bonus.mag = StatMod::new_unchecked(bonus.mag.get() + def.stat_bonus.mag.get());
-            bonus.spd = StatMod::new_unchecked(bonus.spd.get() + def.stat_bonus.spd.get());
-            bonus.hp = StatMod::new_unchecked(bonus.hp.get() + def.stat_bonus.hp.get());
+            bonus.atk = StatMod::new_unchecked((bonus.atk.get() + def.stat_bonus.atk.get()).clamp(-999, 999));
+            bonus.def = StatMod::new_unchecked((bonus.def.get() + def.stat_bonus.def.get()).clamp(-999, 999));
+            bonus.mag = StatMod::new_unchecked((bonus.mag.get() + def.stat_bonus.mag.get()).clamp(-999, 999));
+            bonus.spd = StatMod::new_unchecked((bonus.spd.get() + def.stat_bonus.spd.get()).clamp(-999, 999));
+            bonus.hp = StatMod::new_unchecked((bonus.hp.get() + def.stat_bonus.hp.get()).clamp(-999, 999));
         }
     }
     bonus

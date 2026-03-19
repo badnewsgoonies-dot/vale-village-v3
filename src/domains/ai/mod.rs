@@ -311,11 +311,15 @@ mod tests {
 
     fn test_stats(hp: u16, atk: u16, def: u16, mag: u16, spd: u16) -> Stats {
         Stats {
-            hp: Hp::new_unchecked(hp),
-            atk: BaseStat::new_unchecked(atk),
-            def: BaseStat::new_unchecked(def),
-            mag: BaseStat::new_unchecked(mag),
-            spd: BaseStat::new_unchecked(spd),
+            hp: Hp::new(hp).unwrap_or_else(|_| Hp::new_unchecked(hp.clamp(1, 9999))),
+            atk: BaseStat::new(atk)
+                .unwrap_or_else(|_| BaseStat::new_unchecked(atk.clamp(0, 9999))),
+            def: BaseStat::new(def)
+                .unwrap_or_else(|_| BaseStat::new_unchecked(def.clamp(0, 9999))),
+            mag: BaseStat::new(mag)
+                .unwrap_or_else(|_| BaseStat::new_unchecked(mag.clamp(0, 9999))),
+            spd: BaseStat::new(spd)
+                .unwrap_or_else(|_| BaseStat::new_unchecked(spd.clamp(0, 9999))),
         }
     }
 
@@ -344,8 +348,10 @@ mod tests {
                 _ => None,
             },
             element: None,
-            mana_cost: ManaCost::new_unchecked(cost),
-            base_power: BasePower::new_unchecked(power),
+            mana_cost: ManaCost::new(cost)
+                .unwrap_or_else(|_| ManaCost::new_unchecked(cost.clamp(0, 99))),
+            base_power: BasePower::new(power)
+                .unwrap_or_else(|_| BasePower::new_unchecked(power.clamp(0, 9999))),
             targets,
             unlock_level: Level::new_unchecked(1),
             hit_count: HitCount::new_unchecked(1),

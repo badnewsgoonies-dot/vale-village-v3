@@ -76,17 +76,47 @@ pub fn add_xp(progress: &mut UnitProgress, xp: u32) -> Vec<u8> {
 pub fn calculate_stats_at_level(base_stats: &Stats, growth_rates: &GrowthRates, level: u8) -> Stats {
     let growth = if level > 1 { (level - 1) as u16 } else { 0 };
     Stats {
-        hp: Hp::new_unchecked(base_stats.hp.get() + growth_rates.hp.get() * growth),
-        atk: BaseStat::new_unchecked(base_stats.atk.get() + growth_rates.atk.get() * growth),
-        def: BaseStat::new_unchecked(base_stats.def.get() + growth_rates.def.get() * growth),
-        mag: BaseStat::new_unchecked(base_stats.mag.get() + growth_rates.mag.get() * growth),
-        spd: BaseStat::new_unchecked(base_stats.spd.get() + growth_rates.spd.get() * growth),
+        hp: Hp::new_unchecked(
+            base_stats
+                .hp
+                .get()
+                .saturating_add(growth_rates.hp.get().saturating_mul(growth))
+                .min(9999),
+        ),
+        atk: BaseStat::new_unchecked(
+            base_stats
+                .atk
+                .get()
+                .saturating_add(growth_rates.atk.get().saturating_mul(growth))
+                .min(9999),
+        ),
+        def: BaseStat::new_unchecked(
+            base_stats
+                .def
+                .get()
+                .saturating_add(growth_rates.def.get().saturating_mul(growth))
+                .min(9999),
+        ),
+        mag: BaseStat::new_unchecked(
+            base_stats
+                .mag
+                .get()
+                .saturating_add(growth_rates.mag.get().saturating_mul(growth))
+                .min(9999),
+        ),
+        spd: BaseStat::new_unchecked(
+            base_stats
+                .spd
+                .get()
+                .saturating_add(growth_rates.spd.get().saturating_mul(growth))
+                .min(9999),
+        ),
     }
 }
 
 /// All abilities unlocked at or below the given level.
 pub fn unlocked_abilities(abilities: &[AbilityProgression], level: u8) -> Vec<AbilityId> {
-    let level = Level::new_unchecked(level);
+    let level = Level::new(level).unwrap_or_else(|_| Level::new_unchecked(level.clamp(1, 99)));
     abilities
         .iter()
         .filter(|ap| ap.level <= level)
