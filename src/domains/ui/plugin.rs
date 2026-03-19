@@ -15,6 +15,7 @@ use super::animation;
 use super::battle_scene;
 use super::hud;
 use super::planning;
+use super::screenshot;
 
 /// Bevy resource wrapping the loaded game data.
 #[derive(Resource)]
@@ -52,6 +53,7 @@ impl Plugin for ValeVillagePlugin {
             }),
             ..default()
         }))
+        .add_plugins(screenshot::ScreenshotPlugin)
         .insert_resource(ClearColor(Color::srgb(
             0x1a as f32 / 255.0,
             0x1a as f32 / 255.0,

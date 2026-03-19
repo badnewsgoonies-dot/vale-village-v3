@@ -7,3 +7,4 @@ pub mod battle_scene;
 pub mod hud;
 pub mod planning;
 pub mod animation;
+pub mod screenshot;

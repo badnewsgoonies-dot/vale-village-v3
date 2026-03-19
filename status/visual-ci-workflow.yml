@@ -1,0 +1,29 @@
+name: Visual CI
+
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+
+jobs:
+  visual-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check main crate
+        run: cargo check
+
+      - name: Check asset catalogue binary
+        run: cargo check --bin asset_catalogue
+
+      - name: Check GUI entrypoint
+        run: cargo check --bin vale-village
