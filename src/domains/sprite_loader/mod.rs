@@ -99,6 +99,23 @@ pub fn load_sprites(
         }
     }
 
+    // Scan assets/sprites/units/ for player unit portraits.
+    // Convention: <unit_id>_portrait.png → key is the unit_id (e.g. "adept").
+    let unit_sprite_dir = Path::new(ASSET_ROOT).join("sprites/units");
+    if let Ok(entries) = fs::read_dir(&unit_sprite_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) == Some("png") {
+                if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+                    let unit_id = stem.trim_end_matches("_portrait").to_string();
+                    let asset_path = normalize_asset_path(&path);
+                    let handle = asset_server.load(asset_path);
+                    registry.unit_portraits.insert(unit_id, handle);
+                }
+            }
+        }
+    }
+
     commands.insert_resource(registry);
 }
 

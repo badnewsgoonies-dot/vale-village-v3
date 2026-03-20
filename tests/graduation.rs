@@ -20,6 +20,9 @@ use vale_village::shared::{
     AbilityCategory, AbilityDef, AbilityId, BattleAction, CombatConfig, DamageType, Element,
     EncounterId, EnemyId, Side, Stats, StatusEffectType, TargetMode, TargetRef,
 };
+use vale_village::shared::bounded_types::{
+    BasePower, BaseStat, Gold, HitCount, Hp, Level, ManaCost, Xp,
+};
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -50,10 +53,10 @@ fn enemy(id: &str, stats: Stats) -> EnemyUnitData {
             id: EnemyId(id.to_string()),
             name: id.to_string(),
             element: Element::Venus,
-            level: 1,
+            level: Level::new_unchecked(1),
             stats,
-            xp: 10,
-            gold: 5,
+            xp: Xp::new_unchecked(10),
+            gold: Gold::new_unchecked(5),
             abilities: vec![],
         },
     }
@@ -67,11 +70,11 @@ fn basic_ability(id: &str, cost: u8, power: u16) -> (AbilityId, AbilityDef) {
         category: AbilityCategory::Psynergy,
         damage_type: Some(DamageType::Psynergy),
         element: Some(Element::Venus),
-        mana_cost: cost,
-        base_power: power,
+        mana_cost: ManaCost::new_unchecked(cost),
+        base_power: BasePower::new_unchecked(power),
         targets: TargetMode::SingleEnemy,
-        unlock_level: 1,
-        hit_count: 1,
+        unlock_level: Level::new_unchecked(1),
+        hit_count: HitCount::new_unchecked(1),
         status_effect: None,
         buff_effect: None,
         debuff_effect: None,
@@ -115,43 +118,43 @@ fn test_battle_completes_to_victory_or_defeat() {
     let p1 = player(
         "hero",
         Stats {
-            hp: 120,
-            atk: 30,
-            def: 20,
-            mag: 25,
-            spd: 15,
+            hp: Hp::new_unchecked(120),
+            atk: BaseStat::new_unchecked(30),
+            def: BaseStat::new_unchecked(20),
+            mag: BaseStat::new_unchecked(25),
+            spd: BaseStat::new_unchecked(15),
         },
         5,
     );
     let p2 = player(
         "mage",
         Stats {
-            hp: 100,
-            atk: 20,
-            def: 15,
-            mag: 35,
-            spd: 13,
+            hp: Hp::new_unchecked(100),
+            atk: BaseStat::new_unchecked(20),
+            def: BaseStat::new_unchecked(15),
+            mag: BaseStat::new_unchecked(35),
+            spd: BaseStat::new_unchecked(13),
         },
         5,
     );
     let e1 = enemy(
         "goblin-a",
         Stats {
-            hp: 60,
-            atk: 15,
-            def: 10,
-            mag: 5,
-            spd: 8,
+            hp: Hp::new_unchecked(60),
+            atk: BaseStat::new_unchecked(15),
+            def: BaseStat::new_unchecked(10),
+            mag: BaseStat::new_unchecked(5),
+            spd: BaseStat::new_unchecked(8),
         },
     );
     let e2 = enemy(
         "goblin-b",
         Stats {
-            hp: 50,
-            atk: 12,
-            def: 8,
-            mag: 5,
-            spd: 7,
+            hp: Hp::new_unchecked(50),
+            atk: BaseStat::new_unchecked(12),
+            def: BaseStat::new_unchecked(8),
+            mag: BaseStat::new_unchecked(5),
+            spd: BaseStat::new_unchecked(7),
         },
     );
 
@@ -222,18 +225,18 @@ fn test_battle_completes_to_victory_or_defeat() {
 fn test_physical_damage_formula_is_deterministic() {
     let cfg = config();
     let attacker = Stats {
-        hp: 100,
-        atk: 30,
-        def: 10,
-        mag: 5,
-        spd: 10,
+        hp: Hp::new_unchecked(100),
+        atk: BaseStat::new_unchecked(30),
+        def: BaseStat::new_unchecked(10),
+        mag: BaseStat::new_unchecked(5),
+        spd: BaseStat::new_unchecked(10),
     };
     let defender = Stats {
-        hp: 100,
-        atk: 10,
-        def: 20,
-        mag: 5,
-        spd: 10,
+        hp: Hp::new_unchecked(100),
+        atk: BaseStat::new_unchecked(10),
+        def: BaseStat::new_unchecked(20),
+        mag: BaseStat::new_unchecked(5),
+        spd: BaseStat::new_unchecked(10),
     };
 
     let dmg1 = combat::calculate_damage(50, DamageType::Physical, &attacker, &defender, &cfg);
@@ -294,22 +297,22 @@ fn test_dead_unit_cannot_act() {
     let p = player(
         "hero",
         Stats {
-            hp: 100,
-            atk: 30,
-            def: 20,
-            mag: 25,
-            spd: 15,
+            hp: Hp::new_unchecked(100),
+            atk: BaseStat::new_unchecked(30),
+            def: BaseStat::new_unchecked(20),
+            mag: BaseStat::new_unchecked(25),
+            spd: BaseStat::new_unchecked(15),
         },
         5,
     );
     let e = enemy(
         "goblin",
         Stats {
-            hp: 80,
-            atk: 20,
-            def: 15,
-            mag: 10,
-            spd: 10,
+            hp: Hp::new_unchecked(80),
+            atk: BaseStat::new_unchecked(20),
+            def: BaseStat::new_unchecked(15),
+            mag: BaseStat::new_unchecked(10),
+            spd: BaseStat::new_unchecked(10),
         },
     );
 
@@ -381,22 +384,22 @@ fn test_barrier_blocks_damage_instance() {
     let p = player(
         "hero",
         Stats {
-            hp: 100,
-            atk: 30,
-            def: 20,
-            mag: 25,
-            spd: 15,
+            hp: Hp::new_unchecked(100),
+            atk: BaseStat::new_unchecked(30),
+            def: BaseStat::new_unchecked(20),
+            mag: BaseStat::new_unchecked(25),
+            spd: BaseStat::new_unchecked(15),
         },
         5,
     );
     let e = enemy(
         "goblin",
         Stats {
-            hp: 80,
-            atk: 20,
-            def: 15,
-            mag: 10,
-            spd: 10,
+            hp: Hp::new_unchecked(80),
+            atk: BaseStat::new_unchecked(20),
+            def: BaseStat::new_unchecked(15),
+            mag: BaseStat::new_unchecked(10),
+            spd: BaseStat::new_unchecked(10),
         },
     );
 
@@ -454,22 +457,22 @@ fn test_enemies_attack_player_units() {
     let p = player(
         "hero",
         Stats {
-            hp: 200,
-            atk: 10,
-            def: 10,
-            mag: 10,
-            spd: 5,
+            hp: Hp::new_unchecked(200),
+            atk: BaseStat::new_unchecked(10),
+            def: BaseStat::new_unchecked(10),
+            mag: BaseStat::new_unchecked(10),
+            spd: BaseStat::new_unchecked(5),
         },
         5,
     );
     let e = enemy(
         "strong-goblin",
         Stats {
-            hp: 200,
-            atk: 30,
-            def: 10,
-            mag: 5,
-            spd: 20,
+            hp: Hp::new_unchecked(200),
+            atk: BaseStat::new_unchecked(30),
+            def: BaseStat::new_unchecked(10),
+            mag: BaseStat::new_unchecked(5),
+            spd: BaseStat::new_unchecked(20),
         },
     );
 
