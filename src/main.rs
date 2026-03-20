@@ -170,8 +170,8 @@ fn main() {
                     if !level_result.levels_gained.is_empty() {
                         let new_level = progress.level;
                         let new_stats = &level_result.new_stats;
-                        let hp_gain = new_stats.hp.saturating_sub(old_stats.hp);
-                        let atk_gain = new_stats.atk.saturating_sub(old_stats.atk);
+                        let hp_gain = new_stats.hp.get().saturating_sub(old_stats.hp.get());
+                        let atk_gain = new_stats.atk.get().saturating_sub(old_stats.atk.get());
 
                         let ability_str = if level_result.new_abilities.is_empty() {
                             String::new()
@@ -235,7 +235,7 @@ fn main() {
                             current_hp: game_data
                                 .units
                                 .get(recruit_id)
-                                .map(|u| u.base_stats.hp)
+                                .map(|u| u.base_stats.hp.get())
                                 .unwrap_or(100),
                             equipment: save::SavedEquipment::default(),
                             djinn: vec![],
