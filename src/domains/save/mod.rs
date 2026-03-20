@@ -438,4 +438,125 @@ mod tests {
 
         let _ = fs::remove_dir_all(&dir);
     }
+
+    // ══════════════════════════════════════════════════════════════
+    // P0 Graduation: Full save/load round-trip with rich game state
+    // ══════════════════════════════════════════════════════════════
+
+    /// P0 graduation test: create a mid-game save state with every field
+    /// populated (party with equipment and djinn, roster, gold, xp,
+    /// completed encounters, inventory, team djinn), save to disk, reload,
+    /// and verify byte-level identity.
+    #[test]
+    fn graduation_save_load_full_state_roundtrip() {
+        let dir = test_dir("graduation_full");
+        let path = dir.join("save.ron");
+
+        let mut data = create_new_game();
+
+        // Simulate mid-game progress
+        data.gold = 3750;
+        data.xp = 8200;
+        data.current_encounter_id = Some(EncounterId("house-12".into()));
+        data.completed_encounters = vec![
+            EncounterId("house-01".into()),
+            EncounterId("house-02".into()),
+            EncounterId("house-03".into()),
+            EncounterId("house-04".into()),
+            EncounterId("house-05".into()),
+        ];
+        data.inventory = vec![
+            EquipmentId("bronze-sword".into()),
+            EquipmentId("iron-helm".into()),
+            EquipmentId("potion".into()),
+        ];
+
+        // Level up party, equip gear, assign per-unit djinn
+        data.player_party[0].level = 8;
+        data.player_party[0].current_hp = 95;
+        data.player_party[0].equipment = SavedEquipment {
+            weapon: Some(EquipmentId("iron-sword".into())),
+            helm: Some(EquipmentId("leather-cap".into())),
+            armor: Some(EquipmentId("chain-mail".into())),
+            boots: None,
+            accessory: Some(EquipmentId("power-ring".into())),
+        };
+        data.player_party[0].djinn = vec![SavedDjinn {
+            djinn_id: DjinnId("bane".into()),
+            state: DjinnState::Good,
+        }];
+
+        data.player_party[1].level = 7;
+        data.player_party[1].current_hp = 0; // KO'd unit
+        data.player_party[1].equipment.weapon =
+            Some(EquipmentId("flame-axe".into()));
+
+        // Add roster members (recruited units not in active party)
+        data.roster = vec![
+            SavedUnit {
+                unit_id: UnitId("felix".into()),
+                level: 3,
+                current_hp: 120,
+                equipment: SavedEquipment::default(),
+                djinn: vec![],
+            },
+            SavedUnit {
+                unit_id: UnitId("karis".into()),
+                level: 5,
+                current_hp: 88,
+                equipment: SavedEquipment {
+                    weapon: Some(EquipmentId("wind-blade".into())),
+                    ..SavedEquipment::default()
+                },
+                djinn: vec![SavedDjinn {
+                    djinn_id: DjinnId("breeze".into()),
+                    state: DjinnState::Recovery,
+                }],
+            },
+        ];
+
+        // Team-wide djinn pool
+        data.team_djinn = vec![
+            SavedDjinn {
+                djinn_id: DjinnId("flint".into()),
+                state: DjinnState::Good,
+            },
+            SavedDjinn {
+                djinn_id: DjinnId("forge".into()),
+                state: DjinnState::Good,
+            },
+            SavedDjinn {
+                djinn_id: DjinnId("granite".into()),
+                state: DjinnState::Recovery,
+            },
+        ];
+
+        // Save → Load → Assert identity
+        save_game(&data, &path).expect("save should succeed");
+        let loaded = load_game(&path).expect("load should succeed");
+
+        assert_eq!(data, loaded, "full state must survive round-trip exactly");
+
+        // Verify specific high-stakes fields individually
+        assert_eq!(loaded.gold, 3750);
+        assert_eq!(loaded.xp, 8200);
+        assert_eq!(loaded.completed_encounters.len(), 5);
+        assert_eq!(loaded.player_party[0].level, 8);
+        assert_eq!(loaded.player_party[0].current_hp, 95);
+        assert_eq!(loaded.player_party[1].current_hp, 0, "KO state must survive");
+        assert_eq!(loaded.roster.len(), 2);
+        assert_eq!(loaded.roster[1].djinn[0].state, DjinnState::Recovery);
+        assert_eq!(loaded.team_djinn.len(), 3);
+        assert_eq!(
+            loaded.current_encounter_id,
+            Some(EncounterId("house-12".into()))
+        );
+
+        // Verify the RON file is human-readable (not binary)
+        let raw = fs::read_to_string(&path).expect("file should be readable text");
+        assert!(raw.contains("house-12"), "RON should contain encounter ID as text");
+        assert!(raw.contains("flint"), "RON should contain djinn ID as text");
+
+        let _ = fs::remove_dir_all(&dir);
+    }
 }
