@@ -85,6 +85,8 @@ impl Plugin for ValeVillagePlugin {
                 animation::revert_sprite_swaps,
                 animation::animate_projectiles,
                 animation::animate_impacts,
+                animation::animate_screen_shake,
+                animation::animate_screen_flash,
             ),
         );
     }

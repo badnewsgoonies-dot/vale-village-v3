@@ -297,96 +297,188 @@ fn spawn_projectile_effect(
         return;
     };
 
-    // Spawn projectile entity
+    // Spawn projectile entity — BIG and BRIGHT
     commands.spawn((
         Sprite {
             image: proj_handle,
-            custom_size: Some(Vec2::new(32.0, 32.0)),
+            custom_size: Some(Vec2::new(64.0, 64.0)),
             ..default()
         },
         Transform::from_translation(source_pos + Vec3::new(0.0, 0.0, 5.0)),
         ProjectileAnim {
             start: source_pos,
             end: target_pos,
-            timer: Timer::from_seconds(0.35, TimerMode::Once),
+            timer: Timer::from_seconds(0.30, TimerMode::Once),
         },
     ));
 
-    // Pre-spawn impact (invisible until projectile arrives — handled by animate_projectiles)
+    // Pre-spawn impact — HUGE, invisible until projectile arrives
     if let Some(impact_handle) = sprite_registry.get_effect_impact(key) {
         commands.spawn((
             Sprite {
                 image: impact_handle,
-                custom_size: Some(Vec2::new(48.0, 48.0)),
-                color: Color::srgba(1.0, 1.0, 1.0, 0.0), // invisible until triggered
+                custom_size: Some(Vec2::new(96.0, 96.0)),
+                color: Color::srgba(1.0, 1.0, 1.0, 0.0),
                 ..default()
             },
             Transform::from_translation(target_pos + Vec3::new(0.0, 0.0, 6.0)),
             ImpactAnim {
-                timer: Timer::from_seconds(99.0, TimerMode::Once), // placeholder, reset on arrival
+                timer: Timer::from_seconds(99.0, TimerMode::Once),
             },
         ));
     }
 }
 
-/// Animate projectiles: lerp position from start to end, despawn on arrival and trigger impact.
+/// Animate projectiles: lerp with dramatic arc, scale up as they fly, despawn on arrival.
 pub fn animate_projectiles(
     mut commands: Commands,
     time: Res<Time>,
-    mut proj_q: Query<(Entity, &mut Transform, &mut ProjectileAnim)>,
+    mut proj_q: Query<(Entity, &mut Transform, &mut Sprite, &mut ProjectileAnim)>,
     mut impact_q: Query<(Entity, &mut Sprite, &mut ImpactAnim, &Transform), Without<ProjectileAnim>>,
+    camera_q: Query<Entity, With<Camera2d>>,
 ) {
-    for (entity, mut transform, mut proj) in proj_q.iter_mut() {
+    for (entity, mut transform, mut sprite, mut proj) in proj_q.iter_mut() {
         proj.timer.tick(time.delta());
         let t = proj.timer.fraction();
 
-        // Lerp with arc
+        // Lerp with dramatic high arc
         let pos = proj.start.lerp(proj.end, t);
-        let arc_y = (t * std::f32::consts::PI).sin() * -40.0;
+        let arc_y = (t * std::f32::consts::PI).sin() * -60.0;
         transform.translation = Vec3::new(pos.x, pos.y + arc_y, pos.z);
 
-        // Rotate for visual flair
-        transform.rotation = Quat::from_rotation_z(t * std::f32::consts::PI * 4.0);
+        // Spin fast
+        transform.rotation = Quat::from_rotation_z(t * std::f32::consts::PI * 6.0);
+
+        // Scale up as it flies: 1.0 → 1.5 at peak → 1.0 at end
+        let scale_boost = 1.0 + (t * std::f32::consts::PI).sin() * 0.5;
+        transform.scale = Vec3::splat(scale_boost);
+
+        // Brighten at peak
+        let brightness = 1.0 + (t * std::f32::consts::PI).sin() * 0.3;
+        sprite.color = Color::srgba(brightness, brightness, brightness, 1.0);
 
         if proj.timer.finished() {
-            // Despawn projectile
             commands.entity(entity).despawn();
 
-            // Trigger the nearest impact effect
+            // Trigger impact
             for (_ie, mut impact_sprite, mut impact, _it) in impact_q.iter_mut() {
                 if impact.timer.remaining_secs() > 90.0 {
-                    // This is an untriggered impact — activate it
-                    impact.timer = Timer::from_seconds(0.3, TimerMode::Once);
+                    impact.timer = Timer::from_seconds(0.45, TimerMode::Once);
                     impact_sprite.color = Color::srgba(1.0, 1.0, 1.0, 1.0);
                     break;
                 }
             }
+
+            // Screen shake on impact
+            if let Ok(cam_entity) = camera_q.get_single() {
+                commands.entity(cam_entity).insert(ScreenShake {
+                    timer: Timer::from_seconds(0.25, TimerMode::Once),
+                    intensity: 8.0,
+                    original_pos: None,
+                });
+            }
+
+            // Screen flash on impact
+            commands.spawn((
+                Sprite::from_color(
+                    Color::srgba(1.0, 1.0, 1.0, 0.6),
+                    Vec2::new(2000.0, 2000.0),
+                ),
+                Transform::from_xyz(0.0, 0.0, 50.0),
+                ScreenFlash {
+                    timer: Timer::from_seconds(0.15, TimerMode::Once),
+                },
+            ));
         }
     }
 }
 
-/// Animate impacts: scale up and fade out, then despawn.
+/// Animate impacts: BOLD scale up and fade out with glow.
 pub fn animate_impacts(
     mut commands: Commands,
     time: Res<Time>,
     mut query: Query<(Entity, &mut Transform, &mut Sprite, &mut ImpactAnim)>,
 ) {
     for (entity, mut transform, mut sprite, mut impact) in query.iter_mut() {
-        // Skip untriggered impacts
         if impact.timer.remaining_secs() > 90.0 {
             continue;
         }
         impact.timer.tick(time.delta());
         let t = impact.timer.fraction();
 
-        // Scale up from 0.5 to 2.0
-        let scale = 0.5 + t * 1.5;
+        // Scale up from 0.3 to 3.5 — BIG explosion
+        let scale = 0.3 + t * 3.2;
         transform.scale = Vec3::splat(scale);
 
-        // Fade out
-        sprite.color = Color::srgba(1.0, 1.0, 1.0, 1.0 - t);
+        // Fade out in second half, stay bright in first half
+        let alpha = if t < 0.3 {
+            1.0
+        } else {
+            1.0 - (t - 0.3) / 0.7
+        };
+        sprite.color = Color::srgba(1.0, 1.0, 1.0, alpha);
 
         if impact.timer.finished() {
+            commands.entity(entity).despawn();
+        }
+    }
+}
+
+/// Screen shake — applied to camera, decays over duration.
+#[derive(Component)]
+pub struct ScreenShake {
+    pub timer: Timer,
+    pub intensity: f32,
+    pub original_pos: Option<Vec3>,
+}
+
+/// Screen flash — white overlay that fades quickly.
+#[derive(Component)]
+pub struct ScreenFlash {
+    pub timer: Timer,
+}
+
+/// Shake the camera during impacts.
+pub fn animate_screen_shake(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut query: Query<(Entity, &mut Transform, &mut ScreenShake), With<Camera2d>>,
+) {
+    for (entity, mut transform, mut shake) in query.iter_mut() {
+        if shake.original_pos.is_none() {
+            shake.original_pos = Some(transform.translation);
+        }
+        shake.timer.tick(time.delta());
+        let t = shake.timer.fraction();
+        let decay = 1.0 - t;
+        let offset_x = (t * 47.0).sin() * shake.intensity * decay;
+        let offset_y = (t * 73.0).cos() * shake.intensity * decay;
+
+        if let Some(orig) = shake.original_pos {
+            transform.translation = orig + Vec3::new(offset_x, offset_y, 0.0);
+        }
+
+        if shake.timer.finished() {
+            if let Some(orig) = shake.original_pos {
+                transform.translation = orig;
+            }
+            commands.entity(entity).remove::<ScreenShake>();
+        }
+    }
+}
+
+/// Fade out and despawn the white flash overlay.
+pub fn animate_screen_flash(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut query: Query<(Entity, &mut Sprite, &mut ScreenFlash)>,
+) {
+    for (entity, mut sprite, mut flash) in query.iter_mut() {
+        flash.timer.tick(time.delta());
+        let t = flash.timer.fraction();
+        sprite.color = Color::srgba(1.0, 1.0, 1.0, 0.6 * (1.0 - t));
+
+        if flash.timer.finished() {
             commands.entity(entity).despawn();
         }
     }
@@ -403,9 +495,9 @@ fn spawn_event_visual(
         BattleEvent::DamageDealt(dmg) => {
             if let Some(pos) = get_unit_position(dmg.target, player_q, enemy_q) {
                 let (color, size) = if dmg.is_crit {
-                    (Color::srgb(1.0, 0.84, 0.0), 20.0) // gold, larger
+                    (Color::srgb(1.0, 0.84, 0.0), 28.0) // gold, BIG
                 } else {
-                    (Color::WHITE, 16.0)
+                    (Color::WHITE, 20.0)
                 };
                 spawn_floating_number(commands, pos, dmg.amount as i32, color, size);
             }
@@ -425,7 +517,7 @@ fn spawn_event_visual(
 
         BattleEvent::CritTriggered(unit_ref, _hit) => {
             if let Some(pos) = get_unit_position(*unit_ref, player_q, enemy_q) {
-                spawn_floating_label(commands, pos, "CRIT!", Color::srgb(1.0, 0.84, 0.0), 18.0);
+                spawn_floating_label(commands, pos, "CRIT!", Color::srgb(1.0, 0.84, 0.0), 26.0);
             }
         }
 
@@ -451,7 +543,7 @@ fn spawn_event_visual(
 
         BattleEvent::UnitDefeated(defeated) => {
             if let Some(pos) = get_unit_position(defeated.unit, player_q, enemy_q) {
-                spawn_floating_label(commands, pos, "KO", Color::srgb(0.8, 0.267, 0.267), 22.0);
+                spawn_floating_label(commands, pos, "KO", Color::srgb(1.0, 0.2, 0.2), 32.0);
             }
         }
 
