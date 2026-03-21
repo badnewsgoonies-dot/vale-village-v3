@@ -1,67 +1,73 @@
 # Vale Village v3 — Current State
 
-**Phase:** Wave 9 closeout — team-wide djinn correction
-**Verified Commit:** 268f42a
-**Date:** 2026-03-18
+**Phase:** Wave 2 complete, integration done — adventure mode playable
+**Verified Commit:** b824125
+**Date:** 2026-03-21
 
-## Spine Status: IN PROGRESS
-The CLI path loads full data, save state, progression, and deterministic battle execution end-to-end, and the battle model now treats djinn as a shared 3-slot team pool that every player unit can use under the same state transitions. GUI battle interaction is present, but hardening and pre-battle flow remain ungraduated.
+## Spine Status: EXTENDED
+The CLI battle path (--cli mode) remains functional. A new --adventure mode integrates
+10 beyond-battle domains into a text-based game loop: world map navigation, town
+exploration, NPC dialogue with branching and side effects, shop buy/sell, dungeon
+room-by-room traversal with item pickup and boss rooms.
+
+## Stats
+- Commits: 101
+- LOC: 21,095
+- Tests: 357
+- Domains: 24 (14 original + 10 new)
 
 ## Domains
 
-| Domain | LOC | Tests | Wired? | Verified |
-|--------|-----|-------|--------|----------|
-| shared | 460 | 0 | YES | [Observed] Contract frozen in `src/shared/mod.rs` and checksummed in `.contract.sha256` |
-| ai | 581 | 14 | YES | [Observed] Unit tests pass and battle engine imports AI decision logic |
-| battle_engine | 3585 | 49 | YES | [Observed] Core execution path covered by domain tests and graduation tests |
-| cli_runner | 1633 | 6 | YES | [Observed] `src/main.rs` calls the CLI battle flow through this domain |
-| combat | 637 | 23 | YES | [Observed] Damage, targeting, crit, mana, and ordering tests pass |
-| damage_mods | 217 | 14 | YES | [Observed] Penetration, splash, and chain logic tested and used by battle engine |
-| data_loader | 546 | 12 | YES | [Observed] Full data load is exercised by `src/main.rs`, UI plugin, and graduation tests |
-| djinn | 735 | 27 | YES | [Observed] State machine, summon, and recovery tests pass |
-| equipment | 414 | 15 | YES | [Observed] Equipment effects are tested and used in demo battle construction |
-| progression | 349 | 17 | YES | [Observed] XP/stat growth tests pass and rewards are applied in `src/main.rs` |
-| save | 417 | 10 | YES | [Observed] Save/load roundtrips pass and campaign state is read/written in `src/main.rs` |
-| status | 1001 | 31 | YES | [Observed] Status, barrier, HoT, buff, and cleanse logic tested and consumed by battle engine |
-| ui | 2833 | 6 | YES | [Observed] Battle scene shows djinn rows beside active units, HUD syncs live state, and execution transitions persist through playback |
+| Domain | LOC | Tests | Wired? | Status |
+|--------|-----|-------|--------|--------|
+| shared | 909 | 0 | YES | Contract frozen (Wave 1 extension) |
+| ai | 679 | 14 | YES | [Observed] |
+| battle_engine | 4292 | 49 | YES | [Observed] |
+| cli_runner | 1624 | 6 | YES | [Observed] |
+| combat | 745 | 23 | YES | [Observed] |
+| damage_mods | 283 | 14 | YES | [Observed] |
+| data_loader | 548 | 12 | YES | [Observed] |
+| dialogue | 444 | 12 | YES | [Observed] Wave 2, wired to game_loop |
+| djinn | 838 | 27 | YES | [Observed] |
+| dungeon | 405 | 14 | YES | [Observed] Wave 2, wired to game_loop |
+| encounter | 221 | 13 | YES | [Observed] Wave 2, domain logic only |
+| equipment | 435 | 15 | YES | [Observed] |
+| menu | 1 | 0 | NO | Stub |
+| progression | 424 | 17 | YES | [Observed] |
+| puzzle | 393 | 12 | YES | [Observed] Wave 2, domain logic only |
+| quest | 326 | 10 | YES | [Observed] Wave 2, wired to game_loop |
+| save | 728 | 15 | YES | [Observed] Extended with SaveDataExtension |
+| screens | 327 | 13 | YES | [Observed] Wave 2, wired to game_state |
+| shop | 268 | 10 | YES | [Observed] Wave 2, wired to game_loop |
+| sprite_loader | 291 | 0 | partial | Bevy sprite loader |
+| status | 1048 | 31 | YES | [Observed] |
+| town | 233 | 11 | YES | [Observed] Wave 2, wired to game_loop |
+| ui | 10 | 0 | YES | Bevy UI plugin |
+| world_map | 320 | 17 | YES | [Observed] Wave 2, wired to game_loop |
 
 ## Gate Status
 - [x] Contract checksum: OK
-- [x] Compile: `cargo check` OK
-- [x] Tests: 458 passed, 0 failed (`224` lib + `224` bin + `10` graduation)
-- [x] Lint: `cargo clippy -- -D warnings` OK
-- [x] Connectivity: OK
+- [x] Compile: cargo check OK
+- [x] Test compile: cargo check --tests OK
+- [ ] Test execution: cargo test OOMs (Bevy in 4GB)
+- [x] Connectivity: 22/24 domains import shared (menu + sprite_loader are stubs)
 
-## P0 Debt (blocks shipping)
-- [ ] Final interactive harden pass for click-through team-djinn activation/summon behavior and recovery legibility — [Assumed] until manually exercised on the live surface
+## Integration Layer
+- game_state.rs (181 LOC): GameState composite, save extension roundtrip
+- game_loop.rs (870 LOC): CLI adventure mode — world map, town, shop, dialogue, dungeon
 
-## P1 Debt (blocks next milestone)
-- [ ] Pre-battle team/equipment/djinn assignment surface is not implemented
-- [ ] Battle setup helpers still *feed* djinn through per-unit inputs, then merge them into the shared pool at battle creation — [Observed]
-- [ ] Save/load now has `team_djinn`, but battle startup does not yet consume it from a true pre-battle flow — [Observed]
-- [ ] Top-center battle text duplicates HUD information and could be reduced or restyled
-- [ ] `verify-state-claims.sh` is still absent, so persistent claim verification is only partially automated
+## Pending
+- [ ] RON data loader for world data (currently hardcoded in game_loop.rs)
+- [ ] Encounter domain wiring (random encounters in dungeons)
+- [ ] Puzzle domain wiring (puzzle rooms in dungeons)
+- [ ] Menu screens (party, equipment, djinn, items)
+- [ ] Battle integration from dungeon encounters
+- [ ] Save extension persistence in --adventure mode
+- [ ] Bevy GUI for adventure mode
 
-## P2 Debt (nice to fix)
-- [ ] Four-level SPD tiebreaker is not fully implemented — [Assumed] from `status/workers/combat.md`
-- [ ] Same-element djinn 2+2 ability-count enforcement needs explicit verification — [Assumed] from prior state and missing targeted tests
-- [ ] Equipment content audit for zero-power stub abilities still needs a dedicated pass — [Assumed] from prior state
-
-## Verified Claims
-- [Observed] The shared contract remains frozen and matches `.contract.sha256` — `src/shared/mod.rs`, `.contract.sha256`
-- [Observed] The CLI spine loads data, save state, progression, and battle execution from the main binary — `src/main.rs`
-- [Observed] `Battle` now carries authoritative `team_djinn_slots`, and activation/summon/recovery operate on that shared pool — `src/domains/battle_engine/mod.rs`
-- [Observed] Player units receive mirrored djinn state from the shared team pool so UI surfaces stay in sync — `src/domains/battle_engine/mod.rs`
-- [Observed] Regression tests now cover team-wide activation by any player and team-wide granted abilities from another member's equipped djinn — `src/domains/battle_engine/mod.rs`, `src/domains/ui/planning.rs`
-- [Observed] The battle scene now renders djinn rows beside player sprites and supports scene-side activation/summon affordances — `src/domains/ui/battle_scene.rs`, `src/domains/ui/plugin.rs`
-- [Observed] The planning/HUD layer now stays in `Executing` through playback and refreshes HP, mana, crit, and round summary from live state — `src/domains/ui/planning.rs`, `src/domains/ui/hud.rs`, `src/domains/ui/animation.rs`
-- [Observed] The currently acting unit now has a dedicated battle-scene highlight frame, improving round-order readability on the live GUI — `src/domains/ui/battle_scene.rs`
-- [Observed] SaveData now has a team-wide `team_djinn` field with serde default for forward-compatible persistence — `src/domains/save/mod.rs`
-- [Observed] The integrated GUI launches successfully on `DISPLAY=:0` and renders the new scene-side djinn controls — manual launch plus screenshot on 2026-03-17
-- [Observed] The global automated gate set is green on merged `master` — `cargo check`, `cargo clippy -- -D warnings`, `bash scripts/run-gates.sh` on 2026-03-18
-- [Assumed] The current GUI flow is fully understandable and operable by a player without a manual audit — NEEDS VERIFICATION before a GUI shipping decision depends on it
-
-## Open Questions
-- Does the GUI currently make djinn activation, summon preemption, and recovery order legible enough to count as a shippable interactive battle slice? — blocks GUI milestone
-- Should the mirrored per-unit djinn rows remain the final UI, or collapse to a single team-wide presentation once hardening feedback is in? — blocks final UI fidelity
-- Once all downstream tooling has been migrated, should `.memory/STATE.md` be removed entirely instead of mirrored for compatibility? — blocks cleanup only
+## Wave 2 Costs
+10 premium (Sonnet workers via Copilot) + orchestrator integration time
+- Batch A: 3 premium, 1,097 LOC, 4 fixes
+- Batch B: 3 premium, 881 LOC, 3 fixes
+- Batch C: 3 premium, 958 LOC, 0 fixes
+- Batch D: 1 premium, 167 LOC, 0 fixes
