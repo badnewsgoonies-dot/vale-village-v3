@@ -17,6 +17,7 @@ const ASSET_ROOT: &str = "assets";
 pub struct SpriteRegistry {
     pub enemy_idle: HashMap<String, Handle<Image>>,
     pub enemy_attack: HashMap<String, Handle<Image>>,
+    pub enemy_hit: HashMap<String, Handle<Image>>,
     pub djinn: HashMap<String, Handle<Image>>,
     pub unit_portraits: HashMap<String, Handle<Image>>,
     pub fallback: Handle<Image>,
@@ -39,6 +40,13 @@ impl SpriteRegistry {
 
     pub fn get_enemy_attack(&self, id: &str) -> Handle<Image> {
         self.enemy_attack
+            .get(id)
+            .cloned()
+            .unwrap_or_else(|| self.fallback.clone())
+    }
+
+    pub fn get_enemy_hit(&self, id: &str) -> Handle<Image> {
+        self.enemy_hit
             .get(id)
             .cloned()
             .unwrap_or_else(|| self.fallback.clone())
@@ -87,8 +95,10 @@ pub fn load_sprites(
         for entry in parse_enemy_manifest(&content) {
             let idle = load_or_fallback(entry.sprite_idle.as_deref(), &asset_server, &fallback);
             let attack = load_or_fallback(entry.sprite_attack.as_deref(), &asset_server, &fallback);
+            let hit = load_or_fallback(entry.sprite_hit.as_deref(), &asset_server, &fallback);
             registry.enemy_idle.insert(entry.id.clone(), idle);
-            registry.enemy_attack.insert(entry.id, attack);
+            registry.enemy_attack.insert(entry.id.clone(), attack);
+            registry.enemy_hit.insert(entry.id, hit);
         }
     }
 
@@ -124,6 +134,7 @@ struct EnemyManifestEntry {
     id: String,
     sprite_idle: Option<String>,
     sprite_attack: Option<String>,
+    sprite_hit: Option<String>,
 }
 
 #[derive(Default)]
@@ -167,6 +178,7 @@ fn parse_enemy_manifest(content: &str) -> Vec<EnemyManifestEntry> {
             match key.trim() {
                 "sprite_idle" => entry.sprite_idle = Some(value),
                 "sprite_attack" => entry.sprite_attack = Some(value),
+                "sprite_hit" => entry.sprite_hit = Some(value),
                 _ => {}
             }
         }

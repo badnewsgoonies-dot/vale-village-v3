@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use crate::domains::battle_engine::BattleEvent;
 use crate::shared::{Side, StatusEffectType, TargetRef};
 
-use super::battle_scene::{EnemyUnit, PlayerUnit};
+use super::battle_scene::{EnemyUnit, PlayerUnit, SpriteSwapTimer, UnitSpriteSet};
 use super::planning::{PlanningMode, PlanningState, PostPlaybackMode};
 
 // ── Components ─────────────────────────────────────────────────────
@@ -92,6 +92,7 @@ pub fn play_event_queue(
     mut state: ResMut<PlanningState>,
     player_q: Query<(&Transform, &PlayerUnit)>,
     enemy_q: Query<(&Transform, &EnemyUnit)>,
+    mut sprite_q: Query<(Entity, &mut Sprite, &UnitSpriteSet, Option<&PlayerUnit>, Option<&EnemyUnit>)>,
 ) {
     if !queue.playing {
         return;
@@ -103,6 +104,7 @@ pub fn play_event_queue(
         if queue.event_timer.just_finished() {
             let event = queue.events[queue.current_index].clone();
             spawn_event_visual(&mut commands, &event, &player_q, &enemy_q);
+            apply_sprite_swap(&mut commands, &event, &mut sprite_q);
             queue.current_index += 1;
 
             if queue.current_index >= queue.events.len() {
@@ -131,6 +133,71 @@ pub fn play_event_queue(
                     PostPlaybackMode::BattleOver => PlanningMode::BattleOver,
                 };
             }
+        }
+    }
+}
+
+/// Swap unit sprites based on battle events (attacker → attack pose, target → hit pose).
+fn apply_sprite_swap(
+    commands: &mut Commands,
+    event: &BattleEvent,
+    sprite_q: &mut Query<(Entity, &mut Sprite, &UnitSpriteSet, Option<&PlayerUnit>, Option<&EnemyUnit>)>,
+) {
+    match event {
+        BattleEvent::DamageDealt(dmg) => {
+            swap_unit_sprite(commands, sprite_q, dmg.source, SpriteSwapKind::Attack);
+            swap_unit_sprite(commands, sprite_q, dmg.target, SpriteSwapKind::Hit);
+        }
+        BattleEvent::EnemyAbilityUsed { actor, .. } => {
+            swap_unit_sprite(commands, sprite_q, *actor, SpriteSwapKind::Attack);
+        }
+        _ => {}
+    }
+}
+
+enum SpriteSwapKind {
+    Attack,
+    Hit,
+}
+
+fn swap_unit_sprite(
+    commands: &mut Commands,
+    sprite_q: &mut Query<(Entity, &mut Sprite, &UnitSpriteSet, Option<&PlayerUnit>, Option<&EnemyUnit>)>,
+    target: TargetRef,
+    kind: SpriteSwapKind,
+) {
+    for (entity, mut sprite, sprite_set, player, enemy) in sprite_q.iter_mut() {
+        let matches = match target.side {
+            Side::Player => player.is_some_and(|p| p.index == target.index),
+            Side::Enemy => enemy.is_some_and(|e| e.index == target.index),
+        };
+        if matches {
+            let new_handle = match kind {
+                SpriteSwapKind::Attack => sprite_set.attack.clone(),
+                SpriteSwapKind::Hit => sprite_set.hit.clone(),
+            };
+            sprite.image = new_handle;
+            // Attach a timer to revert to idle after 0.4s
+            commands.entity(entity).insert(SpriteSwapTimer {
+                timer: Timer::from_seconds(0.4, TimerMode::Once),
+                idle_handle: sprite_set.idle.clone(),
+            });
+            break;
+        }
+    }
+}
+
+/// Revert sprite swaps back to idle when their timers expire.
+pub fn revert_sprite_swaps(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut query: Query<(Entity, &mut Sprite, &mut SpriteSwapTimer)>,
+) {
+    for (entity, mut sprite, mut swap) in query.iter_mut() {
+        swap.timer.tick(time.delta());
+        if swap.timer.finished() {
+            sprite.image = swap.idle_handle.clone();
+            commands.entity(entity).remove::<SpriteSwapTimer>();
         }
     }
 }

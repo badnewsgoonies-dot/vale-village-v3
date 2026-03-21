@@ -37,6 +37,21 @@ pub struct EnemyUnit {
 #[derive(Component)]
 pub struct UnitLabel;
 
+/// Sprite handles for idle/attack/hit poses, attached to each unit entity.
+#[derive(Component, Clone)]
+pub struct UnitSpriteSet {
+    pub idle: Handle<Image>,
+    pub attack: Handle<Image>,
+    pub hit: Handle<Image>,
+}
+
+/// Timer-driven sprite revert — swaps back to idle after duration.
+#[derive(Component)]
+pub struct SpriteSwapTimer {
+    pub timer: Timer,
+    pub idle_handle: Handle<Image>,
+}
+
 /// Screen-space overlay root for player djinn markers and summon shortcuts.
 #[derive(Component)]
 pub struct BattleSceneOverlayRoot;
@@ -149,17 +164,22 @@ pub fn setup_battle_scene(
         let element = lookup_element(&unit.unit.id, &game_data);
         let color = element_color(element);
         let name = lookup_name(&unit.unit.id, &game_data);
-        let sprite = battle_unit_sprite(
-            sprite_registry.get_unit_portrait(&unit.unit.id),
-            color,
-            &sprite_registry,
-        );
+        let idle_handle = sprite_registry.get_unit_portrait(&unit.unit.id);
+        let sprite = battle_unit_sprite(idle_handle.clone(), color, &sprite_registry);
+
+        // Player portraits only have idle — attack/hit fall back to idle
+        let sprite_set = UnitSpriteSet {
+            idle: idle_handle.clone(),
+            attack: idle_handle.clone(),
+            hit: idle_handle,
+        };
 
         // Unit sprite
         commands.spawn((
             sprite,
             Transform::from_xyz(PLAYER_X, y, 0.0),
             PlayerUnit { index: i as u8 },
+            sprite_set,
         ));
 
         // Name label below unit
@@ -194,17 +214,21 @@ pub fn setup_battle_scene(
         let element = lookup_element(&unit.unit.id, &game_data);
         let color = element_color(element);
         let name = lookup_name(&unit.unit.id, &game_data);
-        let sprite = battle_unit_sprite(
-            sprite_registry.get_enemy_idle(&unit.unit.id),
-            color,
-            &sprite_registry,
-        );
+        let idle_handle = sprite_registry.get_enemy_idle(&unit.unit.id);
+        let sprite = battle_unit_sprite(idle_handle.clone(), color, &sprite_registry);
+
+        let sprite_set = UnitSpriteSet {
+            idle: idle_handle,
+            attack: sprite_registry.get_enemy_attack(&unit.unit.id),
+            hit: sprite_registry.get_enemy_hit(&unit.unit.id),
+        };
 
         // Unit sprite
         commands.spawn((
             sprite,
             Transform::from_xyz(ENEMY_X, y, 0.0),
             EnemyUnit { index: i as u8 },
+            sprite_set,
         ));
 
         // Name label below enemy

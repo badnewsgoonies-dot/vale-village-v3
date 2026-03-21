@@ -82,6 +82,7 @@ impl Plugin for ValeVillagePlugin {
                 animation::check_for_new_events,
                 animation::play_event_queue,
                 animation::animate_floating_text,
+                animation::revert_sprite_swaps,
             ),
         );
     }
