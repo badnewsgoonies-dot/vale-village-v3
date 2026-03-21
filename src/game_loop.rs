@@ -7,12 +7,15 @@ use std::io::{self, Write};
 
 use crate::game_state::{self, GameState};
 use crate::shared::{
-    bounded_types::Gold,
+    bounded_types::{Gold, ItemCount},
+    DialogueNode, DialogueNodeId, DialogueResponse, DialogueTree, DialogueTreeId,
     DjinnId, Direction, DungeonDef, DungeonId, GameScreen, MapNode, MapNodeId,
     MapNodeType, MenuScreen, NodeUnlockState, NpcId, QuestFlagId, QuestStage,
+    RoomDef, RoomExit, RoomId, RoomItem, RoomType, ItemId, UnitId,
     ScreenTransition, ShopId, TownDef, TownId,
 };
 
+use crate::domains::dialogue::{self, ConditionContext};
 use crate::domains::dungeon;
 use crate::domains::quest::QuestManager;
 use crate::domains::shop;
@@ -118,7 +121,209 @@ fn starter_shop_defs() -> Vec<crate::shared::ShopDef> {
     ]
 }
 
-// ── Input Helper ─────────────────────────────────────────────────────
+// ── Dialogue Trees ───────────────────────────────────────────────────
+
+fn starter_dialogue_trees() -> Vec<DialogueTree> {
+    vec![
+        // NPC 0: Elder in Vale Village
+        DialogueTree {
+            id: DialogueTreeId(0),
+            root: DialogueNodeId(0),
+            nodes: vec![
+                DialogueNode {
+                    id: DialogueNodeId(0),
+                    speaker: Some(NpcId(0)),
+                    text: "Welcome, young adept. Dark forces stir at Mercury Lighthouse. Will you investigate?".into(),
+                    responses: vec![
+                        DialogueResponse {
+                            text: "I'll go at once.".into(),
+                            condition: None,
+                            next_node: Some(DialogueNodeId(1)),
+                            side_effects: vec![
+                                crate::shared::DialogueSideEffect::SetQuestStage(QuestFlagId(0), QuestStage::Active),
+                            ],
+                        },
+                        DialogueResponse {
+                            text: "Tell me more first.".into(),
+                            condition: None,
+                            next_node: Some(DialogueNodeId(2)),
+                            side_effects: vec![],
+                        },
+                    ],
+                },
+                DialogueNode {
+                    id: DialogueNodeId(1),
+                    speaker: Some(NpcId(0)),
+                    text: "Brave soul. Take this gold for supplies. The lighthouse is north of town.".into(),
+                    responses: vec![
+                        DialogueResponse {
+                            text: "[Accept]".into(),
+                            condition: None,
+                            next_node: None,
+                            side_effects: vec![
+                                crate::shared::DialogueSideEffect::GiveGold(Gold::new(200)),
+                            ],
+                        },
+                    ],
+                },
+                DialogueNode {
+                    id: DialogueNodeId(2),
+                    speaker: Some(NpcId(0)),
+                    text: "Saturos and his followers seek to light the beacon. If they succeed, the world will change forever.".into(),
+                    responses: vec![
+                        DialogueResponse {
+                            text: "I understand. I'll stop them.".into(),
+                            condition: None,
+                            next_node: Some(DialogueNodeId(1)),
+                            side_effects: vec![
+                                crate::shared::DialogueSideEffect::SetQuestStage(QuestFlagId(0), QuestStage::Active),
+                            ],
+                        },
+                    ],
+                },
+            ],
+        },
+        // NPC 1: Shop hint
+        DialogueTree {
+            id: DialogueTreeId(1),
+            root: DialogueNodeId(0),
+            nodes: vec![
+                DialogueNode {
+                    id: DialogueNodeId(0),
+                    speaker: Some(NpcId(1)),
+                    text: "The general store has herbs and equipment. Stock up before heading out!".into(),
+                    responses: vec![
+                        DialogueResponse {
+                            text: "Thanks for the tip.".into(),
+                            condition: None,
+                            next_node: None,
+                            side_effects: vec![],
+                        },
+                    ],
+                },
+            ],
+        },
+        // NPC 2: Imil resident
+        DialogueTree {
+            id: DialogueTreeId(2),
+            root: DialogueNodeId(0),
+            nodes: vec![
+                DialogueNode {
+                    id: DialogueNodeId(0),
+                    speaker: Some(NpcId(2)),
+                    text: "Imil is peaceful, but we rely on the lighthouse's power. Please don't let anything happen to it.".into(),
+                    responses: vec![
+                        DialogueResponse {
+                            text: "I'll do my best.".into(),
+                            condition: None,
+                            next_node: None,
+                            side_effects: vec![],
+                        },
+                    ],
+                },
+            ],
+        },
+    ]
+}
+
+// ── Dungeon Definitions ──────────────────────────────────────────────
+
+fn starter_dungeons() -> Vec<DungeonDef> {
+    use crate::shared::{EncounterSlot, PuzzleDef, PuzzleType, Element, EncounterDef,
+        EncounterId, Difficulty, EncounterEnemy, EnemyId};
+    use crate::shared::bounded_types::{Xp, Hp};
+
+    vec![
+        DungeonDef {
+            id: DungeonId(0),
+            name: "Mercury Lighthouse".into(),
+            rooms: vec![
+                RoomDef {
+                    id: RoomId(0),
+                    room_type: RoomType::Normal,
+                    exits: vec![
+                        RoomExit { direction: Direction::Up, target_room: RoomId(1), requires: None },
+                    ],
+                    encounters: vec![],
+                    items: vec![
+                        RoomItem {
+                            item_id: ItemId("herb".into()),
+                            position: (30.0, 30.0),
+                            visible: true,
+                            quest_flag: None,
+                        },
+                    ],
+                    puzzles: vec![],
+                },
+                RoomDef {
+                    id: RoomId(1),
+                    room_type: RoomType::Puzzle,
+                    exits: vec![
+                        RoomExit { direction: Direction::Down, target_room: RoomId(0), requires: None },
+                        RoomExit { direction: Direction::Up, target_room: RoomId(2), requires: None },
+                    ],
+                    encounters: vec![],
+                    items: vec![],
+                    puzzles: vec![
+                        PuzzleDef {
+                            puzzle_type: PuzzleType::ElementPillar(Element::Mercury),
+                            reward: Some(crate::shared::DialogueSideEffect::GiveGold(Gold::new(100))),
+                        },
+                    ],
+                },
+                RoomDef {
+                    id: RoomId(2),
+                    room_type: RoomType::Boss,
+                    exits: vec![
+                        RoomExit { direction: Direction::Down, target_room: RoomId(1), requires: None },
+                    ],
+                    encounters: vec![],
+                    items: vec![],
+                    puzzles: vec![],
+                },
+            ],
+            entry_room: RoomId(0),
+            boss_room: Some(RoomId(2)),
+        },
+    ]
+}
+
+// ── Runtime ConditionContext ──────────────────────────────────────────
+
+/// Snapshot-based context to avoid holding borrows across mutations.
+struct SnapshotCtx {
+    inventory: Vec<ItemId>,
+    quest_flags: std::collections::HashMap<QuestFlagId, QuestStage>,
+    gold: u32,
+}
+
+impl SnapshotCtx {
+    fn from_state(state: &GameState, inventory: &[ItemId]) -> Self {
+        Self {
+            inventory: inventory.to_vec(),
+            quest_flags: state.quest_state.flags.clone(),
+            gold: state.gold.get(),
+        }
+    }
+}
+
+impl ConditionContext for SnapshotCtx {
+    fn has_item(&self, item: &ItemId) -> bool {
+        self.inventory.contains(item)
+    }
+    fn has_djinn(&self, _djinn: &DjinnId) -> bool {
+        false // TODO: check party djinn
+    }
+    fn quest_at_stage(&self, flag: &QuestFlagId, stage: QuestStage) -> bool {
+        self.quest_flags.get(flag).copied().unwrap_or(QuestStage::Unknown) >= stage
+    }
+    fn gold_at_least(&self, amount: Gold) -> bool {
+        self.gold >= amount.get()
+    }
+    fn party_contains(&self, _unit: &UnitId) -> bool {
+        true // TODO: check party roster
+    }
+}
 
 fn prompt(msg: &str) -> String {
     print!("{}", msg);
@@ -150,6 +355,9 @@ pub fn run_game_loop(state: &mut GameState) {
 
     let towns = starter_towns();
     let shop_defs = starter_shop_defs();
+    let dialogue_trees = starter_dialogue_trees();
+    let dungeons = starter_dungeons();
+    let mut inventory: Vec<ItemId> = vec![];
     state.shop_state = shop::init_shop_state(&shop_defs);
 
     // Start at title
@@ -185,9 +393,9 @@ pub fn run_game_loop(state: &mut GameState) {
                 run_shop(state, sid, &shop_defs);
             }
 
-            GameScreen::Dungeon(_dungeon_id) => {
-                println!("[Dungeon] (not yet implemented — returning to world map)");
-                game_state::apply_transition(state, ScreenTransition::ToWorldMap);
+            GameScreen::Dungeon(dungeon_id) => {
+                let did = *dungeon_id;
+                run_dungeon(state, did, &dungeons, &mut inventory);
             }
 
             GameScreen::Menu(menu) => {
@@ -215,9 +423,9 @@ pub fn run_game_loop(state: &mut GameState) {
                 break;
             }
 
-            GameScreen::Dialogue(_npc_id) => {
-                println!("[Dialogue] (not yet wired to dialogue trees)");
-                game_state::apply_transition(state, ScreenTransition::ReturnToPrevious);
+            GameScreen::Dialogue(npc_id) => {
+                let nid = *npc_id;
+                run_dialogue(state, nid, &dialogue_trees, &towns, &mut inventory);
             }
         }
     }
@@ -274,8 +482,10 @@ fn run_town(state: &mut GameState, town_id: TownId, towns: &[TownDef], shop_defs
     let name = town.map(|t| t.name.as_str()).unwrap_or("Unknown Town");
 
     println!("\n── {} ──", name);
-    println!("  [t] Talk to NPCs");
     if let Some(t) = town {
+        for (i, npc) in t.npcs.iter().enumerate() {
+            println!("  [{}] Talk to NPC #{}", i, npc.npc_id.0);
+        }
         if !t.shops.is_empty() {
             println!("  [s] Shop");
         }
@@ -287,13 +497,6 @@ fn run_town(state: &mut GameState, town_id: TownId, towns: &[TownDef], shop_defs
 
     let input = prompt("> ");
     match input.as_str() {
-        "t" => {
-            if let Some(t) = town {
-                for npc in &t.npcs {
-                    println!("  NPC #{}: (dialogue not yet wired)", npc.npc_id.0);
-                }
-            }
-        }
         "s" => {
             if let Some(t) = town {
                 if let Some(&shop_id) = t.shops.first() {
@@ -314,7 +517,17 @@ fn run_town(state: &mut GameState, town_id: TownId, towns: &[TownDef], shop_defs
             game_state::apply_transition(state, ScreenTransition::ToWorldMap);
             return;
         }
-        _ => {}
+        other => {
+            if let Ok(idx) = other.parse::<usize>() {
+                if let Some(t) = town {
+                    if idx < t.npcs.len() {
+                        let npc_id = t.npcs[idx].npc_id;
+                        game_state::apply_transition(state, ScreenTransition::StartDialogue(npc_id));
+                        return;
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -360,6 +573,207 @@ fn run_shop(state: &mut GameState, shop_id: ShopId, defs: &[crate::shared::ShopD
     }
 }
 
+fn run_dialogue(state: &mut GameState, npc_id: NpcId, trees: &[DialogueTree], towns: &[TownDef], inventory: &mut Vec<ItemId>) {
+    // Find dialogue tree for this NPC
+    let tree_id = towns.iter()
+        .flat_map(|t| t.npcs.iter())
+        .find(|n| n.npc_id == npc_id)
+        .map(|n| n.dialogue_tree);
+
+    let tree = tree_id.and_then(|tid| trees.iter().find(|t| t.id == tid));
+
+    let tree = match tree {
+        Some(t) => t,
+        None => {
+            println!("  (This NPC has nothing to say.)");
+            game_state::apply_transition(state, ScreenTransition::ReturnToPrevious);
+            return;
+        }
+    };
+
+    let mut runner = dialogue::start_dialogue(tree);
+    let ctx = SnapshotCtx::from_state(state, &inventory);
+
+    loop {
+        if dialogue::is_finished(&runner) {
+            break;
+        }
+
+        let node = dialogue::get_current_node(&runner, tree);
+        let speaker = node.speaker.map(|id| format!("NPC #{}", id.0)).unwrap_or_else(|| "???".into());
+        println!("\n  {}: \"{}\"", speaker, node.text);
+
+        let responses = dialogue::get_available_responses(&runner, tree, &ctx);
+        if responses.is_empty() {
+            break;
+        }
+
+        for (i, (_idx, resp)) in responses.iter().enumerate() {
+            println!("    [{}] {}", i, resp.text);
+        }
+
+        let choice = match prompt_number("  > ", responses.len()) {
+            Some(c) => c,
+            None => 0,
+        };
+
+        let (original_idx, _) = responses[choice];
+        let (_next, side_effects) = dialogue::choose_response(&mut runner, tree, original_idx);
+
+        // Process side effects
+        for effect in &side_effects {
+            match effect {
+                crate::shared::DialogueSideEffect::GiveGold(amount) => {
+                    let new_gold = state.gold.get() + amount.get();
+                    state.gold = Gold::new(new_gold);
+                    println!("  (Received {} gold!)", amount.get());
+                }
+                crate::shared::DialogueSideEffect::TakeGold(amount) => {
+                    let new_gold = state.gold.get().saturating_sub(amount.get());
+                    state.gold = Gold::new(new_gold);
+                    println!("  (Lost {} gold.)", amount.get());
+                }
+                crate::shared::DialogueSideEffect::GiveItem(item_id, count) => {
+                    for _ in 0..count.get() {
+                        inventory.push(item_id.clone());
+                    }
+                    println!("  (Received {}!)", item_id.0);
+                }
+                crate::shared::DialogueSideEffect::SetQuestStage(flag, stage) => {
+                    state.quest_state.advance(*flag, *stage);
+                    println!("  (Quest updated!)");
+                }
+                crate::shared::DialogueSideEffect::UnlockMapNode(node_id) => {
+                    if let Some(ref mut wm) = state.world_map {
+                        world_map::unlock_node(wm, *node_id);
+                        println!("  (New location discovered!)");
+                    }
+                }
+                crate::shared::DialogueSideEffect::AddDjinnToParty(djinn_id) => {
+                    println!("  (Djinn {} joined the party!)", djinn_id.0);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    game_state::apply_transition(state, ScreenTransition::ReturnToPrevious);
+}
+
+fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[DungeonDef], inventory: &mut Vec<ItemId>) {
+    let def = match dungeons.iter().find(|d| d.id == dungeon_id) {
+        Some(d) => d,
+        None => {
+            println!("  (This dungeon doesn't exist yet.)");
+            game_state::apply_transition(state, ScreenTransition::ToWorldMap);
+            return;
+        }
+    };
+
+    println!("\n╔══════════════════════════════════════╗");
+    println!("║  Entering: {:30}║", def.name);
+    println!("╚══════════════════════════════════════╝");
+
+    let mut ds = dungeon::enter_dungeon(def);
+    let ctx = SnapshotCtx::from_state(state, &inventory);
+
+    loop {
+        let room = dungeon::get_current_room(&ds, def);
+        let room_type_str = match room.room_type {
+            RoomType::Normal => "Room",
+            RoomType::Puzzle => "Puzzle Room",
+            RoomType::MiniBoss => "Mini-Boss Room",
+            RoomType::Boss => "=== BOSS ROOM ===",
+            RoomType::Treasure => "Treasure Room",
+            RoomType::Safe => "Safe Room",
+        };
+        let visited = if ds.visited_rooms.contains(&room.id) { "" } else { " [NEW]" };
+        println!("\n── {} (Room {}) {} ──", room_type_str, room.id.0, visited);
+
+        // Show items
+        for (i, item) in room.items.iter().enumerate() {
+            if !ds.collected_items.contains(&(room.id, i)) {
+                let visibility = if item.visible { "" } else { " [hidden]" };
+                println!("  [i{}] Pick up: {}{}", i, item.item_id.0, visibility);
+            }
+        }
+
+        // Show puzzles
+        let puzzles = dungeon::get_room_puzzles(&ds, def);
+        for (i, puzzle) in puzzles.iter().enumerate() {
+            println!("  [p{}] Puzzle: {:?}", i, puzzle.puzzle_type);
+        }
+
+        // Show exits
+        let exits = dungeon::get_available_exits(&ds, def, &ctx);
+        for (i, (dir, _target)) in exits.iter().enumerate() {
+            println!("  [{:?}] Go {:?}", dir, dir);
+        }
+        println!("  [flee] Leave dungeon");
+
+        if dungeon::is_boss_room(def, room.id) {
+            println!("\n  *** The boss awaits! ***");
+            println!("  [fight] Challenge the boss");
+        }
+
+        let input = prompt("> ").to_lowercase();
+
+        if input == "flee" {
+            println!("  You escape the dungeon.");
+            game_state::apply_transition(state, ScreenTransition::ToWorldMap);
+            return;
+        }
+
+        if input == "fight" && dungeon::is_boss_room(def, room.id) {
+            println!("  [Boss battle would trigger here — returning to world map as victor]");
+            state.quest_state.advance(QuestFlagId(0), QuestStage::Complete);
+            println!("  (Quest completed!)");
+            if let Some(ref mut wm) = state.world_map {
+                world_map::complete_node(wm, MapNodeId(1));
+                // Unlock Imil
+                world_map::unlock_node(wm, MapNodeId(3));
+                world_map::unlock_node(wm, MapNodeId(3));
+                println!("  (New location unlocked: Imil!)");
+            }
+            game_state::apply_transition(state, ScreenTransition::ToWorldMap);
+            return;
+        }
+
+        // Item pickup
+        if input.starts_with('i') {
+            if let Ok(idx) = input[1..].parse::<usize>() {
+                if let Some(item_id) = dungeon::collect_item(&mut ds, def, idx) {
+                    inventory.push(item_id.clone());
+                    println!("  Picked up: {}!", item_id.0);
+                } else {
+                    println!("  Nothing to pick up.");
+                }
+                continue;
+            }
+        }
+
+        // Direction movement
+        let dir = match input.as_str() {
+            "up" => Some(Direction::Up),
+            "down" => Some(Direction::Down),
+            "left" => Some(Direction::Left),
+            "right" => Some(Direction::Right),
+            _ => None,
+        };
+
+        if let Some(d) = dir {
+            if let Some((_, target)) = exits.iter().find(|(ed, _)| *ed == d) {
+                match dungeon::move_to_room(&mut ds, def, *target) {
+                    Ok(()) => {}
+                    Err(e) => println!("  Can't go there: {:?}", e),
+                }
+            } else {
+                println!("  No exit in that direction.");
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -372,6 +786,11 @@ mod tests {
         assert_eq!(towns.len(), 2);
         let shops = starter_shop_defs();
         assert_eq!(shops.len(), 2);
+        let trees = starter_dialogue_trees();
+        assert_eq!(trees.len(), 3);
+        let dungeons = starter_dungeons();
+        assert_eq!(dungeons.len(), 1);
+        assert_eq!(dungeons[0].rooms.len(), 3);
     }
 
     #[test]
@@ -392,9 +811,60 @@ mod tests {
         let mut shop_state = shop::init_shop_state(&defs);
         let gold = Gold::new(100);
         let item = crate::shared::ItemId("herb".into());
-        // Can buy herb for 10 gold
         assert!(shop::can_buy(&shop_state, ShopId(0), &item, gold, &defs).is_ok());
-        // Can't buy with 0 gold
         assert!(shop::can_buy(&shop_state, ShopId(0), &item, Gold::new(0), &defs).is_err());
+    }
+
+    #[test]
+    fn test_dialogue_tree_traversal() {
+        let trees = starter_dialogue_trees();
+        let tree = &trees[0]; // Elder tree
+        let mut runner = dialogue::start_dialogue(tree);
+        assert!(!dialogue::is_finished(&runner));
+
+        let node = dialogue::get_current_node(&runner, tree);
+        assert!(node.text.contains("Mercury Lighthouse"));
+        assert_eq!(node.responses.len(), 2);
+
+        // Choose "I'll go at once"
+        let (_next, effects) = dialogue::choose_response(&mut runner, tree, 0);
+        assert_eq!(effects.len(), 1); // SetQuestStage
+
+        // Should advance to goodbye node
+        let node2 = dialogue::get_current_node(&runner, tree);
+        assert!(node2.text.contains("Brave soul"));
+
+        // Choose [Accept]
+        let (_next, effects2) = dialogue::choose_response(&mut runner, tree, 0);
+        assert_eq!(effects2.len(), 1); // GiveGold
+        assert!(dialogue::is_finished(&runner));
+    }
+
+    #[test]
+    fn test_dungeon_traversal() {
+        let dungeons = starter_dungeons();
+        let def = &dungeons[0];
+        let mut ds = dungeon::enter_dungeon(def);
+
+        // Start in entry room (0)
+        let room = dungeon::get_current_room(&ds, def);
+        assert_eq!(room.id, RoomId(0));
+        assert_eq!(room.room_type, RoomType::Normal);
+
+        // Collect herb
+        let item = dungeon::collect_item(&mut ds, def, 0);
+        assert_eq!(item, Some(ItemId("herb".into())));
+        // Can't collect again
+        let item2 = dungeon::collect_item(&mut ds, def, 0);
+        assert_eq!(item2, None);
+
+        // Move up to puzzle room
+        assert!(dungeon::move_to_room(&mut ds, def, RoomId(1)).is_ok());
+        let room1 = dungeon::get_current_room(&ds, def);
+        assert_eq!(room1.room_type, RoomType::Puzzle);
+
+        // Move up to boss room
+        assert!(dungeon::move_to_room(&mut ds, def, RoomId(2)).is_ok());
+        assert!(dungeon::is_boss_room(def, RoomId(2)));
     }
 }
