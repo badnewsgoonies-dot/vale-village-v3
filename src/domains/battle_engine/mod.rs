@@ -133,27 +133,27 @@ pub fn new_battle(
         .map(|pd| {
             let eq_effects = &pd.equipment_effects;
             let stats = Stats {
-                hp: Hp::new_unchecked(
+                hp: Hp::new(
                     (pd.base_stats.hp.get() as i32 + eq_effects.total_stat_bonus.hp.get() as i32)
                         .max(1)
                         .min(9999) as u16,
                 ),
-                atk: BaseStat::new_unchecked(
+                atk: BaseStat::new(
                     (pd.base_stats.atk.get() as i32 + eq_effects.total_stat_bonus.atk.get() as i32)
                         .max(0)
                         .min(9999) as u16,
                 ),
-                def: BaseStat::new_unchecked(
+                def: BaseStat::new(
                     (pd.base_stats.def.get() as i32 + eq_effects.total_stat_bonus.def.get() as i32)
                         .max(0)
                         .min(9999) as u16,
                 ),
-                mag: BaseStat::new_unchecked(
+                mag: BaseStat::new(
                     (pd.base_stats.mag.get() as i32 + eq_effects.total_stat_bonus.mag.get() as i32)
                         .max(0)
                         .min(9999) as u16,
                 ),
-                spd: BaseStat::new_unchecked(
+                spd: BaseStat::new(
                     (pd.base_stats.spd.get() as i32 + eq_effects.total_stat_bonus.spd.get() as i32)
                         .max(0)
                         .min(9999) as u16,
@@ -643,22 +643,22 @@ fn execute_attack(
     // Effective stats with buff/debuff modifiers
     let effective_attacker = Stats {
         hp: attacker_stats.hp,
-        atk: BaseStat::new_unchecked(
+        atk: BaseStat::new(
             (attacker_stats.atk.get() as i32 + attacker_buff_mods.atk.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        def: BaseStat::new_unchecked(
+        def: BaseStat::new(
             (attacker_stats.def.get() as i32 + attacker_buff_mods.def.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        mag: BaseStat::new_unchecked(
+        mag: BaseStat::new(
             (attacker_stats.mag.get() as i32 + attacker_buff_mods.mag.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        spd: BaseStat::new_unchecked(
+        spd: BaseStat::new(
             (attacker_stats.spd.get() as i32 + attacker_buff_mods.spd.get() as i32)
                 .max(0)
                 .min(9999) as u16,
@@ -666,22 +666,22 @@ fn execute_attack(
     };
     let effective_target = Stats {
         hp: target_stats.hp,
-        atk: BaseStat::new_unchecked(
+        atk: BaseStat::new(
             (target_stats.atk.get() as i32 + target_buff_mods.atk.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        def: BaseStat::new_unchecked(
+        def: BaseStat::new(
             (target_stats.def.get() as i32 + target_buff_mods.def.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        mag: BaseStat::new_unchecked(
+        mag: BaseStat::new(
             (target_stats.mag.get() as i32 + target_buff_mods.mag.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        spd: BaseStat::new_unchecked(
+        spd: BaseStat::new(
             (target_stats.spd.get() as i32 + target_buff_mods.spd.get() as i32)
                 .max(0)
                 .min(9999) as u16,
@@ -824,22 +824,22 @@ fn execute_ability(
     };
     let effective_attacker = Stats {
         hp: attacker_stats.hp,
-        atk: BaseStat::new_unchecked(
+        atk: BaseStat::new(
             (attacker_stats.atk.get() as i32 + attacker_buff_mods.atk.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        def: BaseStat::new_unchecked(
+        def: BaseStat::new(
             (attacker_stats.def.get() as i32 + attacker_buff_mods.def.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        mag: BaseStat::new_unchecked(
+        mag: BaseStat::new(
             (attacker_stats.mag.get() as i32 + attacker_buff_mods.mag.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        spd: BaseStat::new_unchecked(
+        spd: BaseStat::new(
             (attacker_stats.spd.get() as i32 + attacker_buff_mods.spd.get() as i32)
                 .max(0)
                 .min(9999) as u16,
@@ -887,22 +887,22 @@ fn execute_ability(
             };
             let effective_target_base = Stats {
                 hp: target_stats.hp,
-                atk: BaseStat::new_unchecked(
+                atk: BaseStat::new(
                     (target_stats.atk.get() as i32 + target_buff_mods.atk.get() as i32)
                         .max(0)
                         .min(9999) as u16,
                 ),
-                def: BaseStat::new_unchecked(
+                def: BaseStat::new(
                     (target_stats.def.get() as i32 + target_buff_mods.def.get() as i32)
                         .max(0)
                         .min(9999) as u16,
                 ),
-                mag: BaseStat::new_unchecked(
+                mag: BaseStat::new(
                     (target_stats.mag.get() as i32 + target_buff_mods.mag.get() as i32)
                         .max(0)
                         .min(9999) as u16,
                 ),
-                spd: BaseStat::new_unchecked(
+                spd: BaseStat::new(
                     (target_stats.spd.get() as i32 + target_buff_mods.spd.get() as i32)
                         .max(0)
                         .min(9999) as u16,
@@ -917,7 +917,7 @@ fn execute_ability(
             };
 
             let modified_target_stats = Stats {
-                def: BaseStat::new_unchecked(effective_def.min(9999)),
+                def: BaseStat::new(effective_def.min(9999)),
                 ..effective_target_base
             };
 
@@ -1201,13 +1201,13 @@ fn resolve_djinn_activation_damage(
                 &mut actor.status_state,
                 &crate::shared::BuffEffect {
                     stat_modifiers: crate::shared::StatBonus {
-                        atk: crate::shared::bounded_types::StatMod::new_unchecked(2),
-                        def: crate::shared::bounded_types::StatMod::new_unchecked(0),
-                        mag: crate::shared::bounded_types::StatMod::new_unchecked(0),
-                        spd: crate::shared::bounded_types::StatMod::new_unchecked(0),
-                        hp: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                        atk: crate::shared::bounded_types::StatMod::new(2),
+                        def: crate::shared::bounded_types::StatMod::new(0),
+                        mag: crate::shared::bounded_types::StatMod::new(0),
+                        spd: crate::shared::bounded_types::StatMod::new(0),
+                        hp: crate::shared::bounded_types::StatMod::new(0),
                     },
-                    duration: EffectDuration::new_unchecked(3),
+                    duration: EffectDuration::new(3),
                     shield_charges: None,
                     grant_immunity: false,
                 },
@@ -1236,22 +1236,22 @@ fn resolve_djinn_activation_damage(
     };
     let effective_attacker = Stats {
         hp: attacker_stats.hp,
-        atk: BaseStat::new_unchecked(
+        atk: BaseStat::new(
             (attacker_stats.atk.get() as i32 + attacker_buff_mods.atk.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        def: BaseStat::new_unchecked(
+        def: BaseStat::new(
             (attacker_stats.def.get() as i32 + attacker_buff_mods.def.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        mag: BaseStat::new_unchecked(
+        mag: BaseStat::new(
             (attacker_stats.mag.get() as i32 + attacker_buff_mods.mag.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        spd: BaseStat::new_unchecked(
+        spd: BaseStat::new(
             (attacker_stats.spd.get() as i32 + attacker_buff_mods.spd.get() as i32)
                 .max(0)
                 .min(9999) as u16,
@@ -1268,22 +1268,22 @@ fn resolve_djinn_activation_damage(
     };
     let effective_target = Stats {
         hp: target_stats.hp,
-        atk: BaseStat::new_unchecked(
+        atk: BaseStat::new(
             (target_stats.atk.get() as i32 + target_buff_mods.atk.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        def: BaseStat::new_unchecked(
+        def: BaseStat::new(
             (target_stats.def.get() as i32 + target_buff_mods.def.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        mag: BaseStat::new_unchecked(
+        mag: BaseStat::new(
             (target_stats.mag.get() as i32 + target_buff_mods.mag.get() as i32)
                 .max(0)
                 .min(9999) as u16,
         ),
-        spd: BaseStat::new_unchecked(
+        spd: BaseStat::new(
             (target_stats.spd.get() as i32 + target_buff_mods.spd.get() as i32)
                 .max(0)
                 .min(9999) as u16,
@@ -1798,11 +1798,11 @@ mod tests {
 
     fn test_stats(hp: u16, atk: u16, def: u16, mag: u16, spd: u16) -> Stats {
         Stats {
-            hp: Hp::new(hp).unwrap_or_else(|_| Hp::new_unchecked(hp.clamp(1, 9999))),
-            atk: BaseStat::new(atk).unwrap_or_else(|_| BaseStat::new_unchecked(atk.clamp(0, 9999))),
-            def: BaseStat::new(def).unwrap_or_else(|_| BaseStat::new_unchecked(def.clamp(0, 9999))),
-            mag: BaseStat::new(mag).unwrap_or_else(|_| BaseStat::new_unchecked(mag.clamp(0, 9999))),
-            spd: BaseStat::new(spd).unwrap_or_else(|_| BaseStat::new_unchecked(spd.clamp(0, 9999))),
+            hp: Hp::new(hp),
+            atk: BaseStat::new(atk),
+            def: BaseStat::new(def),
+            mag: BaseStat::new(mag),
+            spd: BaseStat::new(spd),
         }
     }
 
@@ -1823,10 +1823,10 @@ mod tests {
                 id: EnemyId(id.to_string()),
                 name: id.to_string(),
                 element: Element::Venus,
-                level: Level::new_unchecked(1),
+                level: Level::new(1),
                 stats,
-                xp: crate::shared::bounded_types::Xp::new_unchecked(10),
-                gold: crate::shared::bounded_types::Gold::new_unchecked(5),
+                xp: crate::shared::bounded_types::Xp::new(10),
+                gold: crate::shared::bounded_types::Gold::new(5),
                 abilities: vec![],
             },
         }
@@ -1840,13 +1840,11 @@ mod tests {
             category: AbilityCategory::Psynergy,
             damage_type: Some(DamageType::Psynergy),
             element: Some(Element::Venus),
-            mana_cost: ManaCost::new(cost)
-                .unwrap_or_else(|_| ManaCost::new_unchecked(cost.clamp(0, 99))),
-            base_power: BasePower::new(power)
-                .unwrap_or_else(|_| BasePower::new_unchecked(power.clamp(0, 9999))),
+            mana_cost: ManaCost::new(cost),
+            base_power: BasePower::new(power),
             targets: TargetMode::SingleEnemy,
-            unlock_level: Level::new_unchecked(1),
-            hit_count: HitCount::new_unchecked(1),
+            unlock_level: Level::new(1),
+            hit_count: HitCount::new(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -1874,7 +1872,7 @@ mod tests {
             id: djinn_id.clone(),
             name: id.to_string(),
             element,
-            tier: crate::shared::bounded_types::DjinnTier::new_unchecked(1),
+            tier: crate::shared::bounded_types::DjinnTier::new(1),
             stat_bonus: crate::shared::StatBonus::default(),
             summon_effect: Some(crate::shared::SummonEffect {
                 damage: summon_damage,
@@ -2224,7 +2222,7 @@ mod tests {
         // Apply burn to enemy
         let burn = StatusEffect {
             effect_type: StatusEffectType::Burn,
-            duration: EffectDuration::new_unchecked(3),
+            duration: EffectDuration::new(3),
             burn_percent: Some(0.10),
             poison_percent: None,
             freeze_threshold: None,
@@ -2662,7 +2660,7 @@ mod tests {
             id: djinn_id.clone(),
             name: "Mist".to_string(),
             element: Element::Mercury,
-            tier: crate::shared::bounded_types::DjinnTier::new_unchecked(1),
+            tier: crate::shared::bounded_types::DjinnTier::new(1),
             stat_bonus: crate::shared::StatBonus::default(),
             summon_effect: Some(crate::shared::SummonEffect {
                 damage: 0,
@@ -2756,19 +2754,19 @@ mod tests {
             id: djinn_id.clone(),
             name: "Forge".to_string(),
             element: Element::Mars,
-            tier: crate::shared::bounded_types::DjinnTier::new_unchecked(1),
+            tier: crate::shared::bounded_types::DjinnTier::new(1),
             stat_bonus: crate::shared::StatBonus::default(),
             summon_effect: Some(crate::shared::SummonEffect {
                 damage: 0,
                 buff: Some(crate::shared::BuffEffect {
                     stat_modifiers: crate::shared::StatBonus {
-                        atk: crate::shared::bounded_types::StatMod::new_unchecked(5),
-                        def: crate::shared::bounded_types::StatMod::new_unchecked(0),
-                        mag: crate::shared::bounded_types::StatMod::new_unchecked(0),
-                        spd: crate::shared::bounded_types::StatMod::new_unchecked(0),
-                        hp: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                        atk: crate::shared::bounded_types::StatMod::new(5),
+                        def: crate::shared::bounded_types::StatMod::new(0),
+                        mag: crate::shared::bounded_types::StatMod::new(0),
+                        spd: crate::shared::bounded_types::StatMod::new(0),
+                        hp: crate::shared::bounded_types::StatMod::new(0),
                     },
-                    duration: EffectDuration::new_unchecked(2),
+                    duration: EffectDuration::new(2),
                     shield_charges: None,
                     grant_immunity: false,
                 }),
@@ -3312,7 +3310,7 @@ mod tests {
         // Apply freeze with a low threshold to the enemy
         let freeze = StatusEffect {
             effect_type: StatusEffectType::Freeze,
-            duration: EffectDuration::new_unchecked(10),
+            duration: EffectDuration::new(10),
             burn_percent: None,
             poison_percent: None,
             freeze_threshold: Some(10), // breaks after 10 cumulative damage
@@ -3374,11 +3372,11 @@ mod tests {
             category: AbilityCategory::Psynergy,
             damage_type: Some(DamageType::Psynergy),
             element: Some(Element::Jupiter),
-            mana_cost: ManaCost::new_unchecked(2),
-            base_power: BasePower::new_unchecked(30),
+            mana_cost: ManaCost::new(2),
+            base_power: BasePower::new(30),
             targets: TargetMode::SingleEnemy,
-            unlock_level: Level::new_unchecked(1),
-            hit_count: HitCount::new_unchecked(1),
+            unlock_level: Level::new(1),
+            hit_count: HitCount::new(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -3525,11 +3523,11 @@ mod tests {
             category: AbilityCategory::Buff,
             damage_type: None,
             element: None,
-            mana_cost: ManaCost::new_unchecked(2),
-            base_power: BasePower::new_unchecked(0),
+            mana_cost: ManaCost::new(2),
+            base_power: BasePower::new(0),
             targets: TargetMode::SingleAlly,
-            unlock_level: Level::new_unchecked(1),
-            hit_count: HitCount::new_unchecked(1),
+            unlock_level: Level::new(1),
+            hit_count: HitCount::new(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -3539,7 +3537,7 @@ mod tests {
             grant_immunity: Some(Immunity {
                 all: true,
                 types: vec![],
-                duration: EffectDuration::new_unchecked(3),
+                duration: EffectDuration::new(3),
             }),
             cleanse: None,
             ignore_defense_percent: None,
@@ -3585,7 +3583,7 @@ mod tests {
         // Try to apply a burn status — should be blocked
         let burn = StatusEffect {
             effect_type: StatusEffectType::Burn,
-            duration: EffectDuration::new_unchecked(3),
+            duration: EffectDuration::new(3),
             burn_percent: Some(0.10),
             poison_percent: None,
             freeze_threshold: None,
@@ -3617,11 +3615,11 @@ mod tests {
             category: AbilityCategory::Buff,
             damage_type: None,
             element: None,
-            mana_cost: ManaCost::new_unchecked(2),
-            base_power: BasePower::new_unchecked(0),
+            mana_cost: ManaCost::new(2),
+            base_power: BasePower::new(0),
             targets: TargetMode::SingleAlly,
-            unlock_level: Level::new_unchecked(1),
-            hit_count: HitCount::new_unchecked(1),
+            unlock_level: Level::new(1),
+            hit_count: HitCount::new(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -3651,14 +3649,14 @@ mod tests {
         // Apply burn and poison to the player (not stun — stun prevents acting)
         let burn = StatusEffect {
             effect_type: StatusEffectType::Burn,
-            duration: EffectDuration::new_unchecked(5),
+            duration: EffectDuration::new(5),
             burn_percent: Some(0.10),
             poison_percent: None,
             freeze_threshold: None,
         };
         let poison = StatusEffect {
             effect_type: StatusEffectType::Poison,
-            duration: EffectDuration::new_unchecked(5),
+            duration: EffectDuration::new(5),
             burn_percent: None,
             poison_percent: Some(0.05),
             freeze_threshold: None,
@@ -3709,11 +3707,11 @@ mod tests {
             category: AbilityCategory::Healing,
             damage_type: None,
             element: None,
-            mana_cost: ManaCost::new_unchecked(3),
-            base_power: BasePower::new_unchecked(0),
+            mana_cost: ManaCost::new(3),
+            base_power: BasePower::new(0),
             targets: TargetMode::SingleAlly,
-            unlock_level: Level::new_unchecked(1),
-            hit_count: HitCount::new_unchecked(1),
+            unlock_level: Level::new(1),
+            hit_count: HitCount::new(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -3803,11 +3801,11 @@ mod tests {
             category: AbilityCategory::Healing,
             damage_type: None,
             element: None,
-            mana_cost: ManaCost::new_unchecked(2),
-            base_power: BasePower::new_unchecked(20), // base heal = 20
+            mana_cost: ManaCost::new(2),
+            base_power: BasePower::new(20), // base heal = 20
             targets: TargetMode::SingleAlly,
-            unlock_level: Level::new_unchecked(1),
-            hit_count: HitCount::new_unchecked(1),
+            unlock_level: Level::new(1),
+            hit_count: HitCount::new(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -3892,11 +3890,11 @@ mod tests {
             category: AbilityCategory::Buff,
             damage_type: None,
             element: None,
-            mana_cost: ManaCost::new_unchecked(2),
-            base_power: BasePower::new_unchecked(0),
+            mana_cost: ManaCost::new(2),
+            base_power: BasePower::new(0),
             targets: TargetMode::SingleAlly,
-            unlock_level: Level::new_unchecked(1),
-            hit_count: HitCount::new_unchecked(1),
+            unlock_level: Level::new(1),
+            hit_count: HitCount::new(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,
@@ -3978,7 +3976,7 @@ mod tests {
         let immunity = Immunity {
             all: true,
             types: vec![],
-            duration: EffectDuration::new_unchecked(2),
+            duration: EffectDuration::new(2),
         };
         status::apply_immunity(&mut battle.player_units[0].status_state, &immunity);
         assert!(
@@ -4036,13 +4034,13 @@ mod tests {
         // Now apply a strong ATK buff to the player
         let atk_buff = crate::shared::BuffEffect {
             stat_modifiers: crate::shared::StatBonus {
-                atk: crate::shared::bounded_types::StatMod::new_unchecked(20),
-                def: crate::shared::bounded_types::StatMod::new_unchecked(0),
-                mag: crate::shared::bounded_types::StatMod::new_unchecked(0),
-                spd: crate::shared::bounded_types::StatMod::new_unchecked(0),
-                hp: crate::shared::bounded_types::StatMod::new_unchecked(0),
+                atk: crate::shared::bounded_types::StatMod::new(20),
+                def: crate::shared::bounded_types::StatMod::new(0),
+                mag: crate::shared::bounded_types::StatMod::new(0),
+                spd: crate::shared::bounded_types::StatMod::new(0),
+                hp: crate::shared::bounded_types::StatMod::new(0),
             },
-            duration: EffectDuration::new_unchecked(5),
+            duration: EffectDuration::new(5),
             shield_charges: None,
             grant_immunity: false,
         };
@@ -4079,10 +4077,10 @@ mod tests {
                 id: EnemyId("weak-a".to_string()),
                 name: "Weak A".to_string(),
                 element: Element::Venus,
-                level: Level::new_unchecked(1),
+                level: Level::new(1),
                 stats: test_stats(10, 1, 1, 1, 1),
-                xp: crate::shared::bounded_types::Xp::new_unchecked(25),
-                gold: crate::shared::bounded_types::Gold::new_unchecked(15),
+                xp: crate::shared::bounded_types::Xp::new(25),
+                gold: crate::shared::bounded_types::Gold::new(15),
                 abilities: vec![],
             },
         };
@@ -4091,10 +4089,10 @@ mod tests {
                 id: EnemyId("weak-b".to_string()),
                 name: "Weak B".to_string(),
                 element: Element::Mars,
-                level: Level::new_unchecked(1),
+                level: Level::new(1),
                 stats: test_stats(10, 1, 1, 1, 1),
-                xp: crate::shared::bounded_types::Xp::new_unchecked(40),
-                gold: crate::shared::bounded_types::Gold::new_unchecked(20),
+                xp: crate::shared::bounded_types::Xp::new(40),
+                gold: crate::shared::bounded_types::Gold::new(20),
                 abilities: vec![],
             },
         };
@@ -4144,7 +4142,7 @@ mod tests {
             id: djinn_id.clone(),
             name: "Ramses".to_string(),
             element: Element::Venus,
-            tier: crate::shared::bounded_types::DjinnTier::new_unchecked(1),
+            tier: crate::shared::bounded_types::DjinnTier::new(1),
             stat_bonus: crate::shared::StatBonus::default(),
             summon_effect: Some(crate::shared::SummonEffect {
                 damage: 50,

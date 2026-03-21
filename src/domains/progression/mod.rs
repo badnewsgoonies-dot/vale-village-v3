@@ -81,35 +81,35 @@ pub fn calculate_stats_at_level(
 ) -> Stats {
     let growth = if level > 1 { (level - 1) as u16 } else { 0 };
     Stats {
-        hp: Hp::new_unchecked(
+        hp: Hp::new(
             base_stats
                 .hp
                 .get()
                 .saturating_add(growth_rates.hp.get().saturating_mul(growth))
                 .min(9999),
         ),
-        atk: BaseStat::new_unchecked(
+        atk: BaseStat::new(
             base_stats
                 .atk
                 .get()
                 .saturating_add(growth_rates.atk.get().saturating_mul(growth))
                 .min(9999),
         ),
-        def: BaseStat::new_unchecked(
+        def: BaseStat::new(
             base_stats
                 .def
                 .get()
                 .saturating_add(growth_rates.def.get().saturating_mul(growth))
                 .min(9999),
         ),
-        mag: BaseStat::new_unchecked(
+        mag: BaseStat::new(
             base_stats
                 .mag
                 .get()
                 .saturating_add(growth_rates.mag.get().saturating_mul(growth))
                 .min(9999),
         ),
-        spd: BaseStat::new_unchecked(
+        spd: BaseStat::new(
             base_stats
                 .spd
                 .get()
@@ -121,7 +121,7 @@ pub fn calculate_stats_at_level(
 
 /// All abilities unlocked at or below the given level.
 pub fn unlocked_abilities(abilities: &[AbilityProgression], level: u8) -> Vec<AbilityId> {
-    let level = Level::new(level).unwrap_or_else(|_| Level::new_unchecked(level.clamp(1, 99)));
+    let level = Level::new(level);
     abilities
         .iter()
         .filter(|ap| ap.level <= level)
@@ -176,52 +176,52 @@ mod tests {
 
     fn test_base_stats() -> Stats {
         Stats {
-            hp: Hp::new_unchecked(100),
-            atk: BaseStat::new_unchecked(10),
-            def: BaseStat::new_unchecked(8),
-            mag: BaseStat::new_unchecked(12),
-            spd: BaseStat::new_unchecked(10),
+            hp: Hp::new(100),
+            atk: BaseStat::new(10),
+            def: BaseStat::new(8),
+            mag: BaseStat::new(12),
+            spd: BaseStat::new(10),
         }
     }
 
     fn test_growth_rates() -> GrowthRates {
         GrowthRates {
-            hp: GrowthRate::new_unchecked(15),
-            atk: GrowthRate::new_unchecked(3),
-            def: GrowthRate::new_unchecked(2),
-            mag: GrowthRate::new_unchecked(4),
-            spd: GrowthRate::new_unchecked(2),
+            hp: GrowthRate::new(15),
+            atk: GrowthRate::new(3),
+            def: GrowthRate::new(2),
+            mag: GrowthRate::new(4),
+            spd: GrowthRate::new(2),
         }
     }
 
     fn test_abilities() -> Vec<AbilityProgression> {
         vec![
             AbilityProgression {
-                level: Level::new_unchecked(1),
+                level: Level::new(1),
                 ability_id: AbilityId("strike".to_string()),
             },
             AbilityProgression {
-                level: Level::new_unchecked(1),
+                level: Level::new(1),
                 ability_id: AbilityId("fireball".to_string()),
             },
             AbilityProgression {
-                level: Level::new_unchecked(3),
+                level: Level::new(3),
                 ability_id: AbilityId("heal".to_string()),
             },
             AbilityProgression {
-                level: Level::new_unchecked(5),
+                level: Level::new(5),
                 ability_id: AbilityId("earthquake".to_string()),
             },
             AbilityProgression {
-                level: Level::new_unchecked(10),
+                level: Level::new(10),
                 ability_id: AbilityId("meteor".to_string()),
             },
             AbilityProgression {
-                level: Level::new_unchecked(15),
+                level: Level::new(15),
                 ability_id: AbilityId("ultima".to_string()),
             },
             AbilityProgression {
-                level: Level::new_unchecked(20),
+                level: Level::new(20),
                 ability_id: AbilityId("genesis".to_string()),
             },
         ]
@@ -232,7 +232,7 @@ mod tests {
             id: UnitId("test-unit".to_string()),
             name: "Test Unit".to_string(),
             element: Element::Venus,
-            mana_contribution: crate::shared::bounded_types::ManaCost::new_unchecked(2),
+            mana_contribution: crate::shared::bounded_types::ManaCost::new(2),
             base_stats: test_base_stats(),
             growth_rates: test_growth_rates(),
             abilities: test_abilities(),

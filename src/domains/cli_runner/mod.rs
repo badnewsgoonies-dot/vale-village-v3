@@ -1221,7 +1221,7 @@ mod tests {
                 target: enemy_ref,
                 effect: crate::shared::StatusEffect {
                     effect_type: crate::shared::StatusEffectType::Burn,
-                    duration: EffectDuration::new_unchecked(3),
+                    duration: EffectDuration::new(3),
                     burn_percent: Some(0.10),
                     poison_percent: None,
                     freeze_threshold: None,
@@ -1314,9 +1314,9 @@ mod tests {
             .get(&EnemyId("mercury-slime".to_string()))
             .unwrap()
             .clone();
-        tanky_enemy.stats.hp = crate::shared::bounded_types::Hp::new_unchecked(60000);
-        tanky_enemy.stats.def = crate::shared::bounded_types::BaseStat::new_unchecked(200);
-        tanky_enemy.stats.atk = crate::shared::bounded_types::BaseStat::new_unchecked(1);
+        tanky_enemy.stats.hp = crate::shared::bounded_types::Hp::new(60000);
+        tanky_enemy.stats.def = crate::shared::bounded_types::BaseStat::new(200);
+        tanky_enemy.stats.atk = crate::shared::bounded_types::BaseStat::new(1);
 
         let mut battle = new_battle(
             vec![PlayerUnitData {
@@ -1452,9 +1452,9 @@ mod tests {
 
         // Make enemy very tanky so battle lasts multiple rounds
         let mut tanky = slime.clone();
-        tanky.stats.hp = crate::shared::bounded_types::Hp::new_unchecked(50000);
-        tanky.stats.def = crate::shared::bounded_types::BaseStat::new_unchecked(200);
-        tanky.stats.atk = crate::shared::bounded_types::BaseStat::new_unchecked(1);
+        tanky.stats.hp = crate::shared::bounded_types::Hp::new(50000);
+        tanky.stats.def = crate::shared::bounded_types::BaseStat::new(200);
+        tanky.stats.atk = crate::shared::bounded_types::BaseStat::new(1);
 
         let mut djinn_slots = DjinnSlots::new();
         djinn_slots.add(crate::shared::DjinnId("flint".to_string()));
@@ -1561,9 +1561,9 @@ mod tests {
 
         // Make enemy tanky so battle lasts 4+ rounds
         let mut tanky = slime.clone();
-        tanky.stats.hp = crate::shared::bounded_types::Hp::new_unchecked(50000);
-        tanky.stats.def = crate::shared::bounded_types::BaseStat::new_unchecked(200);
-        tanky.stats.atk = crate::shared::bounded_types::BaseStat::new_unchecked(1);
+        tanky.stats.hp = crate::shared::bounded_types::Hp::new(50000);
+        tanky.stats.def = crate::shared::bounded_types::BaseStat::new(200);
+        tanky.stats.atk = crate::shared::bounded_types::BaseStat::new(1);
 
         let adept_ability = find_first_psynergy_ability(adept, &game_data);
 

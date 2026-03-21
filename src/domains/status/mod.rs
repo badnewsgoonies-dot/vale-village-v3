@@ -215,15 +215,15 @@ pub fn compute_stat_modifiers(buffs: &[ActiveBuff], debuffs: &[ActiveBuff]) -> S
     let mut total = StatBonus::default();
     for b in buffs.iter().chain(debuffs.iter()) {
         total.atk =
-            StatMod::new_unchecked((total.atk.get() + b.stat_modifiers.atk.get()).clamp(-999, 999));
+            StatMod::new((total.atk.get() + b.stat_modifiers.atk.get()).clamp(-999, 999));
         total.def =
-            StatMod::new_unchecked((total.def.get() + b.stat_modifiers.def.get()).clamp(-999, 999));
+            StatMod::new((total.def.get() + b.stat_modifiers.def.get()).clamp(-999, 999));
         total.mag =
-            StatMod::new_unchecked((total.mag.get() + b.stat_modifiers.mag.get()).clamp(-999, 999));
+            StatMod::new((total.mag.get() + b.stat_modifiers.mag.get()).clamp(-999, 999));
         total.spd =
-            StatMod::new_unchecked((total.spd.get() + b.stat_modifiers.spd.get()).clamp(-999, 999));
+            StatMod::new((total.spd.get() + b.stat_modifiers.spd.get()).clamp(-999, 999));
         total.hp =
-            StatMod::new_unchecked((total.hp.get() + b.stat_modifiers.hp.get()).clamp(-999, 999));
+            StatMod::new((total.hp.get() + b.stat_modifiers.hp.get()).clamp(-999, 999));
     }
     total
 }
@@ -387,8 +387,7 @@ mod tests {
     fn burn_effect(pct: f32, dur: u8) -> StatusEffect {
         StatusEffect {
             effect_type: StatusEffectType::Burn,
-            duration: EffectDuration::new(dur)
-                .unwrap_or_else(|_| EffectDuration::new_unchecked(dur.clamp(0, 10))),
+            duration: EffectDuration::new(dur),
             burn_percent: Some(pct),
             poison_percent: None,
             freeze_threshold: None,
@@ -398,8 +397,7 @@ mod tests {
     fn poison_effect(pct: f32, dur: u8) -> StatusEffect {
         StatusEffect {
             effect_type: StatusEffectType::Poison,
-            duration: EffectDuration::new(dur)
-                .unwrap_or_else(|_| EffectDuration::new_unchecked(dur.clamp(0, 10))),
+            duration: EffectDuration::new(dur),
             burn_percent: None,
             poison_percent: Some(pct),
             freeze_threshold: None,
@@ -409,8 +407,7 @@ mod tests {
     fn freeze_effect(threshold: u16, dur: u8) -> StatusEffect {
         StatusEffect {
             effect_type: StatusEffectType::Freeze,
-            duration: EffectDuration::new(dur)
-                .unwrap_or_else(|_| EffectDuration::new_unchecked(dur.clamp(0, 10))),
+            duration: EffectDuration::new(dur),
             burn_percent: None,
             poison_percent: None,
             freeze_threshold: Some(threshold),
@@ -420,8 +417,7 @@ mod tests {
     fn stun_effect(dur: u8) -> StatusEffect {
         StatusEffect {
             effect_type: StatusEffectType::Stun,
-            duration: EffectDuration::new(dur)
-                .unwrap_or_else(|_| EffectDuration::new_unchecked(dur.clamp(0, 10))),
+            duration: EffectDuration::new(dur),
             burn_percent: None,
             poison_percent: None,
             freeze_threshold: None,
@@ -431,8 +427,7 @@ mod tests {
     fn null_effect(dur: u8) -> StatusEffect {
         StatusEffect {
             effect_type: StatusEffectType::Null,
-            duration: EffectDuration::new(dur)
-                .unwrap_or_else(|_| EffectDuration::new_unchecked(dur.clamp(0, 10))),
+            duration: EffectDuration::new(dur),
             burn_percent: None,
             poison_percent: None,
             freeze_threshold: None,
@@ -442,8 +437,7 @@ mod tests {
     fn incap_effect(dur: u8) -> StatusEffect {
         StatusEffect {
             effect_type: StatusEffectType::Incapacitate,
-            duration: EffectDuration::new(dur)
-                .unwrap_or_else(|_| EffectDuration::new_unchecked(dur.clamp(0, 10))),
+            duration: EffectDuration::new(dur),
             burn_percent: None,
             poison_percent: None,
             freeze_threshold: None,
@@ -453,16 +447,13 @@ mod tests {
     fn buff(atk: i16, def: i16, dur: u8) -> BuffEffect {
         BuffEffect {
             stat_modifiers: StatBonus {
-                atk: StatMod::new(atk)
-                    .unwrap_or_else(|_| StatMod::new_unchecked(atk.clamp(-999, 999))),
-                def: StatMod::new(def)
-                    .unwrap_or_else(|_| StatMod::new_unchecked(def.clamp(-999, 999))),
-                mag: StatMod::new_unchecked(0),
-                spd: StatMod::new_unchecked(0),
-                hp: StatMod::new_unchecked(0),
+                atk: StatMod::new(atk),
+                def: StatMod::new(def),
+                mag: StatMod::new(0),
+                spd: StatMod::new(0),
+                hp: StatMod::new(0),
             },
-            duration: EffectDuration::new(dur)
-                .unwrap_or_else(|_| EffectDuration::new_unchecked(dur.clamp(0, 10))),
+            duration: EffectDuration::new(dur),
             shield_charges: None,
             grant_immunity: false,
         }
@@ -471,16 +462,13 @@ mod tests {
     fn debuff(atk: i16, def: i16, dur: u8) -> DebuffEffect {
         DebuffEffect {
             stat_modifiers: StatBonus {
-                atk: StatMod::new(atk)
-                    .unwrap_or_else(|_| StatMod::new_unchecked(atk.clamp(-999, 999))),
-                def: StatMod::new(def)
-                    .unwrap_or_else(|_| StatMod::new_unchecked(def.clamp(-999, 999))),
-                mag: StatMod::new_unchecked(0),
-                spd: StatMod::new_unchecked(0),
-                hp: StatMod::new_unchecked(0),
+                atk: StatMod::new(atk),
+                def: StatMod::new(def),
+                mag: StatMod::new(0),
+                spd: StatMod::new(0),
+                hp: StatMod::new(0),
             },
-            duration: EffectDuration::new(dur)
-                .unwrap_or_else(|_| EffectDuration::new_unchecked(dur.clamp(0, 10))),
+            duration: EffectDuration::new(dur),
         }
     }
 
@@ -652,32 +640,32 @@ mod tests {
         let buffs = vec![
             ActiveBuff {
                 stat_modifiers: StatBonus {
-                    atk: StatMod::new_unchecked(5),
-                    def: StatMod::new_unchecked(3),
-                    mag: StatMod::new_unchecked(0),
-                    spd: StatMod::new_unchecked(0),
-                    hp: StatMod::new_unchecked(0),
+                    atk: StatMod::new(5),
+                    def: StatMod::new(3),
+                    mag: StatMod::new(0),
+                    spd: StatMod::new(0),
+                    hp: StatMod::new(0),
                 },
                 remaining_turns: 2,
             },
             ActiveBuff {
                 stat_modifiers: StatBonus {
-                    atk: StatMod::new_unchecked(10),
-                    def: StatMod::new_unchecked(0),
-                    mag: StatMod::new_unchecked(2),
-                    spd: StatMod::new_unchecked(0),
-                    hp: StatMod::new_unchecked(0),
+                    atk: StatMod::new(10),
+                    def: StatMod::new(0),
+                    mag: StatMod::new(2),
+                    spd: StatMod::new(0),
+                    hp: StatMod::new(0),
                 },
                 remaining_turns: 3,
             },
         ];
         let debuffs = vec![ActiveBuff {
             stat_modifiers: StatBonus {
-                atk: StatMod::new_unchecked(-4),
-                def: StatMod::new_unchecked(-2),
-                mag: StatMod::new_unchecked(0),
-                spd: StatMod::new_unchecked(0),
-                hp: StatMod::new_unchecked(0),
+                atk: StatMod::new(-4),
+                def: StatMod::new(-2),
+                mag: StatMod::new(0),
+                spd: StatMod::new(0),
+                hp: StatMod::new(0),
             },
             remaining_turns: 1,
         }];

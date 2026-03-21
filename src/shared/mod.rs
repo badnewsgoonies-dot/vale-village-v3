@@ -7,10 +7,11 @@ pub mod entity_types;
 pub mod lifecycle_types;
 
 use crate::shared::bounded_types::{
-    BasePower, BaseStat, DjinnTier, EffectDuration, Gold, GrowthRate, HitCount, Hp, Level,
-    ManaCost, MaxBuffStacks, MaxEquippedDjinn, MaxPartySize, StatMod, Xp,
+    BasePower, BaseStat, DjinnTier, EffectDuration, EncounterRate, Gold, GrowthRate, HitCount,
+    Hp, ItemCount, Level, ManaCost, MaxBuffStacks, MaxEquippedDjinn, MaxPartySize, StatMod, Xp,
 };
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 
 // ── ID Types (string-branded for stable serialization) ──────────────
 
@@ -34,6 +35,38 @@ pub struct EncounterId(pub String);
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct SetId(pub String);
+
+// ── New ID Types (Wave 1 contract extension) ────────────────────────
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct ItemId(pub String);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct TownId(pub u8);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct DungeonId(pub u8);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct MapNodeId(pub u8);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct NpcId(pub u16);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct DialogueTreeId(pub u16);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct DialogueNodeId(pub u16);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct QuestFlagId(pub u16);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct ShopId(pub u8);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct RoomId(pub u16);
 
 // ── Core Enums ──────────────────────────────────────────────────────
 
@@ -175,11 +208,11 @@ pub struct StatBonus {
 impl Default for StatBonus {
     fn default() -> Self {
         StatBonus {
-            atk: StatMod::new_unchecked(0),
-            def: StatMod::new_unchecked(0),
-            mag: StatMod::new_unchecked(0),
-            spd: StatMod::new_unchecked(0),
-            hp: StatMod::new_unchecked(0),
+            atk: StatMod::new(0),
+            def: StatMod::new(0),
+            mag: StatMod::new(0),
+            spd: StatMod::new(0),
+            hp: StatMod::new(0),
         }
     }
 }
@@ -238,11 +271,11 @@ pub struct Stats {
 impl Default for Stats {
     fn default() -> Self {
         Stats {
-            hp: Hp::new_unchecked(1),
-            atk: BaseStat::new_unchecked(0),
-            def: BaseStat::new_unchecked(0),
-            mag: BaseStat::new_unchecked(0),
-            spd: BaseStat::new_unchecked(0),
+            hp: Hp::new(1),
+            atk: BaseStat::new(0),
+            def: BaseStat::new(0),
+            mag: BaseStat::new(0),
+            spd: BaseStat::new(0),
         }
     }
 }
@@ -259,11 +292,11 @@ pub struct GrowthRates {
 impl Default for GrowthRates {
     fn default() -> Self {
         GrowthRates {
-            hp: GrowthRate::new_unchecked(0),
-            atk: GrowthRate::new_unchecked(0),
-            def: GrowthRate::new_unchecked(0),
-            mag: GrowthRate::new_unchecked(0),
-            spd: GrowthRate::new_unchecked(0),
+            hp: GrowthRate::new(0),
+            atk: GrowthRate::new(0),
+            def: GrowthRate::new(0),
+            mag: GrowthRate::new(0),
+            spd: GrowthRate::new(0),
         }
     }
 }
@@ -509,4 +542,368 @@ pub struct CombatConfig {
     pub max_buff_stacks: MaxBuffStacks,
     pub djinn_recovery_start_delay: u8,
     pub djinn_recovery_per_turn: u8,
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// WAVE 1 CONTRACT EXTENSION — Full game surfaces beyond battle
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── Game State Machine ──────────────────────────────────────────────
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
+pub enum GameScreen {
+    #[default]
+    Title,
+    WorldMap,
+    Town(TownId),
+    Dungeon(DungeonId),
+    Battle,
+    Menu(MenuScreen),
+    Shop(ShopId),
+    Dialogue(NpcId),
+    SaveLoad,
+    GameOver,
+    Victory,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum MenuScreen {
+    Party,
+    Equipment,
+    Djinn,
+    Items,
+    Psynergy,
+    Status,
+    QuestLog,
+}
+
+// ── Screen Transition Events ────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ScreenTransition {
+    ToTitle,
+    ToWorldMap,
+    EnterTown(TownId),
+    EnterDungeon(DungeonId),
+    StartBattle(EncounterDef),
+    OpenMenu(MenuScreen),
+    OpenShop(ShopId),
+    StartDialogue(NpcId),
+    OpenSaveLoad,
+    TriggerGameOver,
+    TriggerVictory,
+    ReturnToPrevious,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct ScreenStack {
+    pub stack: Vec<GameScreen>, // max depth 8
+}
+
+// ── Direction ───────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+// ── World Map ───────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MapNode {
+    pub id: MapNodeId,
+    pub name: String,
+    pub position: (f32, f32),
+    pub node_type: MapNodeType,
+    pub connections: Vec<MapNodeId>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum MapNodeType {
+    Town(TownId),
+    Dungeon(DungeonId),
+    Landmark,
+    Hidden,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum NodeUnlockState {
+    Locked,
+    Visible,
+    Unlocked,
+    Completed,
+}
+
+// ── Town and NPC ────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TownDef {
+    pub id: TownId,
+    pub name: String,
+    pub npcs: Vec<NpcPlacement>,
+    pub shops: Vec<ShopId>,
+    pub djinn_points: Vec<DjinnDiscoveryPoint>,
+    pub exits: Vec<MapNodeId>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NpcPlacement {
+    pub npc_id: NpcId,
+    pub position: (f32, f32),
+    pub facing: Direction,
+    pub dialogue_tree: DialogueTreeId,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DjinnDiscoveryPoint {
+    pub djinn_id: DjinnId,
+    pub position: (f32, f32),
+    pub requires_puzzle: bool,
+    pub quest_flag: Option<QuestFlagId>,
+}
+
+// ── Dialogue System ─────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DialogueTree {
+    pub id: DialogueTreeId,
+    pub root: DialogueNodeId,
+    pub nodes: Vec<DialogueNode>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DialogueNode {
+    pub id: DialogueNodeId,
+    pub speaker: Option<NpcId>,
+    pub text: String,
+    pub responses: Vec<DialogueResponse>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DialogueResponse {
+    pub text: String,
+    pub condition: Option<DialogueCondition>,
+    pub next_node: Option<DialogueNodeId>,
+    pub side_effects: Vec<DialogueSideEffect>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum DialogueCondition {
+    HasItem(ItemId),
+    HasDjinn(DjinnId),
+    QuestAtStage(QuestFlagId, QuestStage),
+    GoldAtLeast(Gold),
+    PartyContains(UnitId),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum DialogueSideEffect {
+    GiveItem(ItemId, ItemCount),
+    TakeItem(ItemId, ItemCount),
+    GiveGold(Gold),
+    TakeGold(Gold),
+    SetQuestStage(QuestFlagId, QuestStage),
+    UnlockMapNode(MapNodeId),
+    AddDjinnToParty(DjinnId),
+    StartBattle(EncounterDef),
+    Heal,
+}
+
+// ── Quest / Progression ─────────────────────────────────────────────
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub enum QuestStage {
+    Unknown,
+    Discovered,
+    Active,
+    InProgress,
+    Complete,
+    Rewarded,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestDef {
+    pub id: QuestFlagId,
+    pub name: String,
+    pub description: String,
+    pub stages: Vec<QuestStageDef>,
+    pub rewards: Vec<DialogueSideEffect>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestStageDef {
+    pub stage: QuestStage,
+    pub description: String,
+    pub unlock_condition: Option<DialogueCondition>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct QuestState {
+    pub flags: HashMap<QuestFlagId, QuestStage>,
+}
+
+impl QuestState {
+    /// Advance a quest. Can only move forward, never backward.
+    pub fn advance(&mut self, quest: QuestFlagId, to: QuestStage) {
+        let current = self.flags.get(&quest).copied().unwrap_or(QuestStage::Unknown);
+        if to > current {
+            self.flags.insert(quest, to);
+        }
+    }
+
+    pub fn at_least(&self, quest: QuestFlagId, stage: QuestStage) -> bool {
+        self.flags.get(&quest).copied().unwrap_or(QuestStage::Unknown) >= stage
+    }
+}
+
+// ── Shop System ─────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ShopDef {
+    pub id: ShopId,
+    pub name: String,
+    pub inventory: Vec<ShopEntry>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ShopEntry {
+    pub item_id: ItemId,
+    pub price: Gold,
+    pub stock: ShopStock,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub enum ShopStock {
+    Unlimited,
+    Limited(ItemCount),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ShopEvent {
+    Buy { shop: ShopId, item: ItemId, count: ItemCount },
+    Sell { item: ItemId, count: ItemCount },
+}
+
+// ── Dungeon Types ───────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DungeonDef {
+    pub id: DungeonId,
+    pub name: String,
+    pub rooms: Vec<RoomDef>,
+    pub entry_room: RoomId,
+    pub boss_room: Option<RoomId>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RoomDef {
+    pub id: RoomId,
+    pub room_type: RoomType,
+    pub exits: Vec<RoomExit>,
+    pub encounters: Vec<EncounterSlot>,
+    pub items: Vec<RoomItem>,
+    pub puzzles: Vec<PuzzleDef>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum RoomType {
+    Normal,
+    Puzzle,
+    MiniBoss,
+    Boss,
+    Treasure,
+    Safe,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RoomExit {
+    pub direction: Direction,
+    pub target_room: RoomId,
+    pub requires: Option<DialogueCondition>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EncounterSlot {
+    pub encounter: EncounterDef,
+    pub weight: u8,
+    pub max_triggers: Option<u8>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RoomItem {
+    pub item_id: ItemId,
+    pub position: (f32, f32),
+    pub visible: bool,
+    pub quest_flag: Option<QuestFlagId>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PuzzleDef {
+    pub puzzle_type: PuzzleType,
+    pub reward: Option<DialogueSideEffect>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum PuzzleType {
+    PushBlock,
+    ElementPillar(Element),
+    DjinnPuzzle(DjinnId),
+    SwitchSequence,
+    IceSlide,
+}
+
+// ── Encounter Definitions (extending battle types) ──────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EncounterTable {
+    pub region_id: u8,
+    pub base_rate: EncounterRate,
+    pub entries: Vec<EncounterSlot>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BossEncounter {
+    pub encounter: EncounterDef,
+    pub pre_dialogue: Option<DialogueTreeId>,
+    pub post_dialogue: Option<DialogueTreeId>,
+    pub quest_advance: Option<(QuestFlagId, QuestStage)>,
+    pub unlock_on_defeat: Vec<MapNodeId>,
+}
+
+// ── Player Overworld State ──────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OverworldState {
+    pub current_location: GameScreen,
+    pub current_room: Option<RoomId>,
+    pub player_position: (f32, f32),
+    pub player_facing: Direction,
+    pub steps_since_encounter: u16,
+    pub visited_rooms: HashSet<RoomId>,
+    pub collected_items: HashSet<(DungeonId, RoomId, usize)>,
+}
+
+// ── Save System Extension ───────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SaveDataExtension {
+    pub quest_state: HashMap<QuestFlagId, QuestStage>,
+    pub map_unlock_state: HashMap<MapNodeId, NodeUnlockState>,
+    pub overworld: OverworldSaveData,
+    pub shop_stock: HashMap<ShopId, Vec<(ItemId, Option<ItemCount>)>>,
+    pub visited_rooms: Vec<RoomId>,
+    pub collected_items: Vec<(DungeonId, RoomId, usize)>,
+    pub play_time_seconds: u64,
+    pub save_timestamp: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OverworldSaveData {
+    pub location: GameScreen,
+    pub room: Option<RoomId>,
+    pub position: (f32, f32),
+    pub facing: Direction,
 }

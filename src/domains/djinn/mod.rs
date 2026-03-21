@@ -195,20 +195,20 @@ pub fn compute_djinn_stat_bonus(slots: &DjinnSlots, djinn_defs: &[DjinnDef]) -> 
             continue;
         }
         if let Some(def) = djinn_defs.iter().find(|d| d.id == inst.djinn_id) {
-            bonus.atk = StatMod::new_unchecked(
+            bonus.atk = StatMod::new(
                 (bonus.atk.get() + def.stat_bonus.atk.get()).clamp(-999, 999),
             );
-            bonus.def = StatMod::new_unchecked(
+            bonus.def = StatMod::new(
                 (bonus.def.get() + def.stat_bonus.def.get()).clamp(-999, 999),
             );
-            bonus.mag = StatMod::new_unchecked(
+            bonus.mag = StatMod::new(
                 (bonus.mag.get() + def.stat_bonus.mag.get()).clamp(-999, 999),
             );
-            bonus.spd = StatMod::new_unchecked(
+            bonus.spd = StatMod::new(
                 (bonus.spd.get() + def.stat_bonus.spd.get()).clamp(-999, 999),
             );
             bonus.hp =
-                StatMod::new_unchecked((bonus.hp.get() + def.stat_bonus.hp.get()).clamp(-999, 999));
+                StatMod::new((bonus.hp.get() + def.stat_bonus.hp.get()).clamp(-999, 999));
         }
     }
     bonus
@@ -346,13 +346,13 @@ mod tests {
             id: DjinnId(id.to_string()),
             name: id.to_string(),
             element,
-            tier: DjinnTier::new_unchecked(1),
+            tier: DjinnTier::new(1),
             stat_bonus: StatBonus {
-                atk: StatMod::new_unchecked(5),
-                def: StatMod::new_unchecked(3),
-                mag: StatMod::new_unchecked(2),
-                spd: StatMod::new_unchecked(1),
-                hp: StatMod::new_unchecked(10),
+                atk: StatMod::new(5),
+                def: StatMod::new(3),
+                mag: StatMod::new(2),
+                spd: StatMod::new(1),
+                hp: StatMod::new(10),
             },
             summon_effect: None,
             ability_pairs: DjinnAbilityPairs {

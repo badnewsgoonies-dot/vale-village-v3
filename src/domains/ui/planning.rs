@@ -1102,7 +1102,7 @@ mod tests {
         let game_data = load_full_game_data();
         let mut battle_res = BattleRes(build_test_battle(&game_data));
         battle_res.0.enemies[0].unit.stats.hp =
-            crate::shared::bounded_types::Hp::new_unchecked(999);
+            crate::shared::bounded_types::Hp::new(999);
         battle_res.0.enemies[0].unit.current_hp = 999;
 
         let actor = TargetRef {

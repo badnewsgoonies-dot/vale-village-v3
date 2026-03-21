@@ -335,11 +335,11 @@ mod tests {
 
     fn test_stats(hp: u16, atk: u16, def: u16, mag: u16, spd: u16) -> Stats {
         Stats {
-            hp: Hp::new(hp).unwrap_or_else(|_| Hp::new_unchecked(hp.clamp(1, 9999))),
-            atk: BaseStat::new(atk).unwrap_or_else(|_| BaseStat::new_unchecked(atk.clamp(0, 9999))),
-            def: BaseStat::new(def).unwrap_or_else(|_| BaseStat::new_unchecked(def.clamp(0, 9999))),
-            mag: BaseStat::new(mag).unwrap_or_else(|_| BaseStat::new_unchecked(mag.clamp(0, 9999))),
-            spd: BaseStat::new(spd).unwrap_or_else(|_| BaseStat::new_unchecked(spd.clamp(0, 9999))),
+            hp: Hp::new(hp),
+            atk: BaseStat::new(atk),
+            def: BaseStat::new(def),
+            mag: BaseStat::new(mag),
+            spd: BaseStat::new(spd),
         }
     }
 
@@ -379,13 +379,11 @@ mod tests {
                 _ => None,
             },
             element: None,
-            mana_cost: ManaCost::new(cost)
-                .unwrap_or_else(|_| ManaCost::new_unchecked(cost.clamp(0, 99))),
-            base_power: BasePower::new(power)
-                .unwrap_or_else(|_| BasePower::new_unchecked(power.clamp(0, 9999))),
+            mana_cost: ManaCost::new(cost),
+            base_power: BasePower::new(power),
             targets,
-            unlock_level: Level::new_unchecked(1),
-            hit_count: HitCount::new_unchecked(1),
+            unlock_level: Level::new(1),
+            hit_count: HitCount::new(1),
             status_effect: None,
             buff_effect: None,
             debuff_effect: None,

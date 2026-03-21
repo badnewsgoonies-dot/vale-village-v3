@@ -130,19 +130,19 @@ pub fn compute_equipment_effects(
     for eq_id in &equipped {
         if let Some(def) = defs.get(eq_id) {
             // Stat bonuses
-            effects.total_stat_bonus.atk = StatMod::new_unchecked(
+            effects.total_stat_bonus.atk = StatMod::new(
                 (effects.total_stat_bonus.atk.get() + def.stat_bonus.atk.get()).clamp(-999, 999),
             );
-            effects.total_stat_bonus.def = StatMod::new_unchecked(
+            effects.total_stat_bonus.def = StatMod::new(
                 (effects.total_stat_bonus.def.get() + def.stat_bonus.def.get()).clamp(-999, 999),
             );
-            effects.total_stat_bonus.mag = StatMod::new_unchecked(
+            effects.total_stat_bonus.mag = StatMod::new(
                 (effects.total_stat_bonus.mag.get() + def.stat_bonus.mag.get()).clamp(-999, 999),
             );
-            effects.total_stat_bonus.spd = StatMod::new_unchecked(
+            effects.total_stat_bonus.spd = StatMod::new(
                 (effects.total_stat_bonus.spd.get() + def.stat_bonus.spd.get()).clamp(-999, 999),
             );
-            effects.total_stat_bonus.hp = StatMod::new_unchecked(
+            effects.total_stat_bonus.hp = StatMod::new(
                 (effects.total_stat_bonus.hp.get() + def.stat_bonus.hp.get()).clamp(-999, 999),
             );
 
@@ -198,7 +198,7 @@ mod tests {
             name: id.to_string(),
             slot,
             tier: EquipmentTier::Basic,
-            cost: Gold::new_unchecked(100),
+            cost: Gold::new(100),
             allowed_elements: elements,
             stat_bonus: StatBonus::default(),
             unlocks_ability: None,
@@ -273,19 +273,19 @@ mod tests {
         let mut loadout = EquipmentLoadout::default();
         let mut def_w = make_def("sword1", EquipmentSlot::Weapon, vec![Element::Venus]);
         def_w.stat_bonus = StatBonus {
-            atk: StatMod::new_unchecked(10),
-            def: StatMod::new_unchecked(0),
-            mag: StatMod::new_unchecked(0),
-            spd: StatMod::new_unchecked(5),
-            hp: StatMod::new_unchecked(0),
+            atk: StatMod::new(10),
+            def: StatMod::new(0),
+            mag: StatMod::new(0),
+            spd: StatMod::new(5),
+            hp: StatMod::new(0),
         };
         let mut def_h = make_def("helm1", EquipmentSlot::Helm, vec![Element::Venus]);
         def_h.stat_bonus = StatBonus {
-            atk: StatMod::new_unchecked(0),
-            def: StatMod::new_unchecked(8),
-            mag: StatMod::new_unchecked(0),
-            spd: StatMod::new_unchecked(0),
-            hp: StatMod::new_unchecked(20),
+            atk: StatMod::new(0),
+            def: StatMod::new(8),
+            mag: StatMod::new(0),
+            spd: StatMod::new(0),
+            hp: StatMod::new(20),
         };
 
         loadout.weapon = Some(EquipmentId("sword1".into()));
