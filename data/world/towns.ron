@@ -1,0 +1,45 @@
+[
+    (
+        id: TownId(0),
+        name: "Vale Village",
+        npcs: [
+            (
+                npc_id: NpcId(0),
+                position: (50.0, 50.0),
+                facing: Down,
+                dialogue_tree: DialogueTreeId(0),
+            ),
+            (
+                npc_id: NpcId(1),
+                position: (80.0, 60.0),
+                facing: Left,
+                dialogue_tree: DialogueTreeId(1),
+            ),
+        ],
+        shops: [ShopId(0)],
+        djinn_points: [],
+        exits: [MapNodeId(0)],
+    ),
+    (
+        id: TownId(1),
+        name: "Imil",
+        npcs: [
+            (
+                npc_id: NpcId(2),
+                position: (40.0, 40.0),
+                facing: Down,
+                dialogue_tree: DialogueTreeId(2),
+            ),
+        ],
+        shops: [ShopId(1)],
+        djinn_points: [
+            (
+                djinn_id: DjinnId("Fizz"),
+                position: (120.0, 80.0),
+                requires_puzzle: false,
+                quest_flag: None,
+            ),
+        ],
+        exits: [MapNodeId(3)],
+    ),
+]

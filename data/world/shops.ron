@@ -1,0 +1,19 @@
+[
+    (
+        id: ShopId(0),
+        name: "Vale General Store",
+        inventory: [
+            (item_id: ItemId("herb"), price: Gold(10), stock: Unlimited),
+            (item_id: ItemId("antidote"), price: Gold(15), stock: Unlimited),
+            (item_id: ItemId("short-sword"), price: Gold(120), stock: Limited(ItemCount(3))),
+        ],
+    ),
+    (
+        id: ShopId(1),
+        name: "Imil Outfitters",
+        inventory: [
+            (item_id: ItemId("herb"), price: Gold(10), stock: Unlimited),
+            (item_id: ItemId("frost-blade"), price: Gold(500), stock: Limited(ItemCount(1))),
+        ],
+    ),
+]

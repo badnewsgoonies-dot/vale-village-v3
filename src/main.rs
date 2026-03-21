@@ -1,5 +1,7 @@
 mod data;
 mod domains;
+mod game_loop;
+mod game_state;
 mod shared;
 
 use std::path::Path;
@@ -66,6 +68,14 @@ fn main() {
         bevy::app::App::new()
             .add_plugins(ui::plugin::ValeVillagePlugin)
             .run();
+        return;
+    }
+
+    // Launch text adventure mode (world map, towns, shops, dungeons)
+    if std::env::args().any(|arg| arg == "--adventure") {
+        let mut state = game_state::GameState::new_game();
+        state.gold = shared::bounded_types::Gold::new(500); // starter gold
+        game_loop::run_game_loop(&mut state);
         return;
     }
 
