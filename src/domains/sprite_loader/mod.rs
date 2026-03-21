@@ -20,6 +20,8 @@ pub struct SpriteRegistry {
     pub enemy_hit: HashMap<String, Handle<Image>>,
     pub djinn: HashMap<String, Handle<Image>>,
     pub unit_portraits: HashMap<String, Handle<Image>>,
+    pub effect_projectiles: HashMap<String, Handle<Image>>,
+    pub effect_impacts: HashMap<String, Handle<Image>>,
     pub fallback: Handle<Image>,
 }
 
@@ -57,6 +59,16 @@ impl SpriteRegistry {
             .get(id)
             .cloned()
             .unwrap_or_else(|| self.fallback.clone())
+    }
+
+    /// Get projectile effect sprite for an element (e.g. "venus", "mars").
+    pub fn get_effect_projectile(&self, element: &str) -> Option<Handle<Image>> {
+        self.effect_projectiles.get(element).cloned()
+    }
+
+    /// Get impact effect sprite for an element.
+    pub fn get_effect_impact(&self, element: &str) -> Option<Handle<Image>> {
+        self.effect_impacts.get(element).cloned()
     }
 }
 
@@ -121,6 +133,26 @@ pub fn load_sprites(
                     let asset_path = normalize_asset_path(&path);
                     let handle = asset_server.load(asset_path);
                     registry.unit_portraits.insert(unit_id, handle);
+                }
+            }
+        }
+    }
+
+    // Scan assets/sprites/effects/ for ability effect sprites.
+    // Convention: <element>_projectile.png and <element>_impact.png
+    let effects_dir = Path::new(ASSET_ROOT).join("sprites/effects");
+    if let Ok(entries) = fs::read_dir(&effects_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) == Some("png") {
+                if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+                    let asset_path = normalize_asset_path(&path);
+                    let handle = asset_server.load(asset_path);
+                    if let Some(element) = stem.strip_suffix("_projectile") {
+                        registry.effect_projectiles.insert(element.to_string(), handle);
+                    } else if let Some(element) = stem.strip_suffix("_impact") {
+                        registry.effect_impacts.insert(element.to_string(), handle);
+                    }
                 }
             }
         }

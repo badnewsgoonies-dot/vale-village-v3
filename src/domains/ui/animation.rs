@@ -5,10 +5,12 @@
 use bevy::prelude::*;
 
 use crate::domains::battle_engine::BattleEvent;
-use crate::shared::{Side, StatusEffectType, TargetRef};
+use crate::domains::sprite_loader::SpriteRegistry;
+use crate::shared::{DamageType, Element, Side, StatusEffectType, TargetRef};
 
 use super::battle_scene::{EnemyUnit, PlayerUnit, SpriteSwapTimer, UnitSpriteSet};
 use super::planning::{PlanningMode, PlanningState, PostPlaybackMode};
+use super::plugin::{BattleRes, GameDataRes};
 
 // ── Components ─────────────────────────────────────────────────────
 
@@ -37,6 +39,20 @@ pub struct FlashEffect {
 /// Marker for defeated unit fade-out.
 #[derive(Component)]
 pub struct DefeatedFade {
+    pub timer: Timer,
+}
+
+/// Projectile flying from attacker to target.
+#[derive(Component)]
+pub struct ProjectileAnim {
+    pub start: Vec3,
+    pub end: Vec3,
+    pub timer: Timer,
+}
+
+/// Impact effect that scales up and fades.
+#[derive(Component)]
+pub struct ImpactAnim {
     pub timer: Timer,
 }
 
@@ -93,6 +109,9 @@ pub fn play_event_queue(
     player_q: Query<(&Transform, &PlayerUnit)>,
     enemy_q: Query<(&Transform, &EnemyUnit)>,
     mut sprite_q: Query<(Entity, &mut Sprite, &UnitSpriteSet, Option<&PlayerUnit>, Option<&EnemyUnit>)>,
+    sprite_registry: Res<SpriteRegistry>,
+    battle: Res<BattleRes>,
+    game_data: Res<GameDataRes>,
 ) {
     if !queue.playing {
         return;
@@ -105,6 +124,10 @@ pub fn play_event_queue(
             let event = queue.events[queue.current_index].clone();
             spawn_event_visual(&mut commands, &event, &player_q, &enemy_q);
             apply_sprite_swap(&mut commands, &event, &mut sprite_q);
+            spawn_projectile_effect(
+                &mut commands, &event, &player_q, &enemy_q,
+                &sprite_registry, &battle.0, &game_data.0,
+            );
             queue.current_index += 1;
 
             if queue.current_index >= queue.events.len() {
@@ -198,6 +221,173 @@ pub fn revert_sprite_swaps(
         if swap.timer.finished() {
             sprite.image = swap.idle_handle.clone();
             commands.entity(entity).remove::<SpriteSwapTimer>();
+        }
+    }
+}
+
+// ── Projectile & Impact Effects ─────────────────────────────────────
+
+/// Look up unit element from Battle + GameData by TargetRef.
+fn element_for_unit(
+    target: TargetRef,
+    battle: &crate::domains::battle_engine::Battle,
+    game_data: &crate::domains::data_loader::GameData,
+) -> Element {
+    use crate::shared::{EnemyId, UnitId};
+    let id = match target.side {
+        Side::Player => battle
+            .player_units
+            .get(target.index as usize)
+            .map(|u| u.unit.id.as_str()),
+        Side::Enemy => battle
+            .enemies
+            .get(target.index as usize)
+            .map(|u| u.unit.id.as_str()),
+    };
+    let Some(id) = id else {
+        return Element::Venus;
+    };
+    if let Some(unit_def) = game_data.units.get(&UnitId(id.to_string())) {
+        return unit_def.element;
+    }
+    if let Some(enemy_def) = game_data.enemies.get(&EnemyId(id.to_string())) {
+        return enemy_def.element;
+    }
+    Element::Venus
+}
+
+fn element_key(element: Element) -> &'static str {
+    match element {
+        Element::Venus => "venus",
+        Element::Mars => "mars",
+        Element::Mercury => "mercury",
+        Element::Jupiter => "jupiter",
+    }
+}
+
+/// Spawn a projectile sprite that flies from source to target on DamageDealt (Psynergy only).
+fn spawn_projectile_effect(
+    commands: &mut Commands,
+    event: &BattleEvent,
+    player_q: &Query<(&Transform, &PlayerUnit)>,
+    enemy_q: &Query<(&Transform, &EnemyUnit)>,
+    sprite_registry: &SpriteRegistry,
+    battle: &crate::domains::battle_engine::Battle,
+    game_data: &crate::domains::data_loader::GameData,
+) {
+    let BattleEvent::DamageDealt(dmg) = event else {
+        return;
+    };
+    // Only psynergy gets a projectile; physical attacks use the sprite swap only
+    if dmg.damage_type != DamageType::Psynergy {
+        return;
+    }
+
+    let Some(source_pos) = get_unit_position(dmg.source, player_q, enemy_q) else {
+        return;
+    };
+    let Some(target_pos) = get_unit_position(dmg.target, player_q, enemy_q) else {
+        return;
+    };
+
+    let element = element_for_unit(dmg.source, battle, game_data);
+    let key = element_key(element);
+
+    let Some(proj_handle) = sprite_registry.get_effect_projectile(key) else {
+        return;
+    };
+
+    // Spawn projectile entity
+    commands.spawn((
+        Sprite {
+            image: proj_handle,
+            custom_size: Some(Vec2::new(32.0, 32.0)),
+            ..default()
+        },
+        Transform::from_translation(source_pos + Vec3::new(0.0, 0.0, 5.0)),
+        ProjectileAnim {
+            start: source_pos,
+            end: target_pos,
+            timer: Timer::from_seconds(0.35, TimerMode::Once),
+        },
+    ));
+
+    // Pre-spawn impact (invisible until projectile arrives — handled by animate_projectiles)
+    if let Some(impact_handle) = sprite_registry.get_effect_impact(key) {
+        commands.spawn((
+            Sprite {
+                image: impact_handle,
+                custom_size: Some(Vec2::new(48.0, 48.0)),
+                color: Color::srgba(1.0, 1.0, 1.0, 0.0), // invisible until triggered
+                ..default()
+            },
+            Transform::from_translation(target_pos + Vec3::new(0.0, 0.0, 6.0)),
+            ImpactAnim {
+                timer: Timer::from_seconds(99.0, TimerMode::Once), // placeholder, reset on arrival
+            },
+        ));
+    }
+}
+
+/// Animate projectiles: lerp position from start to end, despawn on arrival and trigger impact.
+pub fn animate_projectiles(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut proj_q: Query<(Entity, &mut Transform, &mut ProjectileAnim)>,
+    mut impact_q: Query<(Entity, &mut Sprite, &mut ImpactAnim, &Transform), Without<ProjectileAnim>>,
+) {
+    for (entity, mut transform, mut proj) in proj_q.iter_mut() {
+        proj.timer.tick(time.delta());
+        let t = proj.timer.fraction();
+
+        // Lerp with arc
+        let pos = proj.start.lerp(proj.end, t);
+        let arc_y = (t * std::f32::consts::PI).sin() * -40.0;
+        transform.translation = Vec3::new(pos.x, pos.y + arc_y, pos.z);
+
+        // Rotate for visual flair
+        transform.rotation = Quat::from_rotation_z(t * std::f32::consts::PI * 4.0);
+
+        if proj.timer.finished() {
+            // Despawn projectile
+            commands.entity(entity).despawn();
+
+            // Trigger the nearest impact effect
+            for (_ie, mut impact_sprite, mut impact, _it) in impact_q.iter_mut() {
+                if impact.timer.remaining_secs() > 90.0 {
+                    // This is an untriggered impact — activate it
+                    impact.timer = Timer::from_seconds(0.3, TimerMode::Once);
+                    impact_sprite.color = Color::srgba(1.0, 1.0, 1.0, 1.0);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+/// Animate impacts: scale up and fade out, then despawn.
+pub fn animate_impacts(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut query: Query<(Entity, &mut Transform, &mut Sprite, &mut ImpactAnim)>,
+) {
+    for (entity, mut transform, mut sprite, mut impact) in query.iter_mut() {
+        // Skip untriggered impacts
+        if impact.timer.remaining_secs() > 90.0 {
+            continue;
+        }
+        impact.timer.tick(time.delta());
+        let t = impact.timer.fraction();
+
+        // Scale up from 0.5 to 2.0
+        let scale = 0.5 + t * 1.5;
+        transform.scale = Vec3::splat(scale);
+
+        // Fade out
+        sprite.color = Color::srgba(1.0, 1.0, 1.0, 1.0 - t);
+
+        if impact.timer.finished() {
+            commands.entity(entity).despawn();
         }
     }
 }
