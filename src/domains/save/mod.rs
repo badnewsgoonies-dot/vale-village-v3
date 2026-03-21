@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 //! Save/Load domain — persist and restore game state via RON files.
 
+use std::collections::HashMap;
 use std::fmt;
 use std::fs;
 use std::io;
@@ -8,7 +9,12 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-use crate::shared::{DjinnId, DjinnState, EncounterId, EquipmentId, UnitId};
+use crate::shared::{
+    DjinnId, DjinnState, Direction, DungeonId, EncounterId, EquipmentId, GameScreen, ItemId,
+    MapNodeId, NodeUnlockState, OverworldSaveData, QuestFlagId, QuestStage, RoomId,
+    SaveDataExtension, ShopId, UnitId,
+};
+use crate::shared::bounded_types::ItemCount;
 
 // ── Constants ───────────────────────────────────────────────────────
 
@@ -61,6 +67,30 @@ pub struct SaveData {
     pub inventory: Vec<EquipmentId>,
     #[serde(default)]
     pub team_djinn: Vec<SavedDjinn>,
+    #[serde(default)]
+    pub extension: Option<SaveDataExtension>,
+}
+
+impl PartialEq for OverworldSaveData {
+    fn eq(&self, other: &Self) -> bool {
+        self.location == other.location
+            && self.room == other.room
+            && self.position == other.position
+            && self.facing == other.facing
+    }
+}
+
+impl PartialEq for SaveDataExtension {
+    fn eq(&self, other: &Self) -> bool {
+        self.quest_state == other.quest_state
+            && self.map_unlock_state == other.map_unlock_state
+            && self.overworld == other.overworld
+            && self.shop_stock == other.shop_stock
+            && self.visited_rooms == other.visited_rooms
+            && self.collected_items == other.collected_items
+            && self.play_time_seconds == other.play_time_seconds
+            && self.save_timestamp == other.save_timestamp
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -170,6 +200,26 @@ pub fn create_new_game() -> SaveData {
         completed_encounters: vec![],
         inventory: vec![],
         team_djinn: vec![],
+        extension: None,
+    }
+}
+
+/// Returns an empty/default `SaveDataExtension` suitable for new-game starts.
+pub fn create_default_extension() -> SaveDataExtension {
+    SaveDataExtension {
+        quest_state: HashMap::new(),
+        map_unlock_state: HashMap::new(),
+        overworld: OverworldSaveData {
+            location: GameScreen::Title,
+            room: None,
+            position: (0.0, 0.0),
+            facing: Direction::Down,
+        },
+        shop_stock: HashMap::new(),
+        visited_rooms: vec![],
+        collected_items: vec![],
+        play_time_seconds: 0,
+        save_timestamp: String::new(),
     }
 }
 
@@ -556,6 +606,122 @@ mod tests {
         let raw = fs::read_to_string(&path).expect("file should be readable text");
         assert!(raw.contains("house-12"), "RON should contain encounter ID as text");
         assert!(raw.contains("flint"), "RON should contain djinn ID as text");
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    // ── Extension tests ─────────────────────────────────────────────
+
+    #[test]
+    fn extension_roundtrip_with_data() {
+        let dir = test_dir("extension_present");
+        let path = dir.join("save.ron");
+
+        let mut data = create_new_game();
+        let mut ext = create_default_extension();
+        ext.quest_state.insert(QuestFlagId(1), QuestStage::Active);
+        ext.quest_state.insert(QuestFlagId(2), QuestStage::Complete);
+        ext.map_unlock_state.insert(MapNodeId(3), NodeUnlockState::Unlocked);
+        ext.overworld = OverworldSaveData {
+            location: GameScreen::WorldMap,
+            room: None,
+            position: (10.5, 20.3),
+            facing: Direction::Right,
+        };
+        ext.visited_rooms = vec![RoomId(1), RoomId(2)];
+        ext.collected_items = vec![(DungeonId(1), RoomId(1), 0)];
+        ext.play_time_seconds = 360;
+        ext.save_timestamp = "2026-03-21T22:00:00Z".to_string();
+        data.extension = Some(ext);
+
+        save_game(&data, &path).expect("save should succeed");
+        let loaded = load_game(&path).expect("load should succeed");
+
+        assert_eq!(data, loaded);
+
+        let loaded_ext = loaded.extension.as_ref().unwrap();
+        assert_eq!(loaded_ext.quest_state[&QuestFlagId(1)], QuestStage::Active);
+        assert_eq!(loaded_ext.quest_state[&QuestFlagId(2)], QuestStage::Complete);
+        assert_eq!(
+            loaded_ext.map_unlock_state[&MapNodeId(3)],
+            NodeUnlockState::Unlocked
+        );
+        assert_eq!(loaded_ext.play_time_seconds, 360);
+        assert_eq!(loaded_ext.save_timestamp, "2026-03-21T22:00:00Z");
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn extension_none_backwards_compat() {
+        let dir = test_dir("extension_none");
+        let path = dir.join("save.ron");
+
+        // A save file without the extension field (simulated via raw RON).
+        let legacy_ron = r#"(
+            version: 1,
+            player_party: [],
+            roster: [],
+            gold: 50,
+            xp: 0,
+            current_encounter_id: None,
+            completed_encounters: [],
+            inventory: [],
+            team_djinn: []
+        )"#;
+        fs::write(&path, legacy_ron).unwrap();
+        let loaded = load_game(&path).expect("legacy save should load");
+
+        assert!(loaded.extension.is_none(), "extension should default to None");
+        assert_eq!(loaded.gold, 50);
+
+        // Also verify that a freshly created game has extension = None and round-trips correctly.
+        let data = create_new_game();
+        assert!(data.extension.is_none());
+        let path2 = dir.join("new_save.ron");
+        save_game(&data, &path2).expect("save should succeed");
+        let loaded2 = load_game(&path2).expect("load should succeed");
+        assert_eq!(data, loaded2);
+        assert!(loaded2.extension.is_none());
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn quest_monotonicity_survives_roundtrip() {
+        let dir = test_dir("quest_monotonicity");
+        let path = dir.join("save.ron");
+
+        let mut data = create_new_game();
+        let mut ext = create_default_extension();
+        ext.quest_state.insert(QuestFlagId(10), QuestStage::InProgress);
+        ext.quest_state.insert(QuestFlagId(20), QuestStage::Complete);
+        ext.quest_state.insert(QuestFlagId(30), QuestStage::Rewarded);
+        data.extension = Some(ext);
+
+        save_game(&data, &path).expect("save should succeed");
+        let loaded = load_game(&path).expect("load should succeed");
+
+        let loaded_ext = loaded.extension.as_ref().unwrap();
+
+        // Stages survive exactly.
+        assert_eq!(
+            loaded_ext.quest_state[&QuestFlagId(10)],
+            QuestStage::InProgress
+        );
+        assert_eq!(
+            loaded_ext.quest_state[&QuestFlagId(20)],
+            QuestStage::Complete
+        );
+        assert_eq!(
+            loaded_ext.quest_state[&QuestFlagId(30)],
+            QuestStage::Rewarded
+        );
+
+        // Monotonicity: each loaded stage is >= the original (equality here proves no regression).
+        assert!(loaded_ext.quest_state[&QuestFlagId(10)] >= QuestStage::InProgress);
+        assert!(loaded_ext.quest_state[&QuestFlagId(20)] >= QuestStage::Complete);
+        assert!(loaded_ext.quest_state[&QuestFlagId(30)] >= QuestStage::Rewarded);
 
         let _ = fs::remove_dir_all(&dir);
     }
