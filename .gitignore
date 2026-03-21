@@ -23,3 +23,5 @@ saves/*.ron
 ai-orchestration-kit.zip
 __pycache__/
 screenshot_battle.png
+*_raw.png
+*_rgba.png
