@@ -2,7 +2,7 @@
 //! Djinn state machine: Good/Recovery states, ability oscillation,
 //! summon execution, and staggered recovery.
 
-use crate::shared::bounded_types::{DjinnTier, StatMod};
+use crate::shared::bounded_types::{StatMod};
 use crate::shared::{
     AbilityId, DjinnCompatibility, DjinnDef, DjinnId, DjinnState, DjinnStateChanged, Element,
     StatBonus, SummonEffect, TargetRef,
@@ -331,6 +331,7 @@ pub fn tick_recovery(slots: &mut DjinnSlots, unit_ref: TargetRef) -> Vec<DjinnSt
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::shared::bounded_types::DjinnTier;
     use crate::shared::{DjinnAbilityPairs, DjinnAbilitySet, Side};
 
     fn unit_ref() -> TargetRef {

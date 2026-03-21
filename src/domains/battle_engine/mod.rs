@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 
 use crate::shared::{
-    bounded_types::{BasePower, BaseStat, EffectDuration, HitCount, Hp, Level, ManaCost},
+    bounded_types::{BaseStat, EffectDuration, Hp},
     AbilityDef, AbilityId, BattleAction, BattlePhase, CombatConfig, DamageDealt, DamageType,
     DjinnDef, DjinnId, DjinnState, DjinnStateChanged, EnemyDef, HealingDone, ManaPoolChanged, Side,
     Stats, StatusApplied, StatusEffectType, TargetRef, UnitDefeated,
