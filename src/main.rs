@@ -73,9 +73,42 @@ fn main() {
 
     // Launch text adventure mode (world map, towns, shops, dungeons)
     if std::env::args().any(|arg| arg == "--adventure") {
-        let mut state = game_state::GameState::new_game();
-        state.gold = shared::bounded_types::Gold::new(500); // starter gold
-        game_loop::run_game_loop(&mut state);
+        std::fs::create_dir_all("saves").expect("failed to create saves/ directory");
+
+        let data_dir = Path::new("data/full");
+        let game_data = match data_loader::load_game_data(data_dir) {
+            Ok(data) => data,
+            Err(errors) => {
+                for e in &errors { eprintln!("Load error: {e:?}"); }
+                std::process::exit(1);
+            }
+        };
+        println!("Loaded {} abilities, {} enemies, {} encounters",
+            game_data.abilities.len(), game_data.enemies.len(), game_data.encounters.len());
+
+        let save_path = Path::new(SAVE_PATH);
+        let mut save_data = if save_path.exists() {
+            save::load_game(save_path).unwrap_or_else(|_| save::create_new_game())
+        } else {
+            save::create_new_game()
+        };
+
+        let mut state = if let Some(ref ext) = save_data.extension {
+            game_state::GameState::from_save(ext)
+        } else {
+            game_state::GameState::new_game()
+        };
+        state.gold = shared::bounded_types::Gold::new(save_data.gold);
+
+        game_loop::run_game_loop(&mut state, &game_data, &mut save_data);
+
+        // Auto-save on exit
+        save_data.gold = state.gold.get();
+        save_data.extension = Some(state.to_save_extension());
+        match save::save_game(&save_data, save_path) {
+            Ok(()) => println!("Game saved."),
+            Err(e) => eprintln!("Warning: failed to save: {e}"),
+        }
         return;
     }
 

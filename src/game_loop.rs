@@ -17,9 +17,15 @@ use crate::shared::{
 
 use crate::domains::dialogue::{self, ConditionContext};
 use crate::domains::dungeon;
+use crate::domains::puzzle;
+use crate::domains::cli_runner;
+use crate::domains::battle_engine::BattleResult;
+use crate::domains::data_loader::GameData;
 use crate::domains::quest::QuestManager;
+use crate::domains::save;
 use crate::domains::shop;
 use crate::domains::world_map;
+use crate::domains::progression;
 
 // ── Starter Data (hardcoded until RON loader is built) ──────────────
 
@@ -325,6 +331,15 @@ impl ConditionContext for SnapshotCtx {
     }
 }
 
+impl puzzle::PuzzleContext for SnapshotCtx {
+    fn has_djinn(&self, _id: &DjinnId) -> bool {
+        false // TODO
+    }
+    fn has_element_ability(&self, _element: crate::shared::Element) -> bool {
+        true // Assume party has all elements for now
+    }
+}
+
 fn prompt(msg: &str) -> String {
     print!("{}", msg);
     io::stdout().flush().ok();
@@ -340,7 +355,7 @@ fn prompt_number(msg: &str, max: usize) -> Option<usize> {
 
 // ── Main Game Loop ───────────────────────────────────────────────────
 
-pub fn run_game_loop(state: &mut GameState) {
+pub fn run_game_loop(state: &mut GameState, game_data: &GameData, save_data: &mut save::SaveData) {
     // Set up world map
     let nodes = starter_map_nodes();
     let mut wm = world_map::load_map(nodes);
@@ -395,7 +410,7 @@ pub fn run_game_loop(state: &mut GameState) {
 
             GameScreen::Dungeon(dungeon_id) => {
                 let did = *dungeon_id;
-                run_dungeon(state, did, &dungeons, &mut inventory);
+                run_dungeon(state, did, &dungeons, &mut inventory, game_data, save_data);
             }
 
             GameScreen::Menu(menu) => {
@@ -660,11 +675,11 @@ fn run_dialogue(state: &mut GameState, npc_id: NpcId, trees: &[DialogueTree], to
     game_state::apply_transition(state, ScreenTransition::ReturnToPrevious);
 }
 
-fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[DungeonDef], inventory: &mut Vec<ItemId>) {
+fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[DungeonDef], inventory: &mut Vec<ItemId>, game_data: &GameData, save_data: &mut save::SaveData) {
     let def = match dungeons.iter().find(|d| d.id == dungeon_id) {
         Some(d) => d,
         None => {
-            println!("  (This dungeon doesn't exist yet.)");
+            println!("  (This dungeon doesn\'t exist yet.)");
             game_state::apply_transition(state, ScreenTransition::ToWorldMap);
             return;
         }
@@ -675,9 +690,11 @@ fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[Dungeon
     println!("╚══════════════════════════════════════╝");
 
     let mut ds = dungeon::enter_dungeon(def);
-    let ctx = SnapshotCtx::from_state(state, &inventory);
+    let mut step_count: u16 = 0;
+    let mut puzzle_instances: std::collections::HashMap<(RoomId, usize), puzzle::PuzzleInstance> = std::collections::HashMap::new();
 
     loop {
+        let ctx = SnapshotCtx::from_state(state, inventory);
         let room = dungeon::get_current_room(&ds, def);
         let room_type_str = match room.room_type {
             RoomType::Normal => "Room",
@@ -687,26 +704,40 @@ fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[Dungeon
             RoomType::Treasure => "Treasure Room",
             RoomType::Safe => "Safe Room",
         };
-        let visited = if ds.visited_rooms.contains(&room.id) { "" } else { " [NEW]" };
-        println!("\n── {} (Room {}) {} ──", room_type_str, room.id.0, visited);
+        let is_new = !ds.visited_rooms.contains(&room.id);
+        let visited_str = if is_new { " [NEW]" } else { "" };
+        println!("\n── {} (Room {}) {} ──", room_type_str, room.id.0, visited_str);
 
         // Show items
         for (i, item) in room.items.iter().enumerate() {
             if !ds.collected_items.contains(&(room.id, i)) {
-                let visibility = if item.visible { "" } else { " [hidden]" };
-                println!("  [i{}] Pick up: {}{}", i, item.item_id.0, visibility);
+                let vis = if item.visible { "" } else { " [hidden]" };
+                println!("  [i{}] Pick up: {}{}", i, item.item_id.0, vis);
             }
         }
 
         // Show puzzles
         let puzzles = dungeon::get_room_puzzles(&ds, def);
-        for (i, puzzle) in puzzles.iter().enumerate() {
-            println!("  [p{}] Puzzle: {:?}", i, puzzle.puzzle_type);
+        for (i, puz) in puzzles.iter().enumerate() {
+            let key = (room.id, i);
+            let status = puzzle_instances.get(&key)
+                .map(|pi| format!("{:?}", pi.state))
+                .unwrap_or_else(|| "Unsolved".into());
+            println!("  [p{}] {:?} [{}]", i, puz.puzzle_type, status);
+        }
+
+        // Show encounters
+        for (i, slot) in room.encounters.iter().enumerate() {
+            let count = ds.encounter_counts.get(&(room.id, i)).copied().unwrap_or(0);
+            let max = slot.max_triggers.unwrap_or(255);
+            if count < max {
+                println!("  [e{}] Fight: {}", i, slot.encounter.name);
+            }
         }
 
         // Show exits
         let exits = dungeon::get_available_exits(&ds, def, &ctx);
-        for (i, (dir, _target)) in exits.iter().enumerate() {
+        for (dir, _target) in &exits {
             println!("  [{:?}] Go {:?}", dir, dir);
         }
         println!("  [flee] Leave dungeon");
@@ -724,19 +755,126 @@ fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[Dungeon
             return;
         }
 
+        // Boss fight with real battle
         if input == "fight" && dungeon::is_boss_room(def, room.id) {
-            println!("  [Boss battle would trigger here — returning to world map as victor]");
-            state.quest_state.advance(QuestFlagId(0), QuestStage::Complete);
-            println!("  (Quest completed!)");
-            if let Some(ref mut wm) = state.world_map {
-                world_map::complete_node(wm, MapNodeId(1));
-                // Unlock Imil
-                world_map::unlock_node(wm, MapNodeId(3));
-                world_map::unlock_node(wm, MapNodeId(3));
-                println!("  (New location unlocked: Imil!)");
+            let boss_enc_id = format!("boss-{}", def.name.to_lowercase().replace(' ', "-"));
+            println!("\n  Challenging the boss!");
+            let result = cli_runner::run_demo_battle(game_data, &boss_enc_id);
+            match result {
+                BattleResult::Victory { xp, gold: bg } => {
+                    println!("\n  BOSS DEFEATED! +{} XP, +{} gold", xp, bg);
+                    let ng = state.gold.get() + bg;
+                    state.gold = Gold::new(ng);
+                    save_data.gold = ng;
+                    save_data.xp += xp;
+                    state.quest_state.advance(QuestFlagId(0), QuestStage::Complete);
+                    println!("  (Quest completed!)");
+                    if let Some(ref mut wm) = state.world_map {
+                        world_map::complete_node(wm, MapNodeId(1));
+                        world_map::unlock_node(wm, MapNodeId(3));
+                        world_map::unlock_node(wm, MapNodeId(3));
+                        println!("  (New location unlocked: Imil!)");
+                    }
+                    // Auto-save
+                    let sp = std::path::Path::new("saves/game.ron");
+                    if let Err(e) = save::save_game(save_data, sp) {
+                        eprintln!("  Warning: auto-save failed: {}", e);
+                    } else { println!("  (Game saved.)"); }
+                }
+                BattleResult::Defeat => {
+                    println!("\n  DEFEATED by the boss... Retreating.");
+                }
             }
             game_state::apply_transition(state, ScreenTransition::ToWorldMap);
             return;
+        }
+
+        // Encounter fight
+        if input.starts_with('e') {
+            if let Ok(idx) = input[1..].parse::<usize>() {
+                if let Some(enc_def) = dungeon::trigger_encounter(&mut ds, def, idx) {
+                    println!("\n  Battle: {}!", enc_def.name);
+                    let result = cli_runner::run_demo_battle(game_data, &enc_def.id.0);
+                    match result {
+                        BattleResult::Victory { xp, gold: bg } => {
+                            println!("  Victory! +{} XP, +{} gold", xp, bg);
+                            let ng = state.gold.get() + bg;
+                            state.gold = Gold::new(ng);
+                            save_data.gold = ng;
+                            save_data.xp += xp;
+                        }
+                        BattleResult::Defeat => {
+                            println!("  Defeated! Fleeing the dungeon...");
+                            game_state::apply_transition(state, ScreenTransition::ToWorldMap);
+                            return;
+                        }
+                    }
+                } else { println!("  No encounter available."); }
+                continue;
+            }
+        }
+
+        // Puzzle attempt
+        if input.starts_with('p') {
+            if let Ok(idx) = input[1..].parse::<usize>() {
+                let puzzles = dungeon::get_room_puzzles(&ds, def);
+                if idx < puzzles.len() {
+                    let key = (room.id, idx);
+                    let puz_def = puzzles[idx].clone();
+                    let instance = puzzle_instances.entry(key).or_insert_with(|| {
+                        puzzle::PuzzleInstance::new(puz_def)
+                    });
+                    let puzzle_input = match &puzzles[idx].puzzle_type {
+                        crate::shared::PuzzleType::PushBlock => {
+                            let d = prompt("  Push direction? (up/down/left/right) > ");
+                            match d.as_str() {
+                                "up" => Some(puzzle::PuzzleInput::PushDirection(Direction::Up)),
+                                "down" => Some(puzzle::PuzzleInput::PushDirection(Direction::Down)),
+                                "left" => Some(puzzle::PuzzleInput::PushDirection(Direction::Left)),
+                                "right" => Some(puzzle::PuzzleInput::PushDirection(Direction::Right)),
+                                _ => None,
+                            }
+                        }
+                        crate::shared::PuzzleType::ElementPillar(elem) => {
+                            println!("  Activate {:?} pillar? (y/n)", elem);
+                            if prompt("  > ") == "y" { Some(puzzle::PuzzleInput::ActivateElement(*elem)) } else { None }
+                        }
+                        crate::shared::PuzzleType::SwitchSequence => {
+                            let s = prompt("  Toggle switch #? (0-3) > ");
+                            s.parse::<usize>().ok().map(puzzle::PuzzleInput::ToggleSwitch)
+                        }
+                        crate::shared::PuzzleType::IceSlide => {
+                            let d = prompt("  Slide direction? > ");
+                            match d.as_str() {
+                                "up" => Some(puzzle::PuzzleInput::SlideDirection(Direction::Up)),
+                                "down" => Some(puzzle::PuzzleInput::SlideDirection(Direction::Down)),
+                                "left" => Some(puzzle::PuzzleInput::SlideDirection(Direction::Left)),
+                                "right" => Some(puzzle::PuzzleInput::SlideDirection(Direction::Right)),
+                                _ => None,
+                            }
+                        }
+                        crate::shared::PuzzleType::DjinnPuzzle(djinn_id) => {
+                            println!("  Use djinn {}? (y/n)", djinn_id.0);
+                            if prompt("  > ") == "y" { Some(puzzle::PuzzleInput::UseDjinn(djinn_id.clone())) } else { None }
+                        }
+                    };
+                    if let Some(pi) = puzzle_input {
+                        let result = puzzle::attempt_solve(instance, pi);
+                        match result {
+                            puzzle::PuzzleResult::Solved(reward) => {
+                                println!("  Puzzle SOLVED!");
+                                if let Some(ref effect) = reward {
+                                    apply_side_effect(state, inventory, effect);
+                                }
+                            }
+                            puzzle::PuzzleResult::Progress => println!("  Making progress..."),
+                            puzzle::PuzzleResult::Failed => println!("  That didn\'t work."),
+                            puzzle::PuzzleResult::AlreadySolved => println!("  Already solved!"),
+                        }
+                    }
+                }
+                continue;
+            }
         }
 
         // Item pickup
@@ -745,14 +883,12 @@ fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[Dungeon
                 if let Some(item_id) = dungeon::collect_item(&mut ds, def, idx) {
                     inventory.push(item_id.clone());
                     println!("  Picked up: {}!", item_id.0);
-                } else {
-                    println!("  Nothing to pick up.");
-                }
+                } else { println!("  Nothing to pick up."); }
                 continue;
             }
         }
 
-        // Direction movement
+        // Direction movement with random encounter check
         let dir = match input.as_str() {
             "up" => Some(Direction::Up),
             "down" => Some(Direction::Down),
@@ -764,15 +900,73 @@ fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[Dungeon
         if let Some(d) = dir {
             if let Some((_, target)) = exits.iter().find(|(ed, _)| *ed == d) {
                 match dungeon::move_to_room(&mut ds, def, *target) {
-                    Ok(()) => {}
-                    Err(e) => println!("  Can't go there: {:?}", e),
+                    Ok(()) => {
+                        step_count += 1;
+                        // Random encounter every 3 steps in rooms with encounters
+                        let new_room = dungeon::get_current_room(&ds, def);
+                        if !new_room.encounters.is_empty() && step_count % 3 == 0 {
+                            if let Some(enc) = dungeon::trigger_encounter(&mut ds, def, 0) {
+                                println!("\n  !! Random encounter: {}!", enc.name);
+                                let result = cli_runner::run_demo_battle(game_data, &enc.id.0);
+                                match result {
+                                    BattleResult::Victory { xp, gold: bg } => {
+                                        println!("  Victory! +{} XP, +{} gold", xp, bg);
+                                        let ng = state.gold.get() + bg;
+                                        state.gold = Gold::new(ng);
+                                        save_data.gold = ng;
+                                        save_data.xp += xp;
+                                    }
+                                    BattleResult::Defeat => {
+                                        println!("  Defeated! Fleeing...");
+                                        game_state::apply_transition(state, ScreenTransition::ToWorldMap);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Err(e) => println!("  Can\'t go there: {:?}", e),
                 }
-            } else {
-                println!("  No exit in that direction.");
-            }
+            } else { println!("  No exit in that direction."); }
         }
     }
 }
+
+/// Apply a dialogue side effect to game state.
+fn apply_side_effect(state: &mut GameState, inventory: &mut Vec<ItemId>, effect: &crate::shared::DialogueSideEffect) {
+    match effect {
+        crate::shared::DialogueSideEffect::GiveGold(amount) => {
+            let ng = state.gold.get() + amount.get();
+            state.gold = Gold::new(ng);
+            println!("  (Received {} gold!)", amount.get());
+        }
+        crate::shared::DialogueSideEffect::TakeGold(amount) => {
+            let ng = state.gold.get().saturating_sub(amount.get());
+            state.gold = Gold::new(ng);
+            println!("  (Lost {} gold.)", amount.get());
+        }
+        crate::shared::DialogueSideEffect::GiveItem(item_id, count) => {
+            for _ in 0..count.get() { inventory.push(item_id.clone()); }
+            println!("  (Received {}!)", item_id.0);
+        }
+        crate::shared::DialogueSideEffect::SetQuestStage(flag, stage) => {
+            state.quest_state.advance(*flag, *stage);
+            println!("  (Quest updated!)");
+        }
+        crate::shared::DialogueSideEffect::UnlockMapNode(node_id) => {
+            if let Some(ref mut wm) = state.world_map {
+                world_map::unlock_node(wm, *node_id);
+                println!("  (New location discovered!)");
+            }
+        }
+        crate::shared::DialogueSideEffect::AddDjinnToParty(djinn_id) => {
+            println!("  (Djinn {} joined the party!)", djinn_id.0);
+        }
+        _ => {}
+    }
+}
+
+
 
 #[cfg(test)]
 mod tests {
