@@ -111,6 +111,13 @@ pub trait PuzzleContext {
 /// Number of pushes required to solve a PushBlock puzzle.
 const PUSH_BLOCK_REQUIRED: u8 = 3;
 
+/// The required push direction sequence for PushBlock puzzles.
+const PUSH_BLOCK_SOLUTION: [Direction; 3] = [
+    Direction::Up,
+    Direction::Left,
+    Direction::Down,
+];
+
 /// Number of switches that must be toggled in sequence to solve SwitchSequence.
 const SWITCH_COUNT: usize = 3;
 
@@ -147,15 +154,25 @@ pub fn attempt_solve(instance: &mut PuzzleInstance, input: PuzzleInput) -> Puzzl
     let puzzle_type = instance.def.puzzle_type.clone();
 
     match (puzzle_type, input) {
-        (PuzzleType::PushBlock, PuzzleInput::PushDirection(_)) => {
+        (PuzzleType::PushBlock, PuzzleInput::PushDirection(dir)) => {
             if let PuzzleProgress::PushBlock { moves } = &mut instance.progress {
-                *moves += 1;
-                if *moves >= PUSH_BLOCK_REQUIRED {
-                    instance.state = PuzzleState::Solved;
-                    return PuzzleResult::Solved(instance.def.reward.clone());
+                let expected = PUSH_BLOCK_SOLUTION.get(*moves as usize);
+                if expected == Some(&dir) {
+                    *moves += 1;
+                    if *moves >= PUSH_BLOCK_REQUIRED {
+                        instance.state = PuzzleState::Solved;
+                        return PuzzleResult::Solved(instance.def.reward.clone());
+                    }
+                    PuzzleResult::Progress
+                } else {
+                    // Wrong direction — reset
+                    *moves = 0;
+                    instance.state = PuzzleState::Unsolved;
+                    PuzzleResult::Failed
                 }
+            } else {
+                PuzzleResult::Failed
             }
-            PuzzleResult::Progress
         }
 
         (PuzzleType::ElementPillar(required), PuzzleInput::ActivateElement(elem)) => {
@@ -275,6 +292,20 @@ mod tests {
         assert_eq!(inst.state, PuzzleState::Solved);
     }
 
+    #[test]
+    fn push_block_wrong_direction_resets() {
+        let mut inst = PuzzleInstance::new(push_block_def());
+        // First push correct
+        assert_eq!(attempt_solve(&mut inst, PuzzleInput::PushDirection(Direction::Up)), PuzzleResult::Progress);
+        // Wrong direction — should reset
+        assert_eq!(attempt_solve(&mut inst, PuzzleInput::PushDirection(Direction::Right)), PuzzleResult::Failed);
+        assert_eq!(inst.state, PuzzleState::Unsolved);
+        // Must restart the full sequence
+        assert_eq!(attempt_solve(&mut inst, PuzzleInput::PushDirection(Direction::Up)), PuzzleResult::Progress);
+        assert_eq!(attempt_solve(&mut inst, PuzzleInput::PushDirection(Direction::Left)), PuzzleResult::Progress);
+        assert_eq!(attempt_solve(&mut inst, PuzzleInput::PushDirection(Direction::Down)), PuzzleResult::Solved(None));
+    }
+
     // ── ElementPillar ──────────────────────────────────────────────────
 
     #[test]
@@ -346,10 +377,10 @@ mod tests {
     #[test]
     fn already_solved_returns_already_solved() {
         let mut inst = PuzzleInstance::new(push_block_def());
-        // Solve it first
+        // Solve it first with correct sequence
         attempt_solve(&mut inst, PuzzleInput::PushDirection(Direction::Up));
-        attempt_solve(&mut inst, PuzzleInput::PushDirection(Direction::Up));
-        attempt_solve(&mut inst, PuzzleInput::PushDirection(Direction::Up));
+        attempt_solve(&mut inst, PuzzleInput::PushDirection(Direction::Left));
+        attempt_solve(&mut inst, PuzzleInput::PushDirection(Direction::Down));
         assert_eq!(inst.state, PuzzleState::Solved);
         // Second attempt must be rejected
         let result = attempt_solve(&mut inst, PuzzleInput::PushDirection(Direction::Up));
