@@ -968,16 +968,50 @@ fn run_menu(state: &mut GameState, screen: MenuScreen, game_data: &GameData, sav
             }
         }
         MenuScreen::Psynergy => {
-            println!("  (Psynergy list not yet wired — requires ability data per unit)");
+            println!("  === PSYNERGY ===");
+            for su in &save_data.player_party {
+                let def = game_data.units.get(&su.unit_id);
+                let name = def.map(|d| d.name.as_str()).unwrap_or(&su.unit_id.0);
+                println!("\n  ── {} (Lv.{}) ──", name, su.level);
+                if let Some(unit_def) = def {
+                    let mut shown = false;
+                    for ap in &unit_def.abilities {
+                        if ap.level.get() as u8 <= su.level {
+                            if let Some(ability) = game_data.abilities.get(&ap.ability_id) {
+                                let elem = ability.element.map(|e| format!("{:?}", e)).unwrap_or_else(|| "---".into());
+                                println!("    {:<18} {:>5} PP  {:>3} pow  {}",
+                                    ability.name, ability.mana_cost.get(), ability.base_power.get(), elem);
+                                shown = true;
+                            }
+                        }
+                    }
+                    if !shown {
+                        println!("    (no abilities learned yet)");
+                    }
+                }
+            }
         }
         MenuScreen::Status => {
-            println!("  Gold: {}", state.gold.get());
-            println!("  Play time: {}s", state.play_time_seconds);
-            println!("  Quests active: {}", state.quest_state.flags.len());
+            println!("  === STATUS ===");
+            let hours = state.play_time_seconds / 3600;
+            let mins = (state.play_time_seconds % 3600) / 60;
+            println!("  Gold:       {}", state.gold.get());
+            println!("  XP:         {}", save_data.xp);
+            println!("  Play time:  {}h {:02}m", hours, mins);
+            println!("  Party size: {}", save_data.player_party.len());
+            println!("  Djinn:      {}", save_data.team_djinn.len());
+            let active_quests = state.quest_state.flags.values()
+                .filter(|s| **s > crate::shared::QuestStage::Unknown && **s < crate::shared::QuestStage::Complete)
+                .count();
+            let done_quests = state.quest_state.flags.values()
+                .filter(|s| **s >= crate::shared::QuestStage::Complete)
+                .count();
+            println!("  Quests:     {} active, {} complete", active_quests, done_quests);
             if let Some(ref wm) = state.world_map {
                 let accessible = world_map::get_accessible_nodes(wm);
-                println!("  Locations unlocked: {}", accessible.len());
+                println!("  Locations:  {} unlocked", accessible.len());
             }
+            println!("  Items:      {}", inventory.len());
         }
         MenuScreen::QuestLog => {
             let entries: Vec<menu::QuestLogEntry> = state.quest_state.flags.iter().map(|(flag, stage)| {
