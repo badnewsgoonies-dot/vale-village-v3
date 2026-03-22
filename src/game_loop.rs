@@ -239,7 +239,23 @@ fn starter_dungeons() -> Vec<DungeonDef> {
         EncounterId, Difficulty, EncounterEnemy, EnemyId};
     use crate::shared::bounded_types::{Xp, Hp};
 
+    // Helper: create a minimal EncounterDef referencing a data-file encounter by ID
+    let enc = |id: &str, name: &str, diff: Difficulty| -> EncounterDef {
+        EncounterDef {
+            id: EncounterId(id.into()),
+            name: name.into(),
+            difficulty: diff,
+            enemies: vec![],  // battle engine loads from game_data by ID
+            xp_reward: Xp::new(0),
+            gold_reward: Gold::new(0),
+            recruit: None,
+            djinn_reward: None,
+            equipment_rewards: vec![],
+        }
+    };
+
     vec![
+        // ── Mercury Lighthouse (DungeonId 0) ─────────────────────────
         DungeonDef {
             id: DungeonId(0),
             name: "Mercury Lighthouse".into(),
@@ -250,7 +266,13 @@ fn starter_dungeons() -> Vec<DungeonDef> {
                     exits: vec![
                         RoomExit { direction: Direction::Up, target_room: RoomId(1), requires: None },
                     ],
-                    encounters: vec![],
+                    encounters: vec![
+                        EncounterSlot {
+                            encounter: enc("house-01", "Wandering Spirits", Difficulty::Easy),
+                            weight: 100,
+                            max_triggers: Some(1),
+                        },
+                    ],
                     items: vec![
                         RoomItem {
                             item_id: ItemId("herb".into()),
@@ -290,6 +312,121 @@ fn starter_dungeons() -> Vec<DungeonDef> {
             ],
             entry_room: RoomId(0),
             boss_room: Some(RoomId(2)),
+        },
+
+        // ── Kolima Forest (DungeonId 1) ──────────────────────────────
+        DungeonDef {
+            id: DungeonId(1),
+            name: "Kolima Forest".into(),
+            rooms: vec![
+                // Room 0: Forest entrance
+                RoomDef {
+                    id: RoomId(0),
+                    room_type: RoomType::Normal,
+                    exits: vec![
+                        RoomExit { direction: Direction::Up, target_room: RoomId(1), requires: None },
+                        RoomExit { direction: Direction::Right, target_room: RoomId(2), requires: None },
+                    ],
+                    encounters: vec![
+                        EncounterSlot {
+                            encounter: enc("house-02", "Forest Spirits", Difficulty::Easy),
+                            weight: 100,
+                            max_triggers: Some(2),
+                        },
+                    ],
+                    items: vec![
+                        RoomItem {
+                            item_id: ItemId("antidote".into()),
+                            position: (40.0, 20.0),
+                            visible: true,
+                            quest_flag: None,
+                        },
+                    ],
+                    puzzles: vec![],
+                },
+                // Room 1: Deep forest — push block puzzle
+                RoomDef {
+                    id: RoomId(1),
+                    room_type: RoomType::Puzzle,
+                    exits: vec![
+                        RoomExit { direction: Direction::Down, target_room: RoomId(0), requires: None },
+                        RoomExit { direction: Direction::Up, target_room: RoomId(3), requires: None },
+                    ],
+                    encounters: vec![
+                        EncounterSlot {
+                            encounter: enc("house-03", "Cursed Trees", Difficulty::Medium),
+                            weight: 100,
+                            max_triggers: Some(1),
+                        },
+                    ],
+                    items: vec![],
+                    puzzles: vec![
+                        PuzzleDef {
+                            puzzle_type: PuzzleType::PushBlock,
+                            reward: Some(crate::shared::DialogueSideEffect::GiveItem(
+                                ItemId("elixir".into()),
+                                crate::shared::bounded_types::ItemCount::new(1),
+                            )),
+                        },
+                    ],
+                },
+                // Room 2: Hidden grove — treasure room
+                RoomDef {
+                    id: RoomId(2),
+                    room_type: RoomType::Treasure,
+                    exits: vec![
+                        RoomExit { direction: Direction::Left, target_room: RoomId(0), requires: None },
+                    ],
+                    encounters: vec![],
+                    items: vec![
+                        RoomItem {
+                            item_id: ItemId("lucky-medal".into()),
+                            position: (60.0, 60.0),
+                            visible: false,
+                            quest_flag: None,
+                        },
+                        RoomItem {
+                            item_id: ItemId("herb".into()),
+                            position: (20.0, 40.0),
+                            visible: true,
+                            quest_flag: None,
+                        },
+                    ],
+                    puzzles: vec![],
+                },
+                // Room 3: Tret's lair — safe room before boss
+                RoomDef {
+                    id: RoomId(3),
+                    room_type: RoomType::Safe,
+                    exits: vec![
+                        RoomExit { direction: Direction::Down, target_room: RoomId(1), requires: None },
+                        RoomExit { direction: Direction::Up, target_room: RoomId(4), requires: None },
+                    ],
+                    encounters: vec![],
+                    items: vec![
+                        RoomItem {
+                            item_id: ItemId("herb".into()),
+                            position: (50.0, 50.0),
+                            visible: true,
+                            quest_flag: None,
+                        },
+                    ],
+                    puzzles: vec![],
+                },
+                // Room 4: Tret boss room
+                RoomDef {
+                    id: RoomId(4),
+                    room_type: RoomType::Boss,
+                    exits: vec![
+                        RoomExit { direction: Direction::Down, target_room: RoomId(3), requires: None },
+                    ],
+                    encounters: vec![],
+                    items: vec![],
+                    puzzles: vec![],
+                },
+            ],
+            entry_room: RoomId(0),
+            boss_room: Some(RoomId(4)),
         },
     ]
 }
@@ -757,9 +894,15 @@ fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[Dungeon
 
         // Boss fight with real battle
         if input == "fight" && dungeon::is_boss_room(def, room.id) {
-            let boss_enc_id = format!("boss-{}", def.name.to_lowercase().replace(' ', "-"));
-            println!("\n  Challenging the boss!");
-            let result = cli_runner::run_demo_battle(game_data, &boss_enc_id);
+            // Per-dungeon boss encounter, quest flag, and unlock
+            let (boss_enc_id, quest_flag, quest_name, unlock_nodes) = match def.id {
+                DungeonId(0) => ("house-16", QuestFlagId(0), "Mercury Lighthouse", vec![(MapNodeId(1), vec![MapNodeId(3)])]),
+                DungeonId(1) => ("house-17", QuestFlagId(1), "Kolima Curse", vec![(MapNodeId(2), vec![])]),
+                _ => ("house-20", QuestFlagId(0), "Unknown", vec![]),
+            };
+
+            println!("\n  ⚔ BOSS BATTLE ⚔");
+            let result = cli_runner::run_demo_battle(game_data, boss_enc_id);
             match result {
                 BattleResult::Victory { xp, gold: bg } => {
                     println!("\n  BOSS DEFEATED! +{} XP, +{} gold", xp, bg);
@@ -767,15 +910,40 @@ fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[Dungeon
                     state.gold = Gold::new(ng);
                     save_data.gold = ng;
                     save_data.xp += xp;
-                    state.quest_state.advance(QuestFlagId(0), QuestStage::Complete);
-                    println!("  (Quest completed!)");
-                    if let Some(ref mut wm) = state.world_map {
-                        world_map::complete_node(wm, MapNodeId(1));
-                        world_map::unlock_node(wm, MapNodeId(3));
-                        world_map::unlock_node(wm, MapNodeId(3));
-                        println!("  (New location unlocked: Imil!)");
+
+                    // Apply XP to party
+                    for unit in &mut save_data.player_party {
+                        if let Some(unit_def) = game_data.units.get(&unit.unit_id) {
+                            let mut progress = progression::UnitProgress {
+                                unit_id: unit.unit_id.clone(),
+                                level: unit.level,
+                                current_xp: progression::xp_for_level(unit.level),
+                            };
+                            let level_result = progression::apply_battle_rewards(&mut progress, xp, unit_def);
+                            if !level_result.levels_gained.is_empty() {
+                                println!("  {} reached level {}!", unit_def.name, progress.level);
+                                unit.level = progress.level;
+                            }
+                        }
                     }
+
+                    state.quest_state.advance(quest_flag, QuestStage::Complete);
+                    println!("  ({} quest completed!)", quest_name);
+
+                    if let Some(ref mut wm) = state.world_map {
+                        for (complete_node_id, unlock_ids) in &unlock_nodes {
+                            world_map::complete_node(wm, *complete_node_id);
+                            for uid in unlock_ids {
+                                world_map::unlock_node(wm, *uid);
+                                world_map::unlock_node(wm, *uid); // Visible → Unlocked
+                                let node_name = wm.nodes.iter().find(|n| n.id == *uid).map(|n| n.name.as_str()).unwrap_or("???");
+                                println!("  (New location unlocked: {}!)", node_name);
+                            }
+                        }
+                    }
+
                     // Auto-save
+                    save_data.extension = Some(state.to_save_extension());
                     let sp = std::path::Path::new("saves/game.ron");
                     if let Err(e) = save::save_game(save_data, sp) {
                         eprintln!("  Warning: auto-save failed: {}", e);
