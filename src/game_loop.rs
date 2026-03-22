@@ -17,6 +17,7 @@ use crate::shared::{
 
 use crate::domains::dialogue::{self, ConditionContext};
 use crate::domains::dungeon;
+use crate::domains::menu;
 use crate::domains::puzzle;
 use crate::domains::cli_runner;
 use crate::domains::battle_engine::BattleResult;
@@ -550,9 +551,8 @@ pub fn run_game_loop(state: &mut GameState, game_data: &GameData, save_data: &mu
                 run_dungeon(state, did, &dungeons, &mut inventory, game_data, save_data);
             }
 
-            GameScreen::Menu(menu) => {
-                println!("[Menu: {:?}] (not yet implemented)", menu);
-                game_state::apply_transition(state, ScreenTransition::ReturnToPrevious);
+            GameScreen::Menu(menu_screen) => {
+                run_menu(state, menu_screen.clone(), game_data, save_data);
             }
 
             GameScreen::Battle => {
@@ -1134,6 +1134,196 @@ fn apply_side_effect(state: &mut GameState, inventory: &mut Vec<ItemId>, effect:
     }
 }
 
+
+
+// ── Menu Integration ────────────────────────────────────────────────
+
+fn run_menu(
+    state: &mut GameState,
+    menu_screen: MenuScreen,
+    game_data: &GameData,
+    save_data: &save::SaveData,
+) {
+    match menu_screen {
+        MenuScreen::Party => {
+            let summaries = build_party_summaries(save_data, game_data);
+            let lines = menu::show_party(&summaries);
+            for line in &lines {
+                println!("{}", line);
+            }
+            println!("\n  [0] Back");
+            let _ = prompt_number("", 1);
+        }
+        MenuScreen::Equipment => {
+            let summaries = build_party_summaries(save_data, game_data);
+            if summaries.is_empty() {
+                println!("  (no party members)");
+            } else {
+                // Show equipment for first party member (simplified)
+                let equip = build_equipment_summaries(save_data, game_data);
+                let lines = menu::show_equipment(&summaries[0], &equip);
+                for line in &lines {
+                    println!("{}", line);
+                }
+            }
+            println!("\n  [0] Back");
+            let _ = prompt_number("", 1);
+        }
+        MenuScreen::Djinn => {
+            let djinn_list = build_djinn_summaries(save_data, game_data);
+            let lines = menu::show_djinn(&djinn_list);
+            for line in &lines {
+                println!("{}", line);
+            }
+            println!("\n  [0] Back");
+            let _ = prompt_number("", 1);
+        }
+        MenuScreen::Items => {
+            let items = build_item_summaries(save_data);
+            let lines = menu::show_items(&items);
+            for line in &lines {
+                println!("{}", line);
+            }
+            println!("\n  [0] Back");
+            let _ = prompt_number("", 1);
+        }
+        MenuScreen::QuestLog => {
+            let quests = build_quest_summaries(state);
+            let lines = menu::show_quest_log(&quests);
+            for line in &lines {
+                println!("{}", line);
+            }
+            println!("\n  [0] Back");
+            let _ = prompt_number("", 1);
+        }
+        MenuScreen::Psynergy | MenuScreen::Status => {
+            println!("  [{:?}] Coming soon!", menu_screen);
+            println!("\n  [0] Back");
+            let _ = prompt_number("", 1);
+        }
+    }
+    game_state::apply_transition(state, ScreenTransition::ReturnToPrevious);
+}
+
+fn build_party_summaries(save_data: &save::SaveData, game_data: &GameData) -> Vec<menu::UnitSummary> {
+    save_data
+        .player_party
+        .iter()
+        .map(|su| {
+            let name = game_data
+                .units
+                .get(&su.unit_id)
+                .map(|u| u.name.clone())
+                .unwrap_or_else(|| su.unit_id.0.clone());
+            let element = game_data
+                .units
+                .get(&su.unit_id)
+                .map(|u| format!("{:?}", u.element))
+                .unwrap_or_else(|| "???".to_string());
+            let hp_max = game_data
+                .units
+                .get(&su.unit_id)
+                .map(|u| u.base_stats.hp.get())
+                .unwrap_or(100);
+            menu::UnitSummary {
+                name,
+                level: su.level,
+                hp_current: su.current_hp,
+                hp_max,
+                element,
+            }
+        })
+        .collect()
+}
+
+fn build_equipment_summaries(save_data: &save::SaveData, game_data: &GameData) -> Vec<menu::EquipmentSummary> {
+    save_data
+        .inventory
+        .iter()
+        .filter_map(|eid| {
+            game_data.equipment.get(eid).map(|edef| {
+                let equipped = save_data.player_party.iter().any(|u| {
+                    u.equipment.weapon.as_ref() == Some(eid)
+                        || u.equipment.armor.as_ref() == Some(eid)
+                        || u.equipment.accessory.as_ref() == Some(eid)
+                });
+                menu::EquipmentSummary {
+                    name: edef.name.clone(),
+                    slot: format!("{:?}", edef.slot),
+                    tier: equipment_tier_to_u8(&edef.tier),
+                    equipped,
+                }
+            })
+        })
+        .collect()
+}
+
+fn equipment_tier_to_u8(tier: &crate::shared::EquipmentTier) -> u8 {
+    use crate::shared::EquipmentTier;
+    match tier {
+        EquipmentTier::Basic => 1,
+        EquipmentTier::Bronze => 2,
+        EquipmentTier::Iron => 3,
+        EquipmentTier::Steel => 4,
+        EquipmentTier::Silver => 5,
+        _ => 6,
+    }
+}
+
+fn build_djinn_summaries(save_data: &save::SaveData, game_data: &GameData) -> Vec<menu::DjinnSummary> {
+    save_data
+        .team_djinn
+        .iter()
+        .filter_map(|sd| {
+            game_data.djinn.get(&sd.djinn_id).map(|ddef| {
+                let ms = match sd.state {
+                    crate::shared::DjinnState::Good => menu::DjinnMenuState::Set,
+                    crate::shared::DjinnState::Recovery => menu::DjinnMenuState::Recovery,
+                };
+                menu::DjinnSummary {
+                    name: ddef.name.clone(),
+                    element: format!("{:?}", ddef.element),
+                    state: ms,
+                    tier: ddef.tier.get() as u8,
+                }
+            })
+        })
+        .collect()
+}
+
+fn build_item_summaries(save_data: &save::SaveData) -> Vec<menu::ItemSummary> {
+    // Count duplicates in inventory
+    let mut counts: std::collections::HashMap<&str, u8> = std::collections::HashMap::new();
+    for eid in &save_data.inventory {
+        *counts.entry(&eid.0).or_insert(0) += 1;
+    }
+    let mut items: Vec<menu::ItemSummary> = counts
+        .into_iter()
+        .map(|(name, count)| menu::ItemSummary {
+            name: name.to_string(),
+            count,
+            description: String::new(),
+        })
+        .collect();
+    items.sort_by(|a, b| a.name.cmp(&b.name));
+    items
+}
+
+fn build_quest_summaries(state: &GameState) -> Vec<menu::QuestLogEntry> {
+    state
+        .quest_state
+        .flags
+        .iter()
+        .map(|(flag, stage)| {
+            let completed = matches!(stage, QuestStage::Complete | QuestStage::Rewarded);
+            menu::QuestLogEntry {
+                name: format!("Quest #{}", flag.0),
+                description: format!("{:?}", stage),
+                completed,
+            }
+        })
+        .collect()
+}
 
 
 #[cfg(test)]
