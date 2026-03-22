@@ -7,13 +7,16 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
+#[allow(unused_imports)]
 use serde::{Deserialize, Serialize};
 
+#[allow(unused_imports)]
 use crate::shared::{
     DjinnId, DjinnState, Direction, DungeonId, EncounterId, EquipmentId, GameScreen, ItemId,
     MapNodeId, NodeUnlockState, OverworldSaveData, QuestFlagId, QuestStage, RoomId,
     SaveDataExtension, ShopId, UnitId,
 };
+#[allow(unused_imports)]
 use crate::shared::bounded_types::ItemCount;
 
 // ── Constants ───────────────────────────────────────────────────────
