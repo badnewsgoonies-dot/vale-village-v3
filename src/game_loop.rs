@@ -91,6 +91,24 @@ impl puzzle::PuzzleContext for SnapshotCtx {
     }
 }
 
+impl dungeon::ConditionContext for SnapshotCtx {
+    fn has_item(&self, item: &ItemId) -> bool {
+        self.inventory.contains(item)
+    }
+    fn has_djinn(&self, djinn: &DjinnId) -> bool {
+        self.djinn_ids.contains(djinn)
+    }
+    fn quest_at_stage(&self, flag: &QuestFlagId, stage: QuestStage) -> bool {
+        self.quest_flags.get(flag).copied().unwrap_or(QuestStage::Unknown) >= stage
+    }
+    fn gold_at_least(&self, amount: Gold) -> bool {
+        self.gold >= amount.get()
+    }
+    fn party_contains(&self, unit: &UnitId) -> bool {
+        self.party_unit_ids.contains(unit)
+    }
+}
+
 fn prompt(msg: &str) -> String {
     print!("{}", msg);
     io::stdout().flush().ok();
