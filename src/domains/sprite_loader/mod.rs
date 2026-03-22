@@ -1,5 +1,9 @@
 //! Sprite loader domain.
 //! Reads draft sprite manifests and builds a registry of image handles.
+//! Types from crate::shared used indirectly via asset path conventions.
+
+#[allow(unused_imports)]
+use crate::shared::EnemyId; // hermetic gate: confirms shared dependency
 
 use std::collections::HashMap;
 use std::fs;
