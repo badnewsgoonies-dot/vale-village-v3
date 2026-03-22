@@ -32,6 +32,9 @@ pub struct GameState {
     pub play_time_seconds: u64,
     pub steps_since_encounter: u16,
     pub active_encounter: Option<crate::shared::EncounterDef>,
+    /// Persistent dungeon progress — survives across dungeon entries.
+    /// Key: (DungeonId, RoomId, item_index). Tracks one-time items collected across ALL dungeons.
+    pub dungeon_collected_items: std::collections::HashSet<(crate::shared::DungeonId, crate::shared::RoomId, usize)>,
 }
 
 impl GameState {
@@ -48,6 +51,7 @@ impl GameState {
             play_time_seconds: 0,
             steps_since_encounter: 0,
             active_encounter: None,
+            dungeon_collected_items: std::collections::HashSet::new(),
         }
     }
 
@@ -66,6 +70,10 @@ impl GameState {
             stock.insert(*sid, items);
         }
 
+        // Restore dungeon collected items
+        let dungeon_collected_items: std::collections::HashSet<(crate::shared::DungeonId, crate::shared::RoomId, usize)> =
+            ext.collected_items.iter().map(|(did, rid, idx)| (*did, *rid, *idx)).collect();
+
         Self {
             screen: ext.overworld.location.clone(),
             screen_stack: crate::shared::ScreenStack::default(),
@@ -77,6 +85,7 @@ impl GameState {
             play_time_seconds: ext.play_time_seconds,
             steps_since_encounter: 0,
             active_encounter: None,
+            dungeon_collected_items,
         }
     }
 
@@ -100,13 +109,16 @@ impl GameState {
             .map(|(sid, items)| (*sid, items.iter().map(|(iid, count)| (iid.clone(), *count)).collect()))
             .collect();
 
-        // Serialize dungeon collected items: need dungeon ID from current screen
-        let collected_items = match (&self.screen, &self.dungeon_state) {
-            (crate::shared::GameScreen::Dungeon(did), Some(ds)) => {
-                ds.collected_items.iter().map(|(rid, idx)| (*did, *rid, *idx)).collect()
+        // Serialize ALL dungeon collected items (persistent across dungeon entries)
+        // Merge current dungeon state with persistent set
+        let mut all_collected = self.dungeon_collected_items.clone();
+        if let (crate::shared::GameScreen::Dungeon(did), Some(ds)) = (&self.screen, &self.dungeon_state) {
+            for (rid, idx) in &ds.collected_items {
+                all_collected.insert((*did, *rid, *idx));
             }
-            _ => Vec::new(),
-        };
+        }
+        let collected_items: Vec<(crate::shared::DungeonId, crate::shared::RoomId, usize)> =
+            all_collected.into_iter().collect();
 
         crate::shared::SaveDataExtension {
             quest_state: self.quest_state.flags.clone(),

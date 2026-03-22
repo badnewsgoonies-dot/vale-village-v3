@@ -504,6 +504,12 @@ fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[Dungeon
     println!("╚══════════════════════════════════════╝");
 
     let mut ds = dungeon::enter_dungeon(def);
+    // Restore previously collected items for this dungeon from persistent state
+    for (did, rid, idx) in &state.dungeon_collected_items {
+        if *did == dungeon_id {
+            ds.collected_items.insert((*rid, *idx));
+        }
+    }
     let mut step_count: u16 = 0;
     let mut puzzle_instances: std::collections::HashMap<(RoomId, usize), puzzle::PuzzleInstance> = std::collections::HashMap::new();
 
@@ -777,6 +783,11 @@ fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[Dungeon
                 }
             } else { println!("  No exit in that direction."); }
         }
+    }
+
+    // Persist collected items before leaving dungeon (AUD-W2-001 fix)
+    for (rid, idx) in &ds.collected_items {
+        state.dungeon_collected_items.insert((dungeon_id, *rid, *idx));
     }
 }
 
