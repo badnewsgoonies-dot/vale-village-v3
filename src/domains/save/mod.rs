@@ -728,4 +728,112 @@ mod tests {
 
         let _ = fs::remove_dir_all(&dir);
     }
+
+    #[test]
+    fn shop_stock_survives_roundtrip() {
+        let dir = test_dir("shop_stock_roundtrip");
+        let path = dir.join("save.ron");
+
+        let mut data = create_new_game();
+        let mut ext = create_default_extension();
+
+        // Add shop stock with limited items
+        ext.shop_stock.insert(
+            ShopId(0),
+            vec![
+                (ItemId("herb".into()), Some(ItemCount::new(5))),
+                (ItemId("sword".into()), None), // unlimited
+            ],
+        );
+        ext.shop_stock.insert(
+            ShopId(1),
+            vec![(ItemId("potion".into()), Some(ItemCount::new(3)))],
+        );
+        data.extension = Some(ext);
+
+        save_game(&data, &path).expect("save");
+        let loaded = load_game(&path).expect("load");
+        let loaded_ext = loaded.extension.as_ref().expect("extension");
+
+        // Both shops survive
+        assert_eq!(loaded_ext.shop_stock.len(), 2);
+        // Shop 0 has 2 items
+        let shop0 = &loaded_ext.shop_stock[&ShopId(0)];
+        assert_eq!(shop0.len(), 2);
+        // Limited stock count preserved
+        let herb = shop0.iter().find(|(id, _)| id.0 == "herb").unwrap();
+        assert_eq!(herb.1, Some(ItemCount::new(5)));
+        // Unlimited stock preserved as None
+        let sword = shop0.iter().find(|(id, _)| id.0 == "sword").unwrap();
+        assert_eq!(sword.1, None);
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn dungeon_collected_items_survive_roundtrip() {
+        let dir = test_dir("dungeon_items_roundtrip");
+        let path = dir.join("save.ron");
+
+        let mut data = create_new_game();
+        let mut ext = create_default_extension();
+
+        // Collect items in two different dungeons
+        ext.collected_items = vec![
+            (DungeonId(0), RoomId(0), 0), // First item in dungeon 0, room 0
+            (DungeonId(0), RoomId(2), 1), // Second item in dungeon 0, room 2
+            (DungeonId(1), RoomId(0), 0), // First item in dungeon 1, room 0
+        ];
+        data.extension = Some(ext);
+
+        save_game(&data, &path).expect("save");
+        let loaded = load_game(&path).expect("load");
+        let loaded_ext = loaded.extension.as_ref().expect("extension");
+
+        // All 3 collected items survive
+        assert_eq!(loaded_ext.collected_items.len(), 3);
+        assert!(loaded_ext.collected_items.contains(&(DungeonId(0), RoomId(0), 0)));
+        assert!(loaded_ext.collected_items.contains(&(DungeonId(0), RoomId(2), 1)));
+        assert!(loaded_ext.collected_items.contains(&(DungeonId(1), RoomId(0), 0)));
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn full_extension_roundtrip() {
+        let dir = test_dir("full_extension_roundtrip");
+        let path = dir.join("save.ron");
+
+        let mut data = create_new_game();
+        data.gold = 500;
+        data.xp = 1200;
+
+        let mut ext = create_default_extension();
+        ext.quest_state.insert(QuestFlagId(1), QuestStage::Active);
+        ext.play_time_seconds = 3600;
+        ext.shop_stock.insert(
+            ShopId(0),
+            vec![(ItemId("herb".into()), Some(ItemCount::new(2)))],
+        );
+        ext.collected_items = vec![(DungeonId(0), RoomId(1), 0)];
+        ext.map_unlock_state.insert(MapNodeId(0), NodeUnlockState::Completed);
+        ext.map_unlock_state.insert(MapNodeId(1), NodeUnlockState::Unlocked);
+        data.extension = Some(ext);
+
+        save_game(&data, &path).expect("save");
+        let loaded = load_game(&path).expect("load");
+
+        assert_eq!(loaded.gold, 500);
+        assert_eq!(loaded.xp, 1200);
+
+        let le = loaded.extension.as_ref().expect("extension");
+        assert_eq!(le.quest_state[&QuestFlagId(1)], QuestStage::Active);
+        assert_eq!(le.play_time_seconds, 3600);
+        assert_eq!(le.shop_stock.len(), 1);
+        assert_eq!(le.collected_items.len(), 1);
+        assert_eq!(le.map_unlock_state[&MapNodeId(0)], NodeUnlockState::Completed);
+        assert_eq!(le.map_unlock_state[&MapNodeId(1)], NodeUnlockState::Unlocked);
+
+        let _ = fs::remove_dir_all(&dir);
+    }
 }
