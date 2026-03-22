@@ -13,12 +13,13 @@ use crate::shared::{
 
 // ── Encounter helper (creates stub EncounterDef — battle engine loads real data by ID) ──
 
-fn enc(id: &str, name: &str, diff: crate::shared::Difficulty) -> crate::shared::EncounterDef {
-    use crate::shared::{EncounterDef, EncounterId};
-    use crate::shared::bounded_types::Xp;
+fn enc(id: &str, name: &str, diff: crate::shared::Difficulty, enemies: Vec<(&str, u8)>, xp: u32, gold: u32) -> crate::shared::EncounterDef {
+    use crate::shared::{EncounterDef, EncounterId, EncounterEnemy, EnemyId};
+    use crate::shared::bounded_types::{Xp, Gold};
     EncounterDef {
         id: EncounterId(id.into()), name: name.into(), difficulty: diff,
-        enemies: vec![], xp_reward: Xp::new(0), gold_reward: Gold::new(0),
+        enemies: enemies.into_iter().map(|(eid, count)| EncounterEnemy { enemy_id: EnemyId(eid.into()), count }).collect(),
+        xp_reward: Xp::new(xp), gold_reward: Gold::new(gold),
         recruit: None, djinn_reward: None, equipment_rewards: vec![],
     }
 }
@@ -254,7 +255,7 @@ pub fn starter_dungeons() -> Vec<DungeonDef> {
         DungeonDef { id: DungeonId(0), name: "Mercury Lighthouse".into(), entry_room: RoomId(0), boss_room: Some(RoomId(2)), rooms: vec![
             RoomDef { id: RoomId(0), room_type: RoomType::Normal,
                 exits: vec![RoomExit { direction: Direction::Up, target_room: RoomId(1), requires: None }],
-                encounters: vec![EncounterSlot { encounter: enc("house-01", "Wandering Spirits", Difficulty::Easy), weight: 100, max_triggers: Some(1) }],
+                encounters: vec![EncounterSlot { encounter: enc("house-01", "Wandering Spirits", Difficulty::Easy, vec![("mercury-slime", 2), ("frost-sprite", 1)], 20, 12), weight: 100, max_triggers: Some(1) }],
                 items: vec![RoomItem { item_id: ItemId("herb".into()), position: (30.0, 30.0), visible: true, quest_flag: None }],
                 puzzles: vec![] },
             RoomDef { id: RoomId(1), room_type: RoomType::Puzzle,
@@ -269,12 +270,12 @@ pub fn starter_dungeons() -> Vec<DungeonDef> {
         DungeonDef { id: DungeonId(1), name: "Kolima Forest".into(), entry_room: RoomId(0), boss_room: Some(RoomId(4)), rooms: vec![
             RoomDef { id: RoomId(0), room_type: RoomType::Normal,
                 exits: vec![RoomExit { direction: Direction::Up, target_room: RoomId(1), requires: None }, RoomExit { direction: Direction::Right, target_room: RoomId(2), requires: None }],
-                encounters: vec![EncounterSlot { encounter: enc("house-02", "Forest Spirits", Difficulty::Easy), weight: 100, max_triggers: Some(2) }],
+                encounters: vec![EncounterSlot { encounter: enc("house-02", "Forest Spirits", Difficulty::Easy, vec![("wind-sprite", 2), ("stone-beetle", 1)], 25, 15), weight: 100, max_triggers: Some(2) }],
                 items: vec![RoomItem { item_id: ItemId("antidote".into()), position: (40.0, 20.0), visible: true, quest_flag: None }],
                 puzzles: vec![] },
             RoomDef { id: RoomId(1), room_type: RoomType::Puzzle,
                 exits: vec![RoomExit { direction: Direction::Down, target_room: RoomId(0), requires: None }, RoomExit { direction: Direction::Up, target_room: RoomId(3), requires: None }],
-                encounters: vec![EncounterSlot { encounter: enc("house-03", "Cursed Trees", Difficulty::Easy), weight: 100, max_triggers: Some(1) }],
+                encounters: vec![EncounterSlot { encounter: enc("house-03", "Cursed Trees", Difficulty::Easy, vec![("earthbound-wolf", 1), ("stone-beetle", 2)], 30, 18), weight: 100, max_triggers: Some(1) }],
                 items: vec![],
                 puzzles: vec![PuzzleDef { puzzle_type: PuzzleType::PushBlock, reward: Some(crate::shared::DialogueSideEffect::GiveItem(ItemId("elixir".into()), ItemCount::new(1))) }] },
             RoomDef { id: RoomId(2), room_type: RoomType::Treasure,
@@ -297,7 +298,7 @@ pub fn starter_dungeons() -> Vec<DungeonDef> {
         DungeonDef { id: DungeonId(2), name: "Mogall Forest".into(), entry_room: RoomId(0), boss_room: Some(RoomId(5)), rooms: vec![
             RoomDef { id: RoomId(0), room_type: RoomType::Normal,
                 exits: vec![RoomExit { direction: Direction::Right, target_room: RoomId(1), requires: None }, RoomExit { direction: Direction::Up, target_room: RoomId(2), requires: None }],
-                encounters: vec![EncounterSlot { encounter: enc("house-06", "Mogall Lurkers", Difficulty::Medium), weight: 100, max_triggers: Some(2) }],
+                encounters: vec![EncounterSlot { encounter: enc("house-06", "Mogall Lurkers", Difficulty::Medium, vec![("ghost-wisp", 2), ("bone-mage", 1)], 45, 30), weight: 100, max_triggers: Some(2) }],
                 items: vec![RoomItem { item_id: ItemId("herb".into()), position: (20.0, 30.0), visible: true, quest_flag: None }],
                 puzzles: vec![] },
             RoomDef { id: RoomId(1), room_type: RoomType::Puzzle,
@@ -306,12 +307,12 @@ pub fn starter_dungeons() -> Vec<DungeonDef> {
                 puzzles: vec![PuzzleDef { puzzle_type: PuzzleType::SwitchSequence, reward: Some(crate::shared::DialogueSideEffect::GiveGold(Gold::new(300))) }] },
             RoomDef { id: RoomId(2), room_type: RoomType::Normal,
                 exits: vec![RoomExit { direction: Direction::Down, target_room: RoomId(0), requires: None }, RoomExit { direction: Direction::Right, target_room: RoomId(3), requires: None }],
-                encounters: vec![EncounterSlot { encounter: enc("house-07", "Thorned Sentinels", Difficulty::Medium), weight: 100, max_triggers: Some(1) }],
+                encounters: vec![EncounterSlot { encounter: enc("house-07", "Thorned Sentinels", Difficulty::Medium, vec![("terra-guardian", 1), ("stone-sprite", 2)], 50, 35), weight: 100, max_triggers: Some(1) }],
                 items: vec![RoomItem { item_id: ItemId("elixir".into()), position: (50.0, 10.0), visible: true, quest_flag: None }],
                 puzzles: vec![] },
             RoomDef { id: RoomId(3), room_type: RoomType::MiniBoss,
                 exits: vec![RoomExit { direction: Direction::Left, target_room: RoomId(2), requires: None }, RoomExit { direction: Direction::Down, target_room: RoomId(1), requires: None }, RoomExit { direction: Direction::Up, target_room: RoomId(4), requires: None }],
-                encounters: vec![EncounterSlot { encounter: enc("house-08", "Mogall Beast", Difficulty::Medium), weight: 100, max_triggers: Some(1) }],
+                encounters: vec![EncounterSlot { encounter: enc("house-08", "Mogall Beast", Difficulty::Medium, vec![("elder-basilisk", 1)], 60, 40), weight: 100, max_triggers: Some(1) }],
                 items: vec![], puzzles: vec![] },
             RoomDef { id: RoomId(4), room_type: RoomType::Treasure,
                 exits: vec![RoomExit { direction: Direction::Down, target_room: RoomId(3), requires: None }, RoomExit { direction: Direction::Right, target_room: RoomId(5), requires: None }],
@@ -328,7 +329,7 @@ pub fn starter_dungeons() -> Vec<DungeonDef> {
         DungeonDef { id: DungeonId(3), name: "Gondowan Passage".into(), entry_room: RoomId(0), boss_room: Some(RoomId(3)), rooms: vec![
             RoomDef { id: RoomId(0), room_type: RoomType::Normal,
                 exits: vec![RoomExit { direction: Direction::Right, target_room: RoomId(1), requires: None }],
-                encounters: vec![EncounterSlot { encounter: enc("house-09", "Cave Bats", Difficulty::Medium), weight: 100, max_triggers: Some(2) }],
+                encounters: vec![EncounterSlot { encounter: enc("house-09", "Cave Bats", Difficulty::Medium, vec![("crystal-bat", 3), ("frost-mystic", 1)], 45, 28), weight: 100, max_triggers: Some(2) }],
                 items: vec![RoomItem { item_id: ItemId("herb".into()), position: (15.0, 25.0), visible: true, quest_flag: None }],
                 puzzles: vec![] },
             RoomDef { id: RoomId(1), room_type: RoomType::Puzzle,
@@ -340,7 +341,7 @@ pub fn starter_dungeons() -> Vec<DungeonDef> {
                 ] },
             RoomDef { id: RoomId(2), room_type: RoomType::Normal,
                 exits: vec![RoomExit { direction: Direction::Left, target_room: RoomId(1), requires: None }, RoomExit { direction: Direction::Right, target_room: RoomId(3), requires: None }],
-                encounters: vec![EncounterSlot { encounter: enc("house-10", "Rock Golems", Difficulty::Medium), weight: 100, max_triggers: Some(1) }],
+                encounters: vec![EncounterSlot { encounter: enc("house-10", "Rock Golems", Difficulty::Medium, vec![("clay-golem", 1), ("iron-golem", 1)], 55, 38), weight: 100, max_triggers: Some(1) }],
                 items: vec![RoomItem { item_id: ItemId("elixir".into()), position: (40.0, 50.0), visible: true, quest_flag: None }],
                 puzzles: vec![] },
             RoomDef { id: RoomId(3), room_type: RoomType::Boss,
@@ -351,7 +352,7 @@ pub fn starter_dungeons() -> Vec<DungeonDef> {
         DungeonDef { id: DungeonId(4), name: "Altmiller Cave".into(), entry_room: RoomId(0), boss_room: Some(RoomId(5)), rooms: vec![
             RoomDef { id: RoomId(0), room_type: RoomType::Normal,
                 exits: vec![RoomExit { direction: Direction::Up, target_room: RoomId(1), requires: None }, RoomExit { direction: Direction::Right, target_room: RoomId(2), requires: None }],
-                encounters: vec![EncounterSlot { encounter: enc("house-11", "Crystal Sentinels", Difficulty::Hard), weight: 100, max_triggers: Some(2) }],
+                encounters: vec![EncounterSlot { encounter: enc("house-11", "Crystal Sentinels", Difficulty::Hard, vec![("crystal-golem", 2), ("frost-lich", 1)], 85, 55), weight: 100, max_triggers: Some(2) }],
                 items: vec![RoomItem { item_id: ItemId("elixir".into()), position: (25.0, 25.0), visible: true, quest_flag: None }],
                 puzzles: vec![] },
             RoomDef { id: RoomId(1), room_type: RoomType::Puzzle,
@@ -367,7 +368,7 @@ pub fn starter_dungeons() -> Vec<DungeonDef> {
                 ], puzzles: vec![] },
             RoomDef { id: RoomId(3), room_type: RoomType::MiniBoss,
                 exits: vec![RoomExit { direction: Direction::Down, target_room: RoomId(1), requires: None }, RoomExit { direction: Direction::Up, target_room: RoomId(4), requires: None }],
-                encounters: vec![EncounterSlot { encounter: enc("house-13", "Cave Warden", Difficulty::Hard), weight: 100, max_triggers: Some(1) }],
+                encounters: vec![EncounterSlot { encounter: enc("house-13", "Cave Warden", Difficulty::Hard, vec![("permafrost-golem", 1), ("glacier-wyrm", 1)], 100, 70), weight: 100, max_triggers: Some(1) }],
                 items: vec![], puzzles: vec![] },
             RoomDef { id: RoomId(4), room_type: RoomType::Safe,
                 exits: vec![RoomExit { direction: Direction::Down, target_room: RoomId(3), requires: None }, RoomExit { direction: Direction::Up, target_room: RoomId(5), requires: None }],
@@ -390,8 +391,8 @@ pub fn overworld_encounter_table() -> crate::shared::EncounterTable {
     EncounterTable {
         region_id: 0, base_rate: EncounterRate::new(3),
         entries: vec![
-            EncounterSlot { encounter: enc("house-01", "Wandering Monsters", Difficulty::Easy), weight: 60, max_triggers: None },
-            EncounterSlot { encounter: enc("house-04", "Road Bandits", Difficulty::Easy), weight: 40, max_triggers: None },
+            EncounterSlot { encounter: enc("house-01", "Wandering Monsters", Difficulty::Easy, vec![("mercury-slime", 1), ("earthbound-wolf", 1)], 18, 10), weight: 60, max_triggers: None },
+            EncounterSlot { encounter: enc("house-04", "Road Bandits", Difficulty::Easy, vec![("road-bandit", 2), ("scavenger", 1)], 25, 20), weight: 40, max_triggers: None },
         ],
     }
 }

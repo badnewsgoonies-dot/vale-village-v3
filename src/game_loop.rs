@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(unused_imports)]
 //! CLI Game Loop — text-based adventure runner integrating all beyond-battle domains.
 //! Orchestrator-owned. This is the integration layer connecting screens, world map,
 //! towns, shops, dungeons, quests, dialogue, and encounters into a playable loop.
@@ -196,7 +197,14 @@ pub fn run_game_loop(state: &mut GameState, game_data: &GameData, save_data: &mu
 }
 
 fn run_world_map(state: &mut GameState, towns: &[TownDef], game_data: &GameData, save_data: &mut save::SaveData) {
-    let wm = state.world_map.as_ref().expect("world map not loaded");
+    let wm = match state.world_map.as_ref() {
+        Some(wm) => wm,
+        None => {
+            println!("World map not loaded — returning to title.");
+            state.screen = GameScreen::Title;
+            return;
+        }
+    };
     let accessible = world_map::get_accessible_nodes(wm);
 
     println!("\n── World Map ──");
