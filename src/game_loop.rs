@@ -155,12 +155,23 @@ pub fn run_game_loop(state: &mut GameState, game_data: &GameData, save_data: &mu
     loop {
         match &state.screen {
             GameScreen::Title => {
-                println!("[Title Screen]");
-                let choice = prompt("Press ENTER to start, or 'q' to quit: ");
-                if choice == "q" {
-                    break;
+                let save_exists = std::path::Path::new("saves/game.ron").exists();
+                println!("  [n] New Game");
+                if save_exists {
+                    println!("  [l] Load Game");
                 }
-                game_state::apply_transition(state, ScreenTransition::ToWorldMap);
+                println!("  [q] Quit");
+                let choice = prompt("> ");
+                match choice.trim() {
+                    "n" | "" => {
+                        game_state::apply_transition(state, ScreenTransition::ToWorldMap);
+                    }
+                    "l" if save_exists => {
+                        game_state::apply_transition(state, ScreenTransition::OpenSaveLoad);
+                    }
+                    "q" => break,
+                    _ => {}
+                }
             }
 
             GameScreen::WorldMap => {
