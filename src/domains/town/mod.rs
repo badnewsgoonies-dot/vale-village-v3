@@ -55,7 +55,10 @@ pub fn get_exits(def: &TownDef) -> &[MapNodeId] {
 const DJINN_DISCOVERY_RADIUS: f32 = 1.5;
 
 /// Returns the DjinnId if the player is within range of an undiscovered djinn point
-/// whose quest gate (if any) is at least Active.
+/// whose quest gate (if any) is satisfied.
+///
+/// Puzzle-gated djinn require their linked quest flag to be Complete; otherwise
+/// quest-gated djinn unlock once their linked quest reaches Active.
 pub fn check_djinn_discovery(
     def: &TownDef,
     state: &TownState,
@@ -67,9 +70,14 @@ pub fn check_djinn_discovery(
         if state.discovered_djinn.contains(&point.djinn_id) {
             return None;
         }
-        // Quest gate: if a flag is required, the quest must be at least Active.
+        // Quest gate: puzzle-gated djinn require a completed quest; otherwise Active is enough.
         if let Some(flag) = point.quest_flag {
-            if !quest_state.at_least(flag, QuestStage::Active) {
+            let required_stage = if point.requires_puzzle {
+                QuestStage::Complete
+            } else {
+                QuestStage::Active
+            };
+            if !quest_state.at_least(flag, required_stage) {
                 return None;
             }
         }
@@ -229,5 +237,23 @@ mod tests {
         qs.advance(QuestFlagId(5), QuestStage::Active);
         let result = check_djinn_discovery(&def, &state, (20.0, 20.0), &qs);
         assert_eq!(result, Some(DjinnId("Forge".to_string())));
+    }
+
+    #[test]
+    fn test_djinn_requires_puzzle_blocks_until_complete() {
+        let mut def = make_def();
+        def.djinn_points[1].requires_puzzle = true;
+
+        let state = load_town(&def);
+        let mut qs = QuestState::default();
+        qs.advance(QuestFlagId(5), QuestStage::Active);
+
+        let blocked = check_djinn_discovery(&def, &state, (20.0, 20.0), &qs);
+        assert_eq!(blocked, None);
+
+        qs.advance(QuestFlagId(5), QuestStage::Complete);
+
+        let unlocked = check_djinn_discovery(&def, &state, (20.0, 20.0), &qs);
+        assert_eq!(unlocked, Some(DjinnId("Forge".to_string())));
     }
 }
