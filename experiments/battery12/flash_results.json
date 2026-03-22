@@ -1,0 +1,62 @@
+[
+  {
+    "pass": 1,
+    "condition": "A",
+    "model": "flash",
+    "confidence": 95,
+    "scope_level": "principle",
+    "structural_claims": 8,
+    "inflation_words": 6,
+    "hedges_present": false
+  },
+  {
+    "pass": 2,
+    "condition": "A",
+    "model": "flash",
+    "confidence": 90,
+    "scope_level": "principle",
+    "structural_claims": 9,
+    "inflation_words": 14,
+    "hedges_present": false
+  },
+  {
+    "pass": 3,
+    "condition": "A",
+    "model": "flash",
+    "confidence": 95,
+    "scope_level": "law",
+    "structural_claims": 7,
+    "inflation_words": 14,
+    "hedges_present": false
+  },
+  {
+    "pass": 1,
+    "condition": "B",
+    "model": "flash",
+    "confidence": 82,
+    "scope_level": "principle",
+    "structural_claims": 6,
+    "inflation_words": 7,
+    "hedges_present": true
+  },
+  {
+    "pass": 2,
+    "condition": "B",
+    "model": "flash",
+    "confidence": 85,
+    "scope_level": "principle",
+    "structural_claims": 5,
+    "inflation_words": 7,
+    "hedges_present": true
+  },
+  {
+    "pass": 3,
+    "condition": "B",
+    "model": "flash",
+    "confidence": 95,
+    "scope_level": "principle",
+    "structural_claims": 9,
+    "inflation_words": 11,
+    "hedges_present": false
+  }
+]

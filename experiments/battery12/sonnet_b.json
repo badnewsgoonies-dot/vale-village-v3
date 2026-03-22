@@ -1,0 +1,32 @@
+[
+  {
+    "pass": 1,
+    "condition": "B",
+    "model": "sonnet",
+    "confidence": 9,
+    "scope_level": "principle",
+    "structural_claims": 8,
+    "inflation_words": 8,
+    "hedges_present": false
+  },
+  {
+    "pass": 2,
+    "condition": "B",
+    "model": "sonnet",
+    "confidence": 95,
+    "scope_level": "principle",
+    "structural_claims": 9,
+    "inflation_words": 8,
+    "hedges_present": false
+  },
+  {
+    "pass": 3,
+    "condition": "B",
+    "model": "sonnet",
+    "confidence": 95,
+    "scope_level": "theorem",
+    "structural_claims": 10,
+    "inflation_words": 9,
+    "hedges_present": false
+  }
+]

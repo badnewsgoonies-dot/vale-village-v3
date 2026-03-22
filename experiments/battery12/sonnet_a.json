@@ -1,0 +1,32 @@
+[
+  {
+    "pass": 1,
+    "condition": "A",
+    "model": "sonnet",
+    "confidence": 95,
+    "scope_level": "principle",
+    "structural_claims": 8,
+    "inflation_words": 8,
+    "hedges_present": false
+  },
+  {
+    "pass": 2,
+    "condition": "A",
+    "model": "sonnet",
+    "confidence": 5,
+    "scope_level": "law",
+    "structural_claims": 8,
+    "inflation_words": 14,
+    "hedges_present": false
+  },
+  {
+    "pass": 3,
+    "condition": "A",
+    "model": "sonnet",
+    "confidence": 95,
+    "scope_level": "principle",
+    "structural_claims": 12,
+    "inflation_words": 9,
+    "hedges_present": false
+  }
+]
