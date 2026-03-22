@@ -103,11 +103,68 @@ pub fn load_sprites(
         ..Default::default()
     };
 
+    #[cfg(not(target_arch = "wasm32"))]
+    load_sprites_native(&mut registry, &asset_server, &fallback);
+
+    #[cfg(target_arch = "wasm32")]
+    load_sprites_wasm(&mut registry, &asset_server);
+
+    commands.insert_resource(registry);
+}
+
+/// WASM sprite loading: load by convention via AssetServer (HTTP fetch).
+/// RON IDs use hyphens but file names use underscores — convert with replace('-', "_").
+#[cfg(target_arch = "wasm32")]
+fn load_sprites_wasm(registry: &mut SpriteRegistry, asset_server: &AssetServer) {
+    let unit_ids = [
+        "adept", "blaze", "felix", "karis", "mystic",
+        "ranger", "sentinel", "stormcaller", "tower-champion", "tyrell", "war-mage",
+    ];
+    for id in unit_ids {
+        let file_id = id.replace('-', "_");
+        let path = format!("sprites/units/{file_id}_portrait.png");
+        registry.unit_portraits.insert(id.to_string(), asset_server.load(path));
+    }
+
+    let enemy_ids = include_str!("../../../data/full/enemies.ron");
+    for line in enemy_ids.lines() {
+        let line = line.trim();
+        if let Some(rest) = line.strip_prefix("id: EnemyId(\"") {
+            if let Some(id) = rest.strip_suffix("\"),") {
+                let file_id = id.replace('-', "_");
+                registry.enemy_idle.insert(id.to_string(), asset_server.load(format!("sprites/enemies/{file_id}_idle.png")));
+                registry.enemy_attack.insert(id.to_string(), asset_server.load(format!("sprites/enemies/{file_id}_attack.png")));
+                registry.enemy_hit.insert(id.to_string(), asset_server.load(format!("sprites/enemies/{file_id}_hit.png")));
+            }
+        }
+    }
+
+    let djinn_data = include_str!("../../../data/full/djinn.ron");
+    for line in djinn_data.lines() {
+        let line = line.trim();
+        if let Some(rest) = line.strip_prefix("id: DjinnId(\"") {
+            if let Some(id) = rest.strip_suffix("\"),") {
+                let file_id = id.replace('-', "_");
+                registry.djinn.insert(id.to_string(), asset_server.load(format!("sprites/djinn/{file_id}.png")));
+            }
+        }
+    }
+
+    let elements = ["venus", "mars", "jupiter", "mercury"];
+    for elem in elements {
+        registry.effect_projectiles.insert(elem.to_string(), asset_server.load(format!("sprites/effects/{elem}_projectile.png")));
+        registry.effect_impacts.insert(elem.to_string(), asset_server.load(format!("sprites/effects/{elem}_impact.png")));
+    }
+}
+
+/// Native sprite loading: filesystem manifest + directory scanning.
+#[cfg(not(target_arch = "wasm32"))]
+fn load_sprites_native(registry: &mut SpriteRegistry, asset_server: &AssetServer, fallback: &Handle<Image>) {
     if let Ok(content) = fs::read_to_string(ENEMY_MANIFEST_PATH) {
         for entry in parse_enemy_manifest(&content) {
-            let idle = load_or_fallback(entry.sprite_idle.as_deref(), &asset_server, &fallback);
-            let attack = load_or_fallback(entry.sprite_attack.as_deref(), &asset_server, &fallback);
-            let hit = load_or_fallback(entry.sprite_hit.as_deref(), &asset_server, &fallback);
+            let idle = load_or_fallback(entry.sprite_idle.as_deref(), asset_server, fallback);
+            let attack = load_or_fallback(entry.sprite_attack.as_deref(), asset_server, fallback);
+            let hit = load_or_fallback(entry.sprite_hit.as_deref(), asset_server, fallback);
             registry.enemy_idle.insert(entry.id.clone(), idle);
             registry.enemy_attack.insert(entry.id.clone(), attack);
             registry.enemy_hit.insert(entry.id, hit);
@@ -116,13 +173,11 @@ pub fn load_sprites(
 
     if let Ok(content) = fs::read_to_string(DJINN_MANIFEST_PATH) {
         for entry in parse_djinn_manifest(&content) {
-            let sprite = load_or_fallback(entry.sprite.as_deref(), &asset_server, &fallback);
+            let sprite = load_or_fallback(entry.sprite.as_deref(), asset_server, fallback);
             registry.djinn.insert(entry.id, sprite);
         }
     }
 
-    // Scan assets/sprites/units/ for player unit portraits.
-    // Convention: <unit_id>_portrait.png → key is the unit_id (e.g. "adept").
     let unit_sprite_dir = Path::new(ASSET_ROOT).join("sprites/units");
     if let Ok(entries) = fs::read_dir(&unit_sprite_dir) {
         for entry in entries.flatten() {
@@ -131,15 +186,12 @@ pub fn load_sprites(
                 if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
                     let unit_id = stem.trim_end_matches("_portrait").to_string();
                     let asset_path = normalize_asset_path(&path);
-                    let handle = asset_server.load(asset_path);
-                    registry.unit_portraits.insert(unit_id, handle);
+                    registry.unit_portraits.insert(unit_id, asset_server.load(asset_path));
                 }
             }
         }
     }
 
-    // Scan assets/sprites/effects/ for ability effect sprites.
-    // Convention: <element>_projectile.png and <element>_impact.png
     let effects_dir = Path::new(ASSET_ROOT).join("sprites/effects");
     if let Ok(entries) = fs::read_dir(&effects_dir) {
         for entry in entries.flatten() {
@@ -157,8 +209,6 @@ pub fn load_sprites(
             }
         }
     }
-
-    commands.insert_resource(registry);
 }
 
 #[derive(Default)]

@@ -220,6 +220,39 @@ fn validate(data: &GameData, errors: &mut Vec<LoadError>) {
 ///
 /// Collects ALL errors (file-not-found, parse, validation) and returns
 /// them together rather than stopping at the first.
+/// Load all game data from embedded RON strings (for WASM where filesystem is unavailable).
+#[cfg(target_arch = "wasm32")]
+pub fn load_game_data_embedded() -> Result<GameData, Vec<LoadError>> {
+    let mut errors = Vec::new();
+
+    fn parse_ron<T: serde::de::DeserializeOwned>(src: &str, errors: &mut Vec<LoadError>) -> Vec<T> {
+        match ron::from_str::<Vec<T>>(src) {
+            Ok(v) => v,
+            Err(e) => { errors.push(LoadError::ParseError("embedded".into(), format!("{e}"))); Vec::new() }
+        }
+    }
+
+    let abilities_list: Vec<AbilityDef> = parse_ron(include_str!("../../../data/full/abilities.ron"), &mut errors);
+    let units_list: Vec<UnitDef> = parse_ron(include_str!("../../../data/full/units.ron"), &mut errors);
+    let enemies_list: Vec<EnemyDef> = parse_ron(include_str!("../../../data/full/enemies.ron"), &mut errors);
+    let equipment_list: Vec<EquipmentDef> = parse_ron(include_str!("../../../data/full/equipment.ron"), &mut errors);
+    let djinn_list: Vec<DjinnDef> = parse_ron(include_str!("../../../data/full/djinn.ron"), &mut errors);
+    let encounters_list: Vec<EncounterDef> = parse_ron(include_str!("../../../data/full/encounters.ron"), &mut errors);
+    let config: CombatConfig = ron::from_str(include_str!("../../../data/full/config.ron"))
+        .unwrap_or_else(|_| crate::data::default_combat_config());
+
+    let abilities = abilities_list.into_iter().map(|a| (a.id.clone(), a)).collect();
+    let units = units_list.into_iter().map(|u| (u.id.clone(), u)).collect();
+    let enemies = enemies_list.into_iter().map(|e| (e.id.clone(), e)).collect();
+    let equipment = equipment_list.into_iter().map(|eq| (eq.id.clone(), eq)).collect();
+    let djinn = djinn_list.into_iter().map(|d| (d.id.clone(), d)).collect();
+    let encounters = encounters_list.into_iter().map(|enc| (enc.id.clone(), enc)).collect();
+
+    let data = GameData { abilities, units, enemies, equipment, djinn, encounters, config };
+    validate(&data, &mut errors);
+    if errors.is_empty() { Ok(data) } else { Err(errors) }
+}
+
 pub fn load_game_data(data_dir: &Path) -> Result<GameData, Vec<LoadError>> {
     let mut errors = Vec::new();
 

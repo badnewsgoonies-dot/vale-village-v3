@@ -64,7 +64,17 @@ fn persist_djinn_reward(save_data: &mut save::SaveData, djinn_id: &DjinnId) {
 }
 
 fn main() {
-    // Launch Bevy GUI mode if --gui flag is passed
+    // Launch Bevy GUI mode: always on WASM, or with --gui flag on native
+    #[cfg(target_arch = "wasm32")]
+    {
+        console_error_panic_hook::set_once();
+        bevy::app::App::new()
+            .add_plugins(ui::plugin::ValeVillagePlugin)
+            .run();
+        return;
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
     if std::env::args().any(|arg| arg == "--gui") {
         bevy::app::App::new()
             .add_plugins(ui::plugin::ValeVillagePlugin)

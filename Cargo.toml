@@ -11,7 +11,37 @@ edition = "2021"
 ironclad = { path = "ironclad" }
 serde = { version = "1", features = ["derive"] }
 ron = "0.8"
-bevy = "0.15"
+bevy = { version = "0.15", default-features = false, features = [
+    "bevy_asset",
+    "bevy_audio",
+    "bevy_core_pipeline",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_winit",
+    "bevy_state",
+    "png",
+    "vorbis",
+    "webgl2",
+    "default_font",
+    "multi_threaded",
+] }
+getrandom = { version = "0.3", features = ["wasm_js"] }
+console_error_panic_hook = "0.1"
 
 [dev-dependencies]
 tempfile = "3"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
