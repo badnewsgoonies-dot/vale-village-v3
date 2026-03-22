@@ -413,3 +413,45 @@ pub fn starter_dungeons() -> Vec<DungeonDef> {
     ]
 }
 
+
+pub fn overworld_encounter_table() -> crate::shared::EncounterTable {
+    use crate::shared::{EncounterSlot, EncounterTable, EncounterDef, EncounterId, Difficulty};
+    use crate::shared::bounded_types::{EncounterRate, Xp};
+
+    EncounterTable {
+        region_id: 0,
+        base_rate: EncounterRate::new(3), // encounter every 3 steps
+        entries: vec![
+            EncounterSlot {
+                encounter: EncounterDef {
+                    id: EncounterId("house-01".into()),
+                    name: "Wandering Monsters".into(),
+                    difficulty: Difficulty::Easy,
+                    enemies: vec![],
+                    xp_reward: Xp::new(0),
+                    gold_reward: Gold::new(0),
+                    recruit: None,
+                    djinn_reward: None,
+                    equipment_rewards: vec![],
+                },
+                weight: 60,
+                max_triggers: None,
+            },
+            EncounterSlot {
+                encounter: EncounterDef {
+                    id: EncounterId("house-02".into()),
+                    name: "Forest Spirits".into(),
+                    difficulty: Difficulty::Easy,
+                    enemies: vec![],
+                    xp_reward: Xp::new(0),
+                    gold_reward: Gold::new(0),
+                    recruit: None,
+                    djinn_reward: None,
+                    equipment_rewards: vec![],
+                },
+                weight: 40,
+                max_triggers: None,
+            },
+        ],
+    }
+}
