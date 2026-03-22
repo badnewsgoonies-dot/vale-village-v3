@@ -6,9 +6,10 @@ use crate::game_state::GameState;
 use crate::shared::{GameScreen, MapNode, MapNodeId, MapNodeType, NodeUnlockState};
 
 use super::app_state::{AppState, CurrentTown, GameStateRes, SaveDataRes};
+use super::plugin::{build_battle_from_encounter, BattleRes, GameDataRes};
 use super::ui_helpers::{
-    despawn_screen, spawn_panel, ButtonAction, ButtonBaseColor, BORDER_COLOR, BG_COLOR,
-    GOLD_COLOR, HIGHLIGHT, MenuButton, ScreenEntity, TEXT_COLOR, TEXT_DIM,
+    despawn_screen, spawn_panel, ButtonAction, ButtonBaseColor, MenuButton, ScreenEntity, BG_COLOR,
+    BORDER_COLOR, GOLD_COLOR, HIGHLIGHT, TEXT_COLOR, TEXT_DIM,
 };
 
 #[derive(Component)]
@@ -79,18 +80,16 @@ fn setup_world_map(
                     );
 
                     map_layer
-                        .spawn((
-                            Node {
-                                position_type: PositionType::Absolute,
-                                left: Val::Px(left),
-                                top: Val::Px(top),
-                                width: Val::Px(140.0),
-                                flex_direction: FlexDirection::Column,
-                                align_items: AlignItems::Center,
-                                row_gap: Val::Px(8.0),
-                                ..default()
-                            },
-                        ))
+                        .spawn((Node {
+                            position_type: PositionType::Absolute,
+                            left: Val::Px(left),
+                            top: Val::Px(top),
+                            width: Val::Px(140.0),
+                            flex_direction: FlexDirection::Column,
+                            align_items: AlignItems::Center,
+                            row_gap: Val::Px(8.0),
+                            ..default()
+                        },))
                         .with_children(|node_parent| {
                             if is_interactive {
                                 node_parent
@@ -119,11 +118,13 @@ fn setup_world_map(
                                                 font_size: 14.0,
                                                 ..default()
                                             },
-                                            TextColor(if unlock_state == NodeUnlockState::Completed {
-                                                BG_COLOR
-                                            } else {
-                                                TEXT_COLOR
-                                            }),
+                                            TextColor(
+                                                if unlock_state == NodeUnlockState::Completed {
+                                                    BG_COLOR
+                                                } else {
+                                                    TEXT_COLOR
+                                                },
+                                            ),
                                         ));
                                     });
                             } else {
@@ -190,6 +191,8 @@ fn handle_world_map_buttons(
     mut commands: Commands,
     mut next_state: ResMut<NextState<AppState>>,
     mut game_state: ResMut<GameStateRes>,
+    save_data: Res<SaveDataRes>,
+    game_data: Res<GameDataRes>,
     button_q: Query<(&Interaction, &MenuButton), Changed<Interaction>>,
     mut status_q: Query<&mut Text, With<WorldMapStatusText>>,
 ) {
@@ -202,16 +205,56 @@ fn handle_world_map_buttons(
             continue;
         };
 
-        let Some(world_map) = game_state.0.world_map.as_ref() else {
-            continue;
+        let (is_travel_step, destination) = {
+            let Some(world_map) = game_state.0.world_map.as_ref() else {
+                continue;
+            };
+
+            if !can_select_node(&game_state.0, world_map, node_id) {
+                set_world_map_status(&mut status_q, "That route is still locked.");
+                continue;
+            }
+
+            (
+                current_map_anchor(&game_state.0, world_map) != Some(node_id),
+                crate::domains::world_map::get_node_type(world_map, node_id).copied(),
+            )
         };
 
-        if !can_select_node(&game_state.0, world_map, node_id) {
-            set_world_map_status(&mut status_q, "That route is still locked.");
-            continue;
+        if is_travel_step {
+            game_state.0.steps_since_encounter =
+                game_state.0.steps_since_encounter.saturating_add(1);
+
+            let encounter_table = crate::starter_data::overworld_encounter_table();
+            let encounter_chance = encounter_table.base_rate.get();
+
+            if encounter_roll_succeeds(encounter_chance, game_state.0.steps_since_encounter) {
+                if let Some(encounter) = crate::domains::encounter::select_encounter(
+                    &encounter_table,
+                    game_state.0.steps_since_encounter,
+                )
+                .cloned()
+                {
+                    let Some(battle) =
+                        build_battle_from_encounter(&game_data.0, &save_data.0, &encounter)
+                    else {
+                        set_world_map_status(
+                            &mut status_q,
+                            "Encounter setup failed. Destination unchanged.",
+                        );
+                        continue;
+                    };
+
+                    game_state.0.steps_since_encounter = 0;
+                    game_state.0.active_encounter = Some(encounter);
+                    commands.insert_resource(BattleRes(battle));
+                    next_state.set(AppState::InBattle);
+                    continue;
+                }
+            }
         }
 
-        match crate::domains::world_map::get_node_type(world_map, node_id).copied() {
+        match destination {
             Some(MapNodeType::Town(town_id)) => {
                 game_state.0.screen = GameScreen::Town(town_id);
                 commands.insert_resource(CurrentTown(town_id));
@@ -285,11 +328,22 @@ fn current_map_anchor(
     }
 }
 
-fn set_world_map_status(
-    status_q: &mut Query<&mut Text, With<WorldMapStatusText>>,
-    message: &str,
-) {
+fn set_world_map_status(status_q: &mut Query<&mut Text, With<WorldMapStatusText>>, message: &str) {
     if let Ok(mut text) = status_q.get_single_mut() {
         text.0 = message.to_string();
     }
+}
+
+fn encounter_roll_succeeds(chance_percent: u8, steps_since_encounter: u16) -> bool {
+    let threshold = u32::from(chance_percent);
+
+    getrandom::u32()
+        .map(|roll| roll % 100 < threshold)
+        .unwrap_or_else(|_| {
+            (u32::from(steps_since_encounter)
+                .wrapping_mul(73)
+                .wrapping_add(19)
+                % 100)
+                < threshold
+        })
 }
