@@ -30,6 +30,7 @@ pub struct GameState {
     pub dungeon_state: Option<DungeonState>,
     pub gold: Gold,
     pub play_time_seconds: u64,
+    pub steps_since_encounter: u16,
 }
 
 impl GameState {
@@ -44,6 +45,7 @@ impl GameState {
             dungeon_state: None,
             gold: Gold::new(0),
             play_time_seconds: 0,
+            steps_since_encounter: 0,
         }
     }
 
@@ -54,15 +56,24 @@ impl GameState {
             quest_state.advance(*flag, *stage);
         }
 
+        // Restore shop stock: Vec<(ItemId, Option<ItemCount>)> → HashMap<ItemId, Option<ItemCount>>
+        let mut stock = std::collections::HashMap::new();
+        for (sid, entries) in &ext.shop_stock {
+            let items: std::collections::HashMap<crate::shared::ItemId, Option<crate::shared::bounded_types::ItemCount>> =
+                entries.iter().map(|(iid, count)| (iid.clone(), *count)).collect();
+            stock.insert(*sid, items);
+        }
+
         Self {
             screen: ext.overworld.location.clone(),
             screen_stack: crate::shared::ScreenStack::default(),
             world_map: None, // loaded separately from data
-            shop_state: ShopState::default(), // TODO: restore from ext.shop_stock
+            shop_state: ShopState { stock },
             quest_state,
             dungeon_state: None,
             gold: Gold::new(0), // gold lives in SaveData.gold
             play_time_seconds: ext.play_time_seconds,
+            steps_since_encounter: 0,
         }
     }
 
@@ -81,17 +92,30 @@ impl GameState {
             facing: crate::shared::Direction::Down,
         };
 
+        // Serialize shop stock: HashMap<ShopId, HashMap<ItemId, Option<ItemCount>>> → HashMap<ShopId, Vec<(ItemId, Option<ItemCount>)>>
+        let shop_stock: HashMap<crate::shared::ShopId, Vec<(crate::shared::ItemId, Option<crate::shared::bounded_types::ItemCount>)>> = self.shop_state.stock.iter()
+            .map(|(sid, items)| (*sid, items.iter().map(|(iid, count)| (iid.clone(), *count)).collect()))
+            .collect();
+
+        // Serialize dungeon collected items: need dungeon ID from current screen
+        let collected_items = match (&self.screen, &self.dungeon_state) {
+            (crate::shared::GameScreen::Dungeon(did), Some(ds)) => {
+                ds.collected_items.iter().map(|(rid, idx)| (*did, *rid, *idx)).collect()
+            }
+            _ => Vec::new(),
+        };
+
         crate::shared::SaveDataExtension {
             quest_state: self.quest_state.flags.clone(),
             map_unlock_state,
             overworld,
-            shop_stock: HashMap::new(), // TODO: serialize shop state
+            shop_stock,
             visited_rooms: self
                 .dungeon_state
                 .as_ref()
                 .map(|ds| ds.visited_rooms.iter().copied().collect())
                 .unwrap_or_default(),
-            collected_items: Vec::new(), // TODO
+            collected_items,
             play_time_seconds: self.play_time_seconds,
             save_timestamp: String::new(),
         }

@@ -17,6 +17,7 @@ use crate::shared::{
 
 use crate::domains::dialogue::{self, ConditionContext};
 use crate::domains::dungeon;
+use crate::domains::encounter;
 use crate::domains::menu;
 use crate::domains::puzzle;
 use crate::domains::cli_runner;
@@ -37,14 +38,27 @@ struct SnapshotCtx {
     inventory: Vec<ItemId>,
     quest_flags: std::collections::HashMap<QuestFlagId, QuestStage>,
     gold: u32,
+    djinn_ids: Vec<DjinnId>,
+    djinn_elements: Vec<crate::shared::Element>,
+    party_unit_ids: Vec<crate::shared::UnitId>,
 }
 
 impl SnapshotCtx {
-    fn from_state(state: &GameState, inventory: &[ItemId]) -> Self {
+    fn from_state(state: &GameState, inventory: &[ItemId], save_data: &save::SaveData, game_data: &GameData) -> Self {
+        let djinn_ids: Vec<DjinnId> = save_data.team_djinn.iter().map(|d| d.djinn_id.clone()).collect();
+        let djinn_elements: Vec<crate::shared::Element> = save_data.team_djinn.iter()
+            .filter_map(|d| game_data.djinn.get(&d.djinn_id).map(|def| def.element))
+            .collect();
+        let party_unit_ids: Vec<crate::shared::UnitId> = save_data.player_party.iter()
+            .map(|u| u.unit_id.clone())
+            .collect();
         Self {
             inventory: inventory.to_vec(),
             quest_flags: state.quest_state.flags.clone(),
             gold: state.gold.get(),
+            djinn_ids,
+            djinn_elements,
+            party_unit_ids,
         }
     }
 }
@@ -53,8 +67,8 @@ impl ConditionContext for SnapshotCtx {
     fn has_item(&self, item: &ItemId) -> bool {
         self.inventory.contains(item)
     }
-    fn has_djinn(&self, _djinn: &DjinnId) -> bool {
-        false // TODO: check party djinn
+    fn has_djinn(&self, djinn: &DjinnId) -> bool {
+        self.djinn_ids.contains(djinn)
     }
     fn quest_at_stage(&self, flag: &QuestFlagId, stage: QuestStage) -> bool {
         self.quest_flags.get(flag).copied().unwrap_or(QuestStage::Unknown) >= stage
@@ -62,17 +76,17 @@ impl ConditionContext for SnapshotCtx {
     fn gold_at_least(&self, amount: Gold) -> bool {
         self.gold >= amount.get()
     }
-    fn party_contains(&self, _unit: &UnitId) -> bool {
-        true // TODO: check party roster
+    fn party_contains(&self, unit: &UnitId) -> bool {
+        self.party_unit_ids.contains(unit)
     }
 }
 
 impl puzzle::PuzzleContext for SnapshotCtx {
-    fn has_djinn(&self, _id: &DjinnId) -> bool {
-        false // TODO
+    fn has_djinn(&self, id: &DjinnId) -> bool {
+        self.djinn_ids.contains(id)
     }
-    fn has_element_ability(&self, _element: crate::shared::Element) -> bool {
-        true // Assume party has all elements for now
+    fn has_element_ability(&self, element: crate::shared::Element) -> bool {
+        self.djinn_elements.contains(&element)
     }
 }
 
@@ -131,7 +145,7 @@ pub fn run_game_loop(state: &mut GameState, game_data: &GameData, save_data: &mu
             }
 
             GameScreen::WorldMap => {
-                run_world_map(state, &towns);
+                run_world_map(state, &towns, game_data, save_data);
             }
 
             GameScreen::Town(town_id) => {
@@ -175,13 +189,13 @@ pub fn run_game_loop(state: &mut GameState, game_data: &GameData, save_data: &mu
 
             GameScreen::Dialogue(npc_id) => {
                 let nid = *npc_id;
-                run_dialogue(state, nid, &dialogue_trees, &towns, &mut inventory);
+                run_dialogue(state, nid, &dialogue_trees, &towns, &mut inventory, game_data, save_data);
             }
         }
     }
 }
 
-fn run_world_map(state: &mut GameState, towns: &[TownDef]) {
+fn run_world_map(state: &mut GameState, towns: &[TownDef], game_data: &GameData, save_data: &mut save::SaveData) {
     let wm = state.world_map.as_ref().expect("world map not loaded");
     let accessible = world_map::get_accessible_nodes(wm);
 
@@ -227,6 +241,30 @@ fn run_world_map(state: &mut GameState, towns: &[TownDef]) {
             if let Ok(idx) = other.parse::<usize>() {
                 if idx < accessible.len() {
                     let node = &accessible[idx];
+                    // Increment travel steps and check for overworld encounter
+                    state.steps_since_encounter += 1;
+                    let mut enc_table = crate::starter_data::overworld_encounter_table();
+                    if encounter::should_encounter(&enc_table, state.steps_since_encounter) {
+                        if let Some(enc) = encounter::select_encounter(&enc_table, state.steps_since_encounter) {
+                            let enc_id = enc.id.0.clone();
+                            println!("\n  ⚔ Random encounter: {}!", enc.name);
+                            let result = cli_runner::run_demo_battle(game_data, &enc_id);
+                            match result {
+                                BattleResult::Victory { xp, gold: bg } => {
+                                    println!("  Victory! +{} XP, +{} gold", xp, bg);
+                                    let ng = state.gold.get() + bg;
+                                    state.gold = Gold::new(ng);
+                                    save_data.gold = ng;
+                                    save_data.xp += xp;
+                                }
+                                BattleResult::Defeat => {
+                                    println!("  Defeat! You retreat to the world map.");
+                                    return; // don't arrive at destination
+                                }
+                            }
+                            state.steps_since_encounter = 0;
+                        }
+                    }
                     match &node.node_type {
                         MapNodeType::Town(tid) => {
                             game_state::apply_transition(state, ScreenTransition::EnterTown(*tid));
@@ -338,7 +376,7 @@ fn run_shop(state: &mut GameState, shop_id: ShopId, defs: &[crate::shared::ShopD
     }
 }
 
-fn run_dialogue(state: &mut GameState, npc_id: NpcId, trees: &[DialogueTree], towns: &[TownDef], inventory: &mut Vec<ItemId>) {
+fn run_dialogue(state: &mut GameState, npc_id: NpcId, trees: &[DialogueTree], towns: &[TownDef], inventory: &mut Vec<ItemId>, game_data: &GameData, save_data: &save::SaveData) {
     // Find dialogue tree for this NPC
     let tree_id = towns.iter()
         .flat_map(|t| t.npcs.iter())
@@ -357,7 +395,7 @@ fn run_dialogue(state: &mut GameState, npc_id: NpcId, trees: &[DialogueTree], to
     };
 
     let mut runner = dialogue::start_dialogue(tree);
-    let ctx = SnapshotCtx::from_state(state, &inventory);
+    let ctx = SnapshotCtx::from_state(state, &inventory, save_data, game_data);
 
     loop {
         if dialogue::is_finished(&runner) {
@@ -444,7 +482,7 @@ fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[Dungeon
     let mut puzzle_instances: std::collections::HashMap<(RoomId, usize), puzzle::PuzzleInstance> = std::collections::HashMap::new();
 
     loop {
-        let ctx = SnapshotCtx::from_state(state, inventory);
+        let ctx = SnapshotCtx::from_state(state, inventory, save_data, game_data);
         let room = dungeon::get_current_room(&ds, def);
         let room_type_str = match room.room_type {
             RoomType::Normal => "Room",
