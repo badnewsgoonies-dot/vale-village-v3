@@ -548,7 +548,10 @@ fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[Dungeon
             // Per-dungeon boss encounter, quest flag, and unlock
             let (boss_enc_id, quest_flag, quest_name, unlock_nodes) = match def.id {
                 DungeonId(0) => ("house-16", QuestFlagId(0), "Mercury Lighthouse", vec![(MapNodeId(1), vec![MapNodeId(3)])]),
-                DungeonId(1) => ("house-17", QuestFlagId(1), "Kolima Curse", vec![(MapNodeId(2), vec![])]),
+                DungeonId(1) => ("house-17", QuestFlagId(1), "Kolima Curse", vec![(MapNodeId(2), vec![MapNodeId(4)])]),
+                DungeonId(2) => ("house-18", QuestFlagId(1), "Mogall Forest", vec![(MapNodeId(4), vec![MapNodeId(5)])]),
+                DungeonId(3) => ("house-19", QuestFlagId(2), "Gondowan Passage", vec![(MapNodeId(6), vec![MapNodeId(7)])]),
+                DungeonId(4) => ("house-20", QuestFlagId(4), "Colosso Qualifier", vec![(MapNodeId(8), vec![MapNodeId(9)])]),
                 _ => ("house-20", QuestFlagId(0), "Unknown", vec![]),
             };
 
