@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vale Village v3</title>
+    <style>
+        * { margin: 0; padding: 0; }
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: #0a0a1a;
+        }
+        #loading-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #0a0a1a;
+            z-index: 100;
+            font-family: 'Courier New', monospace;
+            color: #cc8844;
+        }
+        #loading-screen h1 { font-size: 2.5rem; margin-bottom: 0.5rem; letter-spacing: 4px; }
+        #loading-status { font-size: 0.9rem; opacity: 0.6; margin-top: 1rem; color: #888; }
+        .loading-bar {
+            width: 300px; height: 16px;
+            border: 2px solid #cc8844;
+            border-radius: 2px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+        .loading-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #44cc44;
+            transition: width 0.3s ease;
+        }
+        canvas {
+            display: block;
+            width: 100vw !important;
+            height: 100vh !important;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="vale-village-canvas"></canvas>
+    <div id="loading-screen">
+        <h1>VALE VILLAGE</h1>
+        <div class="loading-bar"><div class="loading-fill" id="bar"></div></div>
+        <div id="loading-status">Loading game...</div>
+    </div>
+
+    <!-- Audio autoplay workaround — MUST be before the module script -->
+    <script>
+    (function () {
+        const contexts = [];
+        const events = ["click","contextmenu","auxclick","dblclick",
+                        "mousedown","mouseup","pointerup","touchend",
+                        "keydown","keyup"];
+        self.AudioContext = new Proxy(self.AudioContext, {
+            construct(target, args) {
+                const ctx = new target(...args);
+                contexts.push(ctx);
+                return ctx;
+            },
+        });
+        function resume() {
+            let running = 0;
+            contexts.forEach(ctx => {
+                if (ctx.state !== "running") ctx.resume();
+                else running++;
+            });
+            if (running > 0 && running === contexts.length) {
+                events.forEach(e => document.removeEventListener(e, resume));
+            }
+        }
+        events.forEach(e => document.addEventListener(e, resume));
+    })();
+    </script>
+
+    <script type="module">
+        import init from './vale-village.js';
+        const bar = document.getElementById('bar');
+        const status = document.getElementById('loading-status');
+        const screen = document.getElementById('loading-screen');
+
+        status.textContent = 'Downloading...';
+        bar.style.width = '20%';
+
+        init().then(() => {
+            bar.style.width = '100%';
+            setTimeout(() => screen.style.display = 'none', 400);
+        }).catch((error) => {
+            if (!error.message.startsWith("Using exceptions for control flow")) {
+                status.textContent = 'Error: ' + error.message;
+                status.style.color = '#ff4444';
+                console.error('WASM init error:', error);
+                return;
+            }
+            bar.style.width = '100%';
+            setTimeout(() => screen.style.display = 'none', 400);
+        });
+    </script>
+</body>
+</html>
