@@ -56,6 +56,27 @@ pub struct ImpactAnim {
     pub timer: Timer,
 }
 
+/// Hit stop — freezes the event queue for a brief moment at impact.
+#[derive(Resource, Default)]
+pub struct HitStop {
+    pub timer: Option<Timer>,
+}
+
+/// Knockback — pushes a unit backward then springs back.
+#[derive(Component)]
+pub struct Knockback {
+    pub timer: Timer,
+    pub offset: f32,
+    pub direction: f32, // 1.0 = right (enemy hit), -1.0 = left (player hit)
+    pub original_x: f32,
+}
+
+/// Afterimage — fading copy of a sprite at a previous position.
+#[derive(Component)]
+pub struct Afterimage {
+    pub timer: Timer,
+}
+
 // ── Event playback resource ────────────────────────────────────────
 
 /// Queued events waiting to be visualized.
@@ -106,6 +127,7 @@ pub fn play_event_queue(
     time: Res<Time>,
     mut queue: ResMut<EventQueue>,
     mut state: ResMut<PlanningState>,
+    mut hit_stop: ResMut<HitStop>,
     player_q: Query<(&Transform, &PlayerUnit)>,
     enemy_q: Query<(&Transform, &EnemyUnit)>,
     mut sprite_q: Query<(Entity, &mut Sprite, &UnitSpriteSet, Option<&PlayerUnit>, Option<&EnemyUnit>)>,
@@ -115,6 +137,15 @@ pub fn play_event_queue(
 ) {
     if !queue.playing {
         return;
+    }
+
+    // Hit stop: freeze everything for a few frames
+    if let Some(hs_timer) = hit_stop.timer.as_mut() {
+        hs_timer.tick(time.delta());
+        if hs_timer.finished() {
+            hit_stop.timer = None;
+        }
+        return; // Frozen — skip all playback
     }
 
     if queue.current_index < queue.events.len() {
@@ -128,7 +159,24 @@ pub fn play_event_queue(
                 &mut commands, &event, &player_q, &enemy_q,
                 &sprite_registry, &battle.0, &game_data.0,
             );
+            spawn_afterimages(&mut commands, &event, &player_q, &enemy_q);
+
+            // Hit stop on damage events — freeze 50ms at moment of contact
+            if matches!(&event, BattleEvent::DamageDealt(d) if d.is_crit) {
+                hit_stop.timer = Some(Timer::from_seconds(0.08, TimerMode::Once));
+            } else if matches!(&event, BattleEvent::DamageDealt(_)) {
+                hit_stop.timer = Some(Timer::from_seconds(0.05, TimerMode::Once));
+            }
+
             queue.current_index += 1;
+
+            // Variable timing: set next event delay based on what just played
+            let next_delay = if queue.current_index < queue.events.len() {
+                event_delay(&queue.events[queue.current_index])
+            } else {
+                0.6
+            };
+            queue.event_timer = Timer::from_seconds(next_delay, TimerMode::Repeating);
 
             if queue.current_index >= queue.events.len() {
                 queue.settle_timer = Some(Timer::from_seconds(0.8, TimerMode::Once));
@@ -160,6 +208,22 @@ pub fn play_event_queue(
     }
 }
 
+/// Variable timing per event type — slow-fast-slow pacing.
+fn event_delay(event: &BattleEvent) -> f32 {
+    match event {
+        BattleEvent::DamageDealt(d) => {
+            if d.is_crit { 0.55 } else { 0.45 }
+        }
+        BattleEvent::HealingDone(_) => 0.6,
+        BattleEvent::UnitDefeated(_) => 0.7,
+        BattleEvent::StatusApplied(_) => 0.35,
+        BattleEvent::CritTriggered(_, _) => 0.3,
+        BattleEvent::BarrierBlocked(_) => 0.3,
+        BattleEvent::EnemyAbilityUsed { .. } => 0.4,
+        _ => 0.3, // round markers, mana changes — fast
+    }
+}
+
 /// Swap unit sprites based on battle events (attacker → attack pose, target → hit pose).
 fn apply_sprite_swap(
     commands: &mut Commands,
@@ -168,11 +232,11 @@ fn apply_sprite_swap(
 ) {
     match event {
         BattleEvent::DamageDealt(dmg) => {
-            swap_unit_sprite(commands, sprite_q, dmg.source, SpriteSwapKind::Attack);
-            swap_unit_sprite(commands, sprite_q, dmg.target, SpriteSwapKind::Hit);
+            swap_unit_sprite(commands, sprite_q, dmg.source, SpriteSwapKind::Attack, false);
+            swap_unit_sprite(commands, sprite_q, dmg.target, SpriteSwapKind::Hit, dmg.is_crit);
         }
         BattleEvent::EnemyAbilityUsed { actor, .. } => {
-            swap_unit_sprite(commands, sprite_q, *actor, SpriteSwapKind::Attack);
+            swap_unit_sprite(commands, sprite_q, *actor, SpriteSwapKind::Attack, false);
         }
         _ => {}
     }
@@ -188,6 +252,7 @@ fn swap_unit_sprite(
     sprite_q: &mut Query<(Entity, &mut Sprite, &UnitSpriteSet, Option<&PlayerUnit>, Option<&EnemyUnit>)>,
     target: TargetRef,
     kind: SpriteSwapKind,
+    is_crit: bool,
 ) {
     for (entity, mut sprite, sprite_set, player, enemy) in sprite_q.iter_mut() {
         let matches = match target.side {
@@ -200,11 +265,24 @@ fn swap_unit_sprite(
                 SpriteSwapKind::Hit => sprite_set.hit.clone(),
             };
             sprite.image = new_handle;
-            // Attach a timer to revert to idle after 0.4s
             commands.entity(entity).insert(SpriteSwapTimer {
                 timer: Timer::from_seconds(0.4, TimerMode::Once),
                 idle_handle: sprite_set.idle.clone(),
             });
+            // Knockback on hit
+            if matches!(kind, SpriteSwapKind::Hit) {
+                let direction = match target.side {
+                    Side::Player => -1.0,
+                    Side::Enemy => 1.0,
+                };
+                let offset = if is_crit { 14.0 } else { 8.0 };
+                commands.entity(entity).insert(Knockback {
+                    timer: Timer::from_seconds(0.25, TimerMode::Once),
+                    offset,
+                    direction,
+                    original_x: 0.0, // Will be set by animate_knockbacks on first tick
+                });
+            }
             break;
         }
     }
@@ -221,6 +299,91 @@ pub fn revert_sprite_swaps(
         if swap.timer.finished() {
             sprite.image = swap.idle_handle.clone();
             commands.entity(entity).remove::<SpriteSwapTimer>();
+        }
+    }
+}
+
+// ── Knockback & Afterimage Effects ──────────────────────────────────
+
+/// Animate knockbacks — push out then spring back.
+pub fn animate_knockbacks(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut query: Query<(Entity, &mut Transform, &mut Knockback)>,
+) {
+    for (entity, mut transform, mut kb) in query.iter_mut() {
+        // Capture original position on first tick
+        if kb.original_x == 0.0 && kb.timer.elapsed_secs() == 0.0 {
+            kb.original_x = transform.translation.x;
+        }
+        kb.timer.tick(time.delta());
+        let t = kb.timer.fraction();
+
+        // Ease out: fast push, slow recovery
+        let displacement = if t < 0.3 {
+            let push_t = t / 0.3;
+            kb.offset * kb.direction * push_t
+        } else {
+            let recover_t = (t - 0.3) / 0.7;
+            kb.offset * kb.direction * (1.0 - recover_t * recover_t)
+        };
+
+        transform.translation.x = kb.original_x + displacement;
+
+        if kb.timer.finished() {
+            transform.translation.x = kb.original_x;
+            commands.entity(entity).remove::<Knockback>();
+        }
+    }
+}
+
+/// Spawn afterimage trails on attackers.
+fn spawn_afterimages(
+    commands: &mut Commands,
+    event: &BattleEvent,
+    player_q: &Query<(&Transform, &PlayerUnit)>,
+    enemy_q: &Query<(&Transform, &EnemyUnit)>,
+) {
+    let source = match event {
+        BattleEvent::DamageDealt(dmg) => dmg.source,
+        BattleEvent::EnemyAbilityUsed { actor, .. } => *actor,
+        _ => return,
+    };
+
+    let Some(pos) = get_unit_position(source, player_q, enemy_q) else {
+        return;
+    };
+
+    // Spawn 2 afterimage ghosts at slightly offset positions
+    for i in 0..2 {
+        let offset_x = -(i as f32 + 1.0) * 6.0;
+        let alpha = 0.3 - i as f32 * 0.1;
+        commands.spawn((
+            Sprite::from_color(
+                Color::srgba(0.8, 0.8, 1.0, alpha),
+                Vec2::new(48.0, 64.0),
+            ),
+            Transform::from_translation(pos + Vec3::new(offset_x, 0.0, -0.5)),
+            Afterimage {
+                timer: Timer::from_seconds(0.2 + i as f32 * 0.05, TimerMode::Once),
+            },
+        ));
+    }
+}
+
+/// Fade out and despawn afterimages.
+pub fn animate_afterimages(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut query: Query<(Entity, &mut Sprite, &mut Afterimage)>,
+) {
+    for (entity, mut sprite, mut after) in query.iter_mut() {
+        after.timer.tick(time.delta());
+        let t = after.timer.fraction();
+        sprite.color = Color::srgba(0.8, 0.8, 1.0, 0.3 * (1.0 - t));
+
+        if after.timer.finished() {
+            commands.entity(entity).despawn();
         }
     }
 }
