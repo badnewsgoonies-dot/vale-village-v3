@@ -24,6 +24,7 @@ bevy = { version = "0.15", default-features = false, features = [
     "png",
     "vorbis",
     "webgl2",
+    "x11",
     "default_font",
     "multi_threaded",
 ] }
