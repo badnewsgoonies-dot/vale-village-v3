@@ -1,0 +1,30 @@
+[
+    (
+        id: MapNodeId(0),
+        name: "Vale Village",
+        position: (100.0, 200.0),
+        node_type: Town(TownId(0)),
+        connections: [MapNodeId(1), MapNodeId(2)],
+    ),
+    (
+        id: MapNodeId(1),
+        name: "Mercury Lighthouse",
+        position: (300.0, 100.0),
+        node_type: Dungeon(DungeonId(0)),
+        connections: [MapNodeId(0)],
+    ),
+    (
+        id: MapNodeId(2),
+        name: "Kolima Forest",
+        position: (300.0, 300.0),
+        node_type: Dungeon(DungeonId(1)),
+        connections: [MapNodeId(0), MapNodeId(3)],
+    ),
+    (
+        id: MapNodeId(3),
+        name: "Imil",
+        position: (500.0, 100.0),
+        node_type: Town(TownId(1)),
+        connections: [MapNodeId(2)],
+    ),
+]

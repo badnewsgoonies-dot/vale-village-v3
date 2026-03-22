@@ -64,6 +64,7 @@ impl Plugin for ValeVillagePlugin {
         .insert_resource(BattleRes(battle))
         .insert_resource(GameDataRes(game_data))
         .insert_resource(animation::EventQueue::default())
+        .insert_resource(animation::HitStop::default())
         .add_systems(
             Startup,
             (
@@ -87,6 +88,8 @@ impl Plugin for ValeVillagePlugin {
                 animation::animate_impacts,
                 animation::animate_screen_shake,
                 animation::animate_screen_flash,
+                animation::animate_knockbacks,
+                animation::animate_afterimages,
             ),
         );
     }

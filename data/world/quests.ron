@@ -1,0 +1,25 @@
+[
+    (
+        id: QuestFlagId(0),
+        name: "The Mercury Lighthouse",
+        description: "Investigate the Mercury Lighthouse and stop the beacon from being lit.",
+        stages: [
+            (stage: Discovered, description: "The Elder mentioned trouble at the lighthouse.", unlock_condition: None),
+            (stage: Active, description: "Head to Mercury Lighthouse.", unlock_condition: None),
+            (stage: InProgress, description: "Explore the lighthouse interior.", unlock_condition: None),
+            (stage: Complete, description: "Defeated Saturos at the top.", unlock_condition: None),
+        ],
+        rewards: [GiveGold(Gold(500))],
+    ),
+    (
+        id: QuestFlagId(1),
+        name: "Kolima Curse",
+        description: "The people of Kolima have been turned to trees. Find a cure.",
+        stages: [
+            (stage: Discovered, description: "Strange reports from Kolima Forest.", unlock_condition: None),
+            (stage: Active, description: "Travel to Kolima Forest.", unlock_condition: None),
+            (stage: Complete, description: "Broke the curse using Tret's power.", unlock_condition: None),
+        ],
+        rewards: [AddDjinnToParty(DjinnId("Granite"))],
+    ),
+]
