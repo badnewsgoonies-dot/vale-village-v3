@@ -5,12 +5,15 @@
 pub mod animation;
 pub mod app_state;
 pub mod battle_scene;
+pub mod dialogue_screen;
+pub mod dungeon_screen;
 pub mod hud;
 pub mod planning;
 pub mod plugin;
+pub mod puzzle_screen;
 pub mod screenshot;
 pub mod shop_screen;
-pub mod town_screen;
 pub mod title_screen;
+pub mod town_screen;
 pub mod ui_helpers;
 pub mod world_map_screen;

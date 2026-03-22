@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::game_state::GameState;
 use crate::shared::{GameScreen, MapNode, MapNodeId, MapNodeType, NodeUnlockState};
 
-use super::app_state::{AppState, CurrentTown, GameStateRes, SaveDataRes};
+use super::app_state::{AppState, CurrentDungeon, CurrentTown, GameStateRes, SaveDataRes};
 use super::plugin::{build_battle_from_encounter, BattleRes, GameDataRes};
 use super::ui_helpers::{
     despawn_screen, spawn_panel, ButtonAction, ButtonBaseColor, MenuButton, ScreenEntity, BG_COLOR,
@@ -260,8 +260,10 @@ fn handle_world_map_buttons(
                 commands.insert_resource(CurrentTown(town_id));
                 next_state.set(AppState::Town);
             }
-            Some(MapNodeType::Dungeon(_)) => {
-                set_world_map_status(&mut status_q, "Dungeon travel is a placeholder for now.");
+            Some(MapNodeType::Dungeon(dungeon_id)) => {
+                game_state.0.screen = GameScreen::Dungeon(dungeon_id);
+                commands.insert_resource(CurrentDungeon(dungeon_id));
+                next_state.set(AppState::Dungeon);
             }
             Some(MapNodeType::Landmark) => {
                 set_world_map_status(&mut status_q, "Landmarks are not enterable yet.");

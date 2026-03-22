@@ -3,7 +3,7 @@
 use bevy::color::Srgba;
 use bevy::prelude::*;
 
-use crate::shared::{DjinnId, EquipmentId, MapNodeId, NpcId, ShopId};
+use crate::shared::{Direction, DjinnId, EquipmentId, MapNodeId, NpcId, RoomId, ShopId};
 
 pub const BG_COLOR: Color = Color::Srgba(Srgba::new(10.0 / 255.0, 10.0 / 255.0, 26.0 / 255.0, 1.0));
 pub const PANEL_BG: Color =
@@ -14,13 +14,10 @@ pub const TEXT_COLOR: Color =
     Color::Srgba(Srgba::new(232.0 / 255.0, 213.0 / 255.0, 183.0 / 255.0, 1.0));
 pub const TEXT_DIM: Color =
     Color::Srgba(Srgba::new(136.0 / 255.0, 136.0 / 255.0, 136.0 / 255.0, 1.0));
-pub const HIGHLIGHT: Color =
-    Color::Srgba(Srgba::new(1.0, 204.0 / 255.0, 102.0 / 255.0, 1.0));
-pub const GOLD_COLOR: Color =
-    Color::Srgba(Srgba::new(1.0, 215.0 / 255.0, 0.0, 1.0));
+pub const HIGHLIGHT: Color = Color::Srgba(Srgba::new(1.0, 204.0 / 255.0, 102.0 / 255.0, 1.0));
+pub const GOLD_COLOR: Color = Color::Srgba(Srgba::new(1.0, 215.0 / 255.0, 0.0, 1.0));
 
-const BUTTON_BG: Color =
-    Color::Srgba(Srgba::new(34.0 / 255.0, 34.0 / 255.0, 56.0 / 255.0, 1.0));
+const BUTTON_BG: Color = Color::Srgba(Srgba::new(34.0 / 255.0, 34.0 / 255.0, 56.0 / 255.0, 1.0));
 const BUTTON_PRESSED: Color =
     Color::Srgba(Srgba::new(140.0 / 255.0, 92.0 / 255.0, 44.0 / 255.0, 1.0));
 
@@ -39,10 +36,21 @@ pub enum ButtonAction {
     TravelTo(MapNodeId),
     EnterShop(ShopId),
     TalkToNpc(NpcId),
+    DialogueResponse(usize),
+    DungeonExit(RoomId),
+    CollectRoomItem(usize),
+    OpenPuzzle(usize),
+    FightBoss,
+    PuzzlePush(Direction),
+    PuzzleActivate,
+    PuzzleVerifyDjinn,
+    PuzzleSwitch(usize),
+    PuzzleSlide(Direction),
     CollectDjinn(DjinnId),
     BuyItem(EquipmentId),
     LeaveToMap,
     LeaveToTown,
+    ReturnToDungeon,
 }
 
 #[derive(Component, Clone, Copy)]

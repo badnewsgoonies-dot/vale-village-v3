@@ -8,13 +8,11 @@ use crate::shared::{
 };
 use crate::starter_data::starter_shop_defs;
 
-use super::app_state::{
-    AppState, CurrentShop, CurrentTown, GameStateRes, SaveDataRes,
-};
+use super::app_state::{AppState, CurrentShop, CurrentTown, GameStateRes, SaveDataRes};
 use super::plugin::GameDataRes;
 use super::ui_helpers::{
-    despawn_screen, spawn_button, spawn_panel, ButtonAction, ButtonBaseColor, BG_COLOR,
-    BORDER_COLOR, GOLD_COLOR, MenuButton, ScreenEntity, TEXT_COLOR, TEXT_DIM,
+    despawn_screen, spawn_button, spawn_panel, ButtonAction, ButtonBaseColor, MenuButton,
+    ScreenEntity, BG_COLOR, BORDER_COLOR, GOLD_COLOR, TEXT_COLOR, TEXT_DIM,
 };
 
 #[derive(Component)]
@@ -117,7 +115,10 @@ fn refresh_shop_screen(
     info_q: Query<Entity, With<ShopInfoColumn>>,
 ) {
     let shop_defs = starter_shop_defs();
-    let Some(shop_def) = shop_defs.iter().find(|shop_def| shop_def.id == current_shop.0) else {
+    let Some(shop_def) = shop_defs
+        .iter()
+        .find(|shop_def| shop_def.id == current_shop.0)
+    else {
         return;
     };
 
@@ -153,9 +154,14 @@ fn refresh_shop_screen(
 
         for entry in &shop_def.inventory {
             let remaining = stock_remaining(&game_state.0.shop_state, shop_def.id, &entry.item_id);
-            let enabled =
-                shop::can_buy(&game_state.0.shop_state, shop_def.id, &entry.item_id, player_gold, &shop_defs)
-                    .is_ok();
+            let enabled = shop::can_buy(
+                &game_state.0.shop_state,
+                shop_def.id,
+                &entry.item_id,
+                player_gold,
+                &shop_defs,
+            )
+            .is_ok();
             spawn_shop_entry_button(
                 column,
                 entry,
@@ -224,7 +230,11 @@ fn handle_shop_buttons(
                 ) {
                     Ok(()) => {
                         if let Some(entry) = find_shop_entry(&shop_defs, current_shop.0, &item_id) {
-                            shop::execute_buy(&mut game_state.0.shop_state, current_shop.0, &item_id);
+                            shop::execute_buy(
+                                &mut game_state.0.shop_state,
+                                current_shop.0,
+                                &item_id,
+                            );
                             let remaining_gold =
                                 Gold::new(player_gold.get().saturating_sub(entry.price.get()));
                             save_data.0.gold = remaining_gold.get();
@@ -259,18 +269,23 @@ fn cleanup_shop_state(mut commands: Commands) {
     commands.remove_resource::<ShopStatusMessage>();
 }
 
-fn find_shop_entry<'a>(shop_defs: &'a [ShopDef], shop_id: ShopId, item_id: &ItemId) -> Option<&'a ShopEntry> {
+fn find_shop_entry<'a>(
+    shop_defs: &'a [ShopDef],
+    shop_id: ShopId,
+    item_id: &ItemId,
+) -> Option<&'a ShopEntry> {
     shop_defs
         .iter()
         .find(|shop_def| shop_def.id == shop_id)
-        .and_then(|shop_def| shop_def.inventory.iter().find(|entry| &entry.item_id == item_id))
+        .and_then(|shop_def| {
+            shop_def
+                .inventory
+                .iter()
+                .find(|entry| &entry.item_id == item_id)
+        })
 }
 
-fn stock_remaining(
-    shop_state: &shop::ShopState,
-    shop_id: ShopId,
-    item_id: &ItemId,
-) -> Option<u8> {
+fn stock_remaining(shop_state: &shop::ShopState, shop_id: ShopId, item_id: &ItemId) -> Option<u8> {
     match shop_state
         .stock
         .get(&shop_id)

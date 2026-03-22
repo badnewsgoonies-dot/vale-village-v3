@@ -7,7 +7,7 @@ use bevy::prelude::*;
 
 use crate::domains::save::SaveData;
 use crate::game_state::GameState;
-use crate::shared::{ShopId, TownId};
+use crate::shared::{DungeonId, MenuScreen, NpcId, PuzzleDef, ShopId, TownId};
 
 // ── Bevy States enum ────────────────────────────────────────────────
 
@@ -18,6 +18,10 @@ pub enum AppState {
     Title,
     WorldMap,
     Town,
+    Menu,
+    Dialogue,
+    Dungeon,
+    Puzzle,
     Shop,
     InBattle,
     PostBattle,
@@ -36,6 +40,22 @@ pub struct SaveDataRes(pub SaveData);
 /// Bevy Resource tracking which town the player is in.
 #[derive(Resource)]
 pub struct CurrentTown(pub TownId);
+
+/// Bevy Resource tracking which read-only menu tab is visible.
+#[derive(Resource)]
+pub struct CurrentMenu(pub MenuScreen);
+
+/// Bevy Resource tracking which NPC is being spoken to.
+#[derive(Resource)]
+pub struct CurrentNpc(pub NpcId);
+
+/// Bevy Resource tracking which dungeon the player is exploring.
+#[derive(Resource)]
+pub struct CurrentDungeon(pub DungeonId);
+
+/// Bevy Resource tracking which puzzle is currently active.
+#[derive(Resource)]
+pub struct CurrentPuzzle(pub PuzzleDef);
 
 /// Bevy Resource tracking which shop the player is browsing.
 #[derive(Resource)]

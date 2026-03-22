@@ -130,7 +130,13 @@ pub fn play_event_queue(
     mut hit_stop: ResMut<HitStop>,
     player_q: Query<(&Transform, &PlayerUnit)>,
     enemy_q: Query<(&Transform, &EnemyUnit)>,
-    mut sprite_q: Query<(Entity, &mut Sprite, &UnitSpriteSet, Option<&PlayerUnit>, Option<&EnemyUnit>)>,
+    mut sprite_q: Query<(
+        Entity,
+        &mut Sprite,
+        &UnitSpriteSet,
+        Option<&PlayerUnit>,
+        Option<&EnemyUnit>,
+    )>,
     sprite_registry: Res<SpriteRegistry>,
     battle: Res<BattleRes>,
     game_data: Res<GameDataRes>,
@@ -156,8 +162,13 @@ pub fn play_event_queue(
             spawn_event_visual(&mut commands, &event, &player_q, &enemy_q);
             apply_sprite_swap(&mut commands, &event, &mut sprite_q);
             spawn_projectile_effect(
-                &mut commands, &event, &player_q, &enemy_q,
-                &sprite_registry, &battle.0, &game_data.0,
+                &mut commands,
+                &event,
+                &player_q,
+                &enemy_q,
+                &sprite_registry,
+                &battle.0,
+                &game_data.0,
             );
             spawn_afterimages(&mut commands, &event, &player_q, &enemy_q);
 
@@ -212,7 +223,11 @@ pub fn play_event_queue(
 fn event_delay(event: &BattleEvent) -> f32 {
     match event {
         BattleEvent::DamageDealt(d) => {
-            if d.is_crit { 0.55 } else { 0.45 }
+            if d.is_crit {
+                0.55
+            } else {
+                0.45
+            }
         }
         BattleEvent::HealingDone(_) => 0.6,
         BattleEvent::UnitDefeated(_) => 0.7,
@@ -228,12 +243,30 @@ fn event_delay(event: &BattleEvent) -> f32 {
 fn apply_sprite_swap(
     commands: &mut Commands,
     event: &BattleEvent,
-    sprite_q: &mut Query<(Entity, &mut Sprite, &UnitSpriteSet, Option<&PlayerUnit>, Option<&EnemyUnit>)>,
+    sprite_q: &mut Query<(
+        Entity,
+        &mut Sprite,
+        &UnitSpriteSet,
+        Option<&PlayerUnit>,
+        Option<&EnemyUnit>,
+    )>,
 ) {
     match event {
         BattleEvent::DamageDealt(dmg) => {
-            swap_unit_sprite(commands, sprite_q, dmg.source, SpriteSwapKind::Attack, false);
-            swap_unit_sprite(commands, sprite_q, dmg.target, SpriteSwapKind::Hit, dmg.is_crit);
+            swap_unit_sprite(
+                commands,
+                sprite_q,
+                dmg.source,
+                SpriteSwapKind::Attack,
+                false,
+            );
+            swap_unit_sprite(
+                commands,
+                sprite_q,
+                dmg.target,
+                SpriteSwapKind::Hit,
+                dmg.is_crit,
+            );
         }
         BattleEvent::EnemyAbilityUsed { actor, .. } => {
             swap_unit_sprite(commands, sprite_q, *actor, SpriteSwapKind::Attack, false);
@@ -249,7 +282,13 @@ enum SpriteSwapKind {
 
 fn swap_unit_sprite(
     commands: &mut Commands,
-    sprite_q: &mut Query<(Entity, &mut Sprite, &UnitSpriteSet, Option<&PlayerUnit>, Option<&EnemyUnit>)>,
+    sprite_q: &mut Query<(
+        Entity,
+        &mut Sprite,
+        &UnitSpriteSet,
+        Option<&PlayerUnit>,
+        Option<&EnemyUnit>,
+    )>,
     target: TargetRef,
     kind: SpriteSwapKind,
     is_crit: bool,
@@ -359,10 +398,7 @@ fn spawn_afterimages(
         let offset_x = -(i as f32 + 1.0) * 6.0;
         let alpha = 0.3 - i as f32 * 0.1;
         commands.spawn((
-            Sprite::from_color(
-                Color::srgba(0.8, 0.8, 1.0, alpha),
-                Vec2::new(48.0, 64.0),
-            ),
+            Sprite::from_color(Color::srgba(0.8, 0.8, 1.0, alpha), Vec2::new(48.0, 64.0)),
             Transform::from_translation(pos + Vec3::new(offset_x, 0.0, -0.5)),
             Afterimage {
                 timer: Timer::from_seconds(0.2 + i as f32 * 0.05, TimerMode::Once),
@@ -497,7 +533,10 @@ pub fn animate_projectiles(
     mut commands: Commands,
     time: Res<Time>,
     mut proj_q: Query<(Entity, &mut Transform, &mut Sprite, &mut ProjectileAnim)>,
-    mut impact_q: Query<(Entity, &mut Sprite, &mut ImpactAnim, &Transform), Without<ProjectileAnim>>,
+    mut impact_q: Query<
+        (Entity, &mut Sprite, &mut ImpactAnim, &Transform),
+        Without<ProjectileAnim>,
+    >,
     camera_q: Query<Entity, With<Camera2d>>,
 ) {
     for (entity, mut transform, mut sprite, mut proj) in proj_q.iter_mut() {
@@ -543,10 +582,7 @@ pub fn animate_projectiles(
 
             // Screen flash on impact
             commands.spawn((
-                Sprite::from_color(
-                    Color::srgba(1.0, 1.0, 1.0, 0.6),
-                    Vec2::new(2000.0, 2000.0),
-                ),
+                Sprite::from_color(Color::srgba(1.0, 1.0, 1.0, 0.6), Vec2::new(2000.0, 2000.0)),
                 Transform::from_xyz(0.0, 0.0, 50.0),
                 ScreenFlash {
                     timer: Timer::from_seconds(0.15, TimerMode::Once),
@@ -574,11 +610,7 @@ pub fn animate_impacts(
         transform.scale = Vec3::splat(scale);
 
         // Fade out in second half, stay bright in first half
-        let alpha = if t < 0.3 {
-            1.0
-        } else {
-            1.0 - (t - 0.3) / 0.7
-        };
+        let alpha = if t < 0.3 { 1.0 } else { 1.0 - (t - 0.3) / 0.7 };
         sprite.color = Color::srgba(1.0, 1.0, 1.0, alpha);
 
         if impact.timer.finished() {

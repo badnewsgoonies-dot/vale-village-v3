@@ -7,10 +7,10 @@ use crate::domains::town;
 use crate::shared::DjinnState;
 use crate::starter_data::starter_towns;
 
-use super::app_state::{AppState, CurrentShop, CurrentTown, GameStateRes, SaveDataRes};
+use super::app_state::{AppState, CurrentNpc, CurrentShop, CurrentTown, GameStateRes, SaveDataRes};
 use super::ui_helpers::{
-    despawn_screen, spawn_button, spawn_panel, ButtonAction, BG_COLOR, GOLD_COLOR, ScreenEntity,
-    TEXT_COLOR, TEXT_DIM, MenuButton,
+    despawn_screen, spawn_button, spawn_panel, ButtonAction, MenuButton, ScreenEntity, BG_COLOR,
+    GOLD_COLOR, TEXT_COLOR, TEXT_DIM,
 };
 
 #[derive(Component)]
@@ -21,10 +21,7 @@ pub struct TownScreenPlugin;
 impl Plugin for TownScreenPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AppState::Town), setup_town_screen)
-            .add_systems(
-                Update,
-                handle_town_buttons.run_if(in_state(AppState::Town)),
-            )
+            .add_systems(Update, handle_town_buttons.run_if(in_state(AppState::Town)))
             .add_systems(OnExit(AppState::Town), (despawn_screen, cleanup_town_state));
     }
 }
@@ -161,7 +158,8 @@ fn handle_town_buttons(
 
         match &button.action {
             ButtonAction::TalkToNpc(npc_id) => {
-                set_town_status(&mut status_q, &format!("NPC {} says hello.", npc_id.0));
+                commands.insert_resource(CurrentNpc(*npc_id));
+                next_state.set(AppState::Dialogue);
             }
             ButtonAction::EnterShop(shop_id) => {
                 commands.insert_resource(CurrentShop(*shop_id));

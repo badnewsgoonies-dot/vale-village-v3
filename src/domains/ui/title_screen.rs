@@ -10,8 +10,8 @@ use crate::starter_data::starter_map_nodes;
 
 use super::app_state::{AppState, GameStateRes, SaveDataRes};
 use super::ui_helpers::{
-    despawn_screen, spawn_button, spawn_panel, ButtonAction, BORDER_COLOR, BG_COLOR, MenuButton,
-    ScreenEntity,
+    despawn_screen, spawn_button, spawn_panel, ButtonAction, MenuButton, ScreenEntity, BG_COLOR,
+    BORDER_COLOR,
 };
 
 pub struct TitleScreenPlugin;
