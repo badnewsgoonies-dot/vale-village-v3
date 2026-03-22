@@ -3,6 +3,7 @@ mod domains;
 mod game_loop;
 mod game_state;
 mod shared;
+mod starter_data;
 
 use std::path::Path;
 
