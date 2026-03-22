@@ -71,6 +71,10 @@ pub fn check_djinn_discovery(
             return None;
         }
         // Quest gate: puzzle-gated djinn require a completed quest; otherwise Active is enough.
+        // If requires_puzzle but no quest_flag, block discovery entirely.
+        if point.requires_puzzle && point.quest_flag.is_none() {
+            return None;
+        }
         if let Some(flag) = point.quest_flag {
             let required_stage = if point.requires_puzzle {
                 QuestStage::Complete
