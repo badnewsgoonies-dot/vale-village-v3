@@ -7,8 +7,33 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::domains::dialogue::{evaluate_condition, ConditionContext};
-use crate::shared::{Direction, DungeonDef, EncounterDef, ItemId, PuzzleDef, RoomDef, RoomId};
+use crate::shared::bounded_types::Gold;
+use crate::shared::{
+    DialogueCondition, Direction, DjinnId, DungeonDef, EncounterDef, ItemId, PuzzleDef,
+    QuestFlagId, QuestStage, RoomDef, RoomId, UnitId,
+};
+
+// ── Condition evaluation ────────────────────────────────────────────
+
+/// Implemented by the game state layer so dungeon exits can evaluate
+/// shared dialogue-style conditions without importing another domain.
+pub trait ConditionContext {
+    fn has_item(&self, item: &ItemId) -> bool;
+    fn has_djinn(&self, djinn: &DjinnId) -> bool;
+    fn quest_at_stage(&self, flag: &QuestFlagId, stage: QuestStage) -> bool;
+    fn gold_at_least(&self, amount: Gold) -> bool;
+    fn party_contains(&self, unit: &UnitId) -> bool;
+}
+
+fn evaluate_condition(cond: &DialogueCondition, ctx: &dyn ConditionContext) -> bool {
+    match cond {
+        DialogueCondition::HasItem(id) => ctx.has_item(id),
+        DialogueCondition::HasDjinn(id) => ctx.has_djinn(id),
+        DialogueCondition::QuestAtStage(flag, stage) => ctx.quest_at_stage(flag, *stage),
+        DialogueCondition::GoldAtLeast(amount) => ctx.gold_at_least(*amount),
+        DialogueCondition::PartyContains(unit) => ctx.party_contains(unit),
+    }
+}
 
 // ── Error type ───────────────────────────────────────────────────────
 
@@ -162,11 +187,10 @@ pub fn is_boss_room(def: &DungeonDef, room_id: RoomId) -> bool {
 mod tests {
     use super::*;
     use crate::shared::{
-        bounded_types::{Gold, Xp},
+        bounded_types::Xp,
         DialogueCondition, Difficulty, DjinnId, EncounterDef, EncounterId, EncounterSlot, ItemId,
         PuzzleDef, PuzzleType, RoomExit, RoomItem, RoomType, UnitId, QuestFlagId, QuestStage,
     };
-    use crate::domains::dialogue::ConditionContext;
 
     // ── Minimal ConditionContext for tests ────────────────────────────
 

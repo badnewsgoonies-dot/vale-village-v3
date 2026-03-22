@@ -31,6 +31,7 @@ pub struct GameState {
     pub gold: Gold,
     pub play_time_seconds: u64,
     pub steps_since_encounter: u16,
+    pub active_encounter: Option<crate::shared::EncounterDef>,
 }
 
 impl GameState {
@@ -46,6 +47,7 @@ impl GameState {
             gold: Gold::new(0),
             play_time_seconds: 0,
             steps_since_encounter: 0,
+            active_encounter: None,
         }
     }
 
@@ -74,6 +76,7 @@ impl GameState {
             gold: Gold::new(0), // gold lives in SaveData.gold
             play_time_seconds: ext.play_time_seconds,
             steps_since_encounter: 0,
+            active_encounter: None,
         }
     }
 
@@ -132,7 +135,10 @@ pub fn apply_transition(state: &mut GameState, transition: ScreenTransition) {
             state.dungeon_state = None; // reset on entry
             GameScreen::Dungeon(id)
         }
-        ScreenTransition::StartBattle(enc) => GameScreen::Battle,
+        ScreenTransition::StartBattle(enc) => {
+            state.active_encounter = Some(enc);
+            GameScreen::Battle
+        }
         ScreenTransition::OpenMenu(menu) => {
             screens::push_screen(&mut state.screen_stack, state.screen.clone()).ok();
             GameScreen::Menu(menu)

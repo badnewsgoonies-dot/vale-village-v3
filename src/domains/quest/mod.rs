@@ -60,8 +60,13 @@ impl QuestManager {
     }
 
     /// Mark rewards as claimed (advance to Rewarded).
-    pub fn claim_rewards(&mut self, quest_id: QuestFlagId) {
+    /// Returns false if quest is not at Complete stage.
+    pub fn claim_rewards(&mut self, quest_id: QuestFlagId) -> bool {
+        if self.stage(quest_id) != QuestStage::Complete {
+            return false;
+        }
         self.state.advance(quest_id, QuestStage::Rewarded);
+        true
     }
 }
 
