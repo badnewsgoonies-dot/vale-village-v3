@@ -192,8 +192,7 @@ pub fn run_game_loop(state: &mut GameState, game_data: &GameData, save_data: &mu
             }
 
             GameScreen::SaveLoad => {
-                println!("[Save/Load] (not yet implemented)");
-                game_state::apply_transition(state, ScreenTransition::ReturnToPrevious);
+                run_save_load(state, game_data, save_data, &mut inventory);
             }
 
             GameScreen::GameOver => {
@@ -789,6 +788,81 @@ fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[Dungeon
     for (rid, idx) in &ds.collected_items {
         state.dungeon_collected_items.insert((dungeon_id, *rid, *idx));
     }
+}
+
+fn run_save_load(state: &mut GameState, game_data: &GameData, save_data: &mut save::SaveData, inventory: &mut Vec<ItemId>) {
+    let save_path = std::path::Path::new("saves/game.ron");
+
+    println!("\n── Save / Load ──");
+    let save_exists = save_path.exists();
+    println!("  [0] Save Game");
+    if save_exists {
+        println!("  [1] Load Game");
+    }
+    println!("  [b] Back");
+
+    let choice = prompt("> ");
+    match choice.trim() {
+        "0" => {
+            // Update extension with current state before saving
+            save_data.extension = Some(state.to_save_extension());
+            if let Some(parent) = save_path.parent() {
+                let _ = std::fs::create_dir_all(parent);
+            }
+            match save::save_game(save_data, save_path) {
+                Ok(()) => {
+                    println!("  Game saved! ({})", save_path.display());
+                    println!("  Gold: {}, XP: {}, Screen: {:?}", save_data.gold, save_data.xp, state.screen);
+                }
+                Err(e) => println!("  Save failed: {}", e),
+            }
+        }
+        "1" if save_exists => {
+            match save::load_game(save_path) {
+                Ok(loaded) => {
+                    // Restore save data
+                    *save_data = loaded;
+                    // Rebuild game state from extension
+                    if let Some(ext) = &save_data.extension {
+                        let restored = GameState::from_save(ext);
+                        state.screen = restored.screen;
+                        state.quest_state = restored.quest_state;
+                        state.shop_state = restored.shop_state;
+                        state.dungeon_collected_items = restored.dungeon_collected_items;
+                        state.play_time_seconds = restored.play_time_seconds;
+                        // Rebuild world map from data
+                        let nodes = crate::starter_data::starter_map_nodes();
+                        let mut wm = crate::domains::world_map::load_map(nodes);
+                        if let Some(ext) = &save_data.extension {
+                            for (nid, unlock) in &ext.map_unlock_state {
+                                match unlock {
+                                    NodeUnlockState::Visible => { crate::domains::world_map::unlock_node(&mut wm, *nid); }
+                                    NodeUnlockState::Unlocked | NodeUnlockState::Completed => {
+                                        crate::domains::world_map::unlock_node(&mut wm, *nid);
+                                        crate::domains::world_map::unlock_node(&mut wm, *nid);
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                        state.world_map = Some(wm);
+                        // Runtime inventory (dungeon items) is restored via dungeon_collected_items
+                        // Equipment inventory is on save_data.inventory (EquipmentId, not ItemId)
+                        inventory.clear();
+                        println!("  Game loaded! Gold: {}, XP: {}", save_data.gold, save_data.xp);
+                        println!("  Resuming at: {:?}", state.screen);
+                    } else {
+                        println!("  Warning: save file has no extension data — starting fresh.");
+                        game_state::apply_transition(state, ScreenTransition::ToWorldMap);
+                    }
+                    return; // Don't ReturnToPrevious — we're already at the right screen
+                }
+                Err(e) => println!("  Load failed: {}", e),
+            }
+        }
+        _ => {}
+    }
+    game_state::apply_transition(state, ScreenTransition::ReturnToPrevious);
 }
 
 /// Apply a dialogue side effect to game state.
