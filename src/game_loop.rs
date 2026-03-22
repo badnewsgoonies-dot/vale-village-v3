@@ -28,409 +28,7 @@ use crate::domains::shop;
 use crate::domains::world_map;
 use crate::domains::progression;
 
-// ── Starter Data (hardcoded until RON loader is built) ──────────────
-
-fn starter_map_nodes() -> Vec<MapNode> {
-    vec![
-        MapNode {
-            id: MapNodeId(0),
-            name: "Vale Village".into(),
-            position: (100.0, 200.0),
-            node_type: MapNodeType::Town(TownId(0)),
-            connections: vec![MapNodeId(1), MapNodeId(2)],
-        },
-        MapNode {
-            id: MapNodeId(1),
-            name: "Mercury Lighthouse".into(),
-            position: (300.0, 100.0),
-            node_type: MapNodeType::Dungeon(DungeonId(0)),
-            connections: vec![MapNodeId(0)],
-        },
-        MapNode {
-            id: MapNodeId(2),
-            name: "Kolima Forest".into(),
-            position: (300.0, 300.0),
-            node_type: MapNodeType::Dungeon(DungeonId(1)),
-            connections: vec![MapNodeId(0), MapNodeId(3)],
-        },
-        MapNode {
-            id: MapNodeId(3),
-            name: "Imil".into(),
-            position: (500.0, 100.0),
-            node_type: MapNodeType::Town(TownId(1)),
-            connections: vec![MapNodeId(2)],
-        },
-    ]
-}
-
-fn starter_towns() -> Vec<TownDef> {
-    use crate::shared::{DialogueTreeId, NpcPlacement, ShopId, DjinnDiscoveryPoint};
-    vec![
-        TownDef {
-            id: TownId(0),
-            name: "Vale Village".into(),
-            npcs: vec![
-                NpcPlacement {
-                    npc_id: NpcId(0),
-                    position: (50.0, 50.0),
-                    facing: Direction::Down,
-                    dialogue_tree: DialogueTreeId(0),
-                },
-            ],
-            shops: vec![ShopId(0)],
-            djinn_points: vec![],
-            exits: vec![MapNodeId(0)],
-        },
-        TownDef {
-            id: TownId(1),
-            name: "Imil".into(),
-            npcs: vec![
-                NpcPlacement {
-                    npc_id: NpcId(2),
-                    position: (40.0, 40.0),
-                    facing: Direction::Down,
-                    dialogue_tree: DialogueTreeId(2),
-                },
-            ],
-            shops: vec![ShopId(1)],
-            djinn_points: vec![
-                DjinnDiscoveryPoint {
-                    djinn_id: DjinnId("Fizz".into()),
-                    position: (120.0, 80.0),
-                    requires_puzzle: false,
-                    quest_flag: None,
-                },
-            ],
-            exits: vec![MapNodeId(3)],
-        },
-    ]
-}
-
-fn starter_shop_defs() -> Vec<crate::shared::ShopDef> {
-    use crate::shared::{ItemId, ShopDef, ShopEntry, ShopStock};
-    use crate::shared::bounded_types::ItemCount;
-    vec![
-        ShopDef {
-            id: ShopId(0),
-            name: "Vale General Store".into(),
-            inventory: vec![
-                ShopEntry { item_id: ItemId("herb".into()), price: Gold::new(10), stock: ShopStock::Unlimited },
-                ShopEntry { item_id: ItemId("antidote".into()), price: Gold::new(15), stock: ShopStock::Unlimited },
-            ],
-        },
-        ShopDef {
-            id: ShopId(1),
-            name: "Imil Outfitters".into(),
-            inventory: vec![
-                ShopEntry { item_id: ItemId("herb".into()), price: Gold::new(10), stock: ShopStock::Unlimited },
-            ],
-        },
-    ]
-}
-
-// ── Dialogue Trees ───────────────────────────────────────────────────
-
-fn starter_dialogue_trees() -> Vec<DialogueTree> {
-    vec![
-        // NPC 0: Elder in Vale Village
-        DialogueTree {
-            id: DialogueTreeId(0),
-            root: DialogueNodeId(0),
-            nodes: vec![
-                DialogueNode {
-                    id: DialogueNodeId(0),
-                    speaker: Some(NpcId(0)),
-                    text: "Welcome, young adept. Dark forces stir at Mercury Lighthouse. Will you investigate?".into(),
-                    responses: vec![
-                        DialogueResponse {
-                            text: "I'll go at once.".into(),
-                            condition: None,
-                            next_node: Some(DialogueNodeId(1)),
-                            side_effects: vec![
-                                crate::shared::DialogueSideEffect::SetQuestStage(QuestFlagId(0), QuestStage::Active),
-                            ],
-                        },
-                        DialogueResponse {
-                            text: "Tell me more first.".into(),
-                            condition: None,
-                            next_node: Some(DialogueNodeId(2)),
-                            side_effects: vec![],
-                        },
-                    ],
-                },
-                DialogueNode {
-                    id: DialogueNodeId(1),
-                    speaker: Some(NpcId(0)),
-                    text: "Brave soul. Take this gold for supplies. The lighthouse is north of town.".into(),
-                    responses: vec![
-                        DialogueResponse {
-                            text: "[Accept]".into(),
-                            condition: None,
-                            next_node: None,
-                            side_effects: vec![
-                                crate::shared::DialogueSideEffect::GiveGold(Gold::new(200)),
-                            ],
-                        },
-                    ],
-                },
-                DialogueNode {
-                    id: DialogueNodeId(2),
-                    speaker: Some(NpcId(0)),
-                    text: "Saturos and his followers seek to light the beacon. If they succeed, the world will change forever.".into(),
-                    responses: vec![
-                        DialogueResponse {
-                            text: "I understand. I'll stop them.".into(),
-                            condition: None,
-                            next_node: Some(DialogueNodeId(1)),
-                            side_effects: vec![
-                                crate::shared::DialogueSideEffect::SetQuestStage(QuestFlagId(0), QuestStage::Active),
-                            ],
-                        },
-                    ],
-                },
-            ],
-        },
-        // NPC 1: Shop hint
-        DialogueTree {
-            id: DialogueTreeId(1),
-            root: DialogueNodeId(0),
-            nodes: vec![
-                DialogueNode {
-                    id: DialogueNodeId(0),
-                    speaker: Some(NpcId(1)),
-                    text: "The general store has herbs and equipment. Stock up before heading out!".into(),
-                    responses: vec![
-                        DialogueResponse {
-                            text: "Thanks for the tip.".into(),
-                            condition: None,
-                            next_node: None,
-                            side_effects: vec![],
-                        },
-                    ],
-                },
-            ],
-        },
-        // NPC 2: Imil resident
-        DialogueTree {
-            id: DialogueTreeId(2),
-            root: DialogueNodeId(0),
-            nodes: vec![
-                DialogueNode {
-                    id: DialogueNodeId(0),
-                    speaker: Some(NpcId(2)),
-                    text: "Imil is peaceful, but we rely on the lighthouse's power. Please don't let anything happen to it.".into(),
-                    responses: vec![
-                        DialogueResponse {
-                            text: "I'll do my best.".into(),
-                            condition: None,
-                            next_node: None,
-                            side_effects: vec![],
-                        },
-                    ],
-                },
-            ],
-        },
-    ]
-}
-
-// ── Dungeon Definitions ──────────────────────────────────────────────
-
-fn starter_dungeons() -> Vec<DungeonDef> {
-    use crate::shared::{EncounterSlot, PuzzleDef, PuzzleType, Element, EncounterDef,
-        EncounterId, Difficulty, EncounterEnemy, EnemyId};
-    use crate::shared::bounded_types::{Xp, Hp};
-
-    // Helper: create a minimal EncounterDef referencing a data-file encounter by ID
-    let enc = |id: &str, name: &str, diff: Difficulty| -> EncounterDef {
-        EncounterDef {
-            id: EncounterId(id.into()),
-            name: name.into(),
-            difficulty: diff,
-            enemies: vec![],  // battle engine loads from game_data by ID
-            xp_reward: Xp::new(0),
-            gold_reward: Gold::new(0),
-            recruit: None,
-            djinn_reward: None,
-            equipment_rewards: vec![],
-        }
-    };
-
-    vec![
-        // ── Mercury Lighthouse (DungeonId 0) ─────────────────────────
-        DungeonDef {
-            id: DungeonId(0),
-            name: "Mercury Lighthouse".into(),
-            rooms: vec![
-                RoomDef {
-                    id: RoomId(0),
-                    room_type: RoomType::Normal,
-                    exits: vec![
-                        RoomExit { direction: Direction::Up, target_room: RoomId(1), requires: None },
-                    ],
-                    encounters: vec![
-                        EncounterSlot {
-                            encounter: enc("house-01", "Wandering Spirits", Difficulty::Easy),
-                            weight: 100,
-                            max_triggers: Some(1),
-                        },
-                    ],
-                    items: vec![
-                        RoomItem {
-                            item_id: ItemId("herb".into()),
-                            position: (30.0, 30.0),
-                            visible: true,
-                            quest_flag: None,
-                        },
-                    ],
-                    puzzles: vec![],
-                },
-                RoomDef {
-                    id: RoomId(1),
-                    room_type: RoomType::Puzzle,
-                    exits: vec![
-                        RoomExit { direction: Direction::Down, target_room: RoomId(0), requires: None },
-                        RoomExit { direction: Direction::Up, target_room: RoomId(2), requires: None },
-                    ],
-                    encounters: vec![],
-                    items: vec![],
-                    puzzles: vec![
-                        PuzzleDef {
-                            puzzle_type: PuzzleType::ElementPillar(Element::Mercury),
-                            reward: Some(crate::shared::DialogueSideEffect::GiveGold(Gold::new(100))),
-                        },
-                    ],
-                },
-                RoomDef {
-                    id: RoomId(2),
-                    room_type: RoomType::Boss,
-                    exits: vec![
-                        RoomExit { direction: Direction::Down, target_room: RoomId(1), requires: None },
-                    ],
-                    encounters: vec![],
-                    items: vec![],
-                    puzzles: vec![],
-                },
-            ],
-            entry_room: RoomId(0),
-            boss_room: Some(RoomId(2)),
-        },
-
-        // ── Kolima Forest (DungeonId 1) ──────────────────────────────
-        DungeonDef {
-            id: DungeonId(1),
-            name: "Kolima Forest".into(),
-            rooms: vec![
-                // Room 0: Forest entrance
-                RoomDef {
-                    id: RoomId(0),
-                    room_type: RoomType::Normal,
-                    exits: vec![
-                        RoomExit { direction: Direction::Up, target_room: RoomId(1), requires: None },
-                        RoomExit { direction: Direction::Right, target_room: RoomId(2), requires: None },
-                    ],
-                    encounters: vec![
-                        EncounterSlot {
-                            encounter: enc("house-02", "Forest Spirits", Difficulty::Easy),
-                            weight: 100,
-                            max_triggers: Some(2),
-                        },
-                    ],
-                    items: vec![
-                        RoomItem {
-                            item_id: ItemId("antidote".into()),
-                            position: (40.0, 20.0),
-                            visible: true,
-                            quest_flag: None,
-                        },
-                    ],
-                    puzzles: vec![],
-                },
-                // Room 1: Deep forest — push block puzzle
-                RoomDef {
-                    id: RoomId(1),
-                    room_type: RoomType::Puzzle,
-                    exits: vec![
-                        RoomExit { direction: Direction::Down, target_room: RoomId(0), requires: None },
-                        RoomExit { direction: Direction::Up, target_room: RoomId(3), requires: None },
-                    ],
-                    encounters: vec![
-                        EncounterSlot {
-                            encounter: enc("house-03", "Cursed Trees", Difficulty::Medium),
-                            weight: 100,
-                            max_triggers: Some(1),
-                        },
-                    ],
-                    items: vec![],
-                    puzzles: vec![
-                        PuzzleDef {
-                            puzzle_type: PuzzleType::PushBlock,
-                            reward: Some(crate::shared::DialogueSideEffect::GiveItem(
-                                ItemId("elixir".into()),
-                                crate::shared::bounded_types::ItemCount::new(1),
-                            )),
-                        },
-                    ],
-                },
-                // Room 2: Hidden grove — treasure room
-                RoomDef {
-                    id: RoomId(2),
-                    room_type: RoomType::Treasure,
-                    exits: vec![
-                        RoomExit { direction: Direction::Left, target_room: RoomId(0), requires: None },
-                    ],
-                    encounters: vec![],
-                    items: vec![
-                        RoomItem {
-                            item_id: ItemId("lucky-medal".into()),
-                            position: (60.0, 60.0),
-                            visible: false,
-                            quest_flag: None,
-                        },
-                        RoomItem {
-                            item_id: ItemId("herb".into()),
-                            position: (20.0, 40.0),
-                            visible: true,
-                            quest_flag: None,
-                        },
-                    ],
-                    puzzles: vec![],
-                },
-                // Room 3: Tret's lair — safe room before boss
-                RoomDef {
-                    id: RoomId(3),
-                    room_type: RoomType::Safe,
-                    exits: vec![
-                        RoomExit { direction: Direction::Down, target_room: RoomId(1), requires: None },
-                        RoomExit { direction: Direction::Up, target_room: RoomId(4), requires: None },
-                    ],
-                    encounters: vec![],
-                    items: vec![
-                        RoomItem {
-                            item_id: ItemId("herb".into()),
-                            position: (50.0, 50.0),
-                            visible: true,
-                            quest_flag: None,
-                        },
-                    ],
-                    puzzles: vec![],
-                },
-                // Room 4: Tret boss room
-                RoomDef {
-                    id: RoomId(4),
-                    room_type: RoomType::Boss,
-                    exits: vec![
-                        RoomExit { direction: Direction::Down, target_room: RoomId(3), requires: None },
-                    ],
-                    encounters: vec![],
-                    items: vec![],
-                    puzzles: vec![],
-                },
-            ],
-            entry_room: RoomId(0),
-            boss_room: Some(RoomId(4)),
-        },
-    ]
-}
+use crate::starter_data::{starter_map_nodes, starter_towns, starter_shop_defs, starter_dialogue_trees, starter_dungeons};
 
 // ── Runtime ConditionContext ──────────────────────────────────────────
 
@@ -551,8 +149,8 @@ pub fn run_game_loop(state: &mut GameState, game_data: &GameData, save_data: &mu
                 run_dungeon(state, did, &dungeons, &mut inventory, game_data, save_data);
             }
 
-            GameScreen::Menu(menu_screen) => {
-                run_menu(state, menu_screen.clone(), game_data, save_data);
+            GameScreen::Menu(menu) => {
+                run_menu(state, *menu, game_data, save_data, &inventory);
             }
 
             GameScreen::Battle => {
@@ -605,7 +203,22 @@ fn run_world_map(state: &mut GameState, towns: &[TownDef]) {
             game_state::apply_transition(state, ScreenTransition::ToTitle);
         }
         "m" => {
-            game_state::apply_transition(state, ScreenTransition::OpenMenu(MenuScreen::Party));
+            println!("\n  Menu:");
+            println!("  [1] Party    [2] Equipment  [3] Djinn");
+            println!("  [4] Items    [5] Quest Log  [6] Status");
+            let choice = prompt("  > ");
+            let screen = match choice.as_str() {
+                "1" => Some(MenuScreen::Party),
+                "2" => Some(MenuScreen::Equipment),
+                "3" => Some(MenuScreen::Djinn),
+                "4" => Some(MenuScreen::Items),
+                "5" => Some(MenuScreen::QuestLog),
+                "6" => Some(MenuScreen::Status),
+                _ => None,
+            };
+            if let Some(s) = screen {
+                game_state::apply_transition(state, ScreenTransition::OpenMenu(s));
+            }
         }
         "s" => {
             game_state::apply_transition(state, ScreenTransition::OpenSaveLoad);
@@ -1101,6 +714,130 @@ fn run_dungeon(state: &mut GameState, dungeon_id: DungeonId, dungeons: &[Dungeon
 }
 
 /// Apply a dialogue side effect to game state.
+fn run_menu(state: &mut GameState, screen: MenuScreen, game_data: &GameData, save_data: &save::SaveData, inventory: &[ItemId]) {
+    println!("\n── Menu: {:?} ──", screen);
+
+    match screen {
+        MenuScreen::Party => {
+            let summaries: Vec<menu::UnitSummary> = save_data.player_party.iter().map(|su| {
+                let def = game_data.units.get(&su.unit_id);
+                menu::UnitSummary {
+                    name: def.map(|d| d.name.clone()).unwrap_or_else(|| su.unit_id.0.clone()),
+                    level: su.level,
+                    hp_current: su.current_hp,
+                    hp_max: def.map(|d| d.base_stats.hp.get()).unwrap_or(100),
+                    element: def.map(|d| format!("{:?}", d.element)).unwrap_or_else(|| "???".into()),
+                }
+            }).collect();
+            for line in menu::show_party(&summaries) {
+                println!("  {}", line);
+            }
+        }
+        MenuScreen::Equipment => {
+            if let Some(first) = save_data.player_party.first() {
+                let def = game_data.units.get(&first.unit_id);
+                let unit_summary = menu::UnitSummary {
+                    name: def.map(|d| d.name.clone()).unwrap_or_else(|| first.unit_id.0.clone()),
+                    level: first.level,
+                    hp_current: first.current_hp,
+                    hp_max: def.map(|d| d.base_stats.hp.get()).unwrap_or(100),
+                    element: def.map(|d| format!("{:?}", d.element)).unwrap_or_else(|| "???".into()),
+                };
+                // Show equipped items
+                let mut eq_list = Vec::new();
+                if let Some(ref wep) = first.equipment.weapon {
+                    let name = game_data.equipment.get(wep).map(|e| e.name.clone()).unwrap_or_else(|| wep.0.clone());
+                    eq_list.push(menu::EquipmentSummary { name, slot: "Weapon".into(), tier: 1, equipped: true });
+                }
+                if let Some(ref helm) = first.equipment.helm {
+                    let name = game_data.equipment.get(helm).map(|e| e.name.clone()).unwrap_or_else(|| helm.0.clone());
+                    eq_list.push(menu::EquipmentSummary { name, slot: "Helm".into(), tier: 1, equipped: true });
+                }
+                if let Some(ref armor) = first.equipment.armor {
+                    let name = game_data.equipment.get(armor).map(|e| e.name.clone()).unwrap_or_else(|| armor.0.clone());
+                    eq_list.push(menu::EquipmentSummary { name, slot: "Armor".into(), tier: 1, equipped: true });
+                }
+                for line in menu::show_equipment(&unit_summary, &eq_list) {
+                    println!("  {}", line);
+                }
+            } else {
+                println!("  No party members.");
+            }
+        }
+        MenuScreen::Djinn => {
+            let djinn_list: Vec<menu::DjinnSummary> = save_data.team_djinn.iter().map(|sd| {
+                let def = game_data.djinn.get(&sd.djinn_id);
+                menu::DjinnSummary {
+                    name: def.map(|d| d.name.clone()).unwrap_or_else(|| sd.djinn_id.0.clone()),
+                    element: def.map(|d| format!("{:?}", d.element)).unwrap_or_else(|| "???".into()),
+                    state: match sd.state {
+                        crate::shared::DjinnState::Good => menu::DjinnMenuState::Set,
+                        crate::shared::DjinnState::Recovery => menu::DjinnMenuState::Recovery,
+                    },
+                    tier: def.map(|d| d.tier.get()).unwrap_or(1),
+                }
+            }).collect();
+            for line in menu::show_djinn(&djinn_list) {
+                println!("  {}", line);
+            }
+            if djinn_list.is_empty() {
+                println!("  No djinn in party yet.");
+            }
+        }
+        MenuScreen::Items => {
+            // Count items in inventory
+            let mut counts: std::collections::HashMap<&str, u8> = std::collections::HashMap::new();
+            for item_id in inventory {
+                *counts.entry(&item_id.0).or_insert(0) += 1;
+            }
+            let item_list: Vec<menu::ItemSummary> = counts.iter().map(|(name, count)| {
+                menu::ItemSummary {
+                    name: name.to_string(),
+                    count: *count,
+                    description: String::new(),
+                }
+            }).collect();
+            for line in menu::show_items(&item_list) {
+                println!("  {}", line);
+            }
+            if item_list.is_empty() {
+                println!("  No items.");
+            }
+        }
+        MenuScreen::Psynergy => {
+            println!("  (Psynergy list not yet wired — requires ability data per unit)");
+        }
+        MenuScreen::Status => {
+            println!("  Gold: {}", state.gold.get());
+            println!("  Play time: {}s", state.play_time_seconds);
+            println!("  Quests active: {}", state.quest_state.flags.len());
+            if let Some(ref wm) = state.world_map {
+                let accessible = world_map::get_accessible_nodes(wm);
+                println!("  Locations unlocked: {}", accessible.len());
+            }
+        }
+        MenuScreen::QuestLog => {
+            let entries: Vec<menu::QuestLogEntry> = state.quest_state.flags.iter().map(|(flag, stage)| {
+                menu::QuestLogEntry {
+                    name: format!("Quest #{}", flag.0),
+                    description: format!("Stage: {:?}", stage),
+                    completed: *stage >= crate::shared::QuestStage::Complete,
+                }
+            }).collect();
+            for line in menu::show_quest_log(&entries) {
+                println!("  {}", line);
+            }
+            if entries.is_empty() {
+                println!("  No quests yet.");
+            }
+        }
+    }
+
+    println!("\n  [Press ENTER to return]");
+    prompt("");
+    game_state::apply_transition(state, ScreenTransition::ReturnToPrevious);
+}
+
 fn apply_side_effect(state: &mut GameState, inventory: &mut Vec<ItemId>, effect: &crate::shared::DialogueSideEffect) {
     match effect {
         crate::shared::DialogueSideEffect::GiveGold(amount) => {
@@ -1134,196 +871,6 @@ fn apply_side_effect(state: &mut GameState, inventory: &mut Vec<ItemId>, effect:
     }
 }
 
-
-
-// ── Menu Integration ────────────────────────────────────────────────
-
-fn run_menu(
-    state: &mut GameState,
-    menu_screen: MenuScreen,
-    game_data: &GameData,
-    save_data: &save::SaveData,
-) {
-    match menu_screen {
-        MenuScreen::Party => {
-            let summaries = build_party_summaries(save_data, game_data);
-            let lines = menu::show_party(&summaries);
-            for line in &lines {
-                println!("{}", line);
-            }
-            println!("\n  [0] Back");
-            let _ = prompt_number("", 1);
-        }
-        MenuScreen::Equipment => {
-            let summaries = build_party_summaries(save_data, game_data);
-            if summaries.is_empty() {
-                println!("  (no party members)");
-            } else {
-                // Show equipment for first party member (simplified)
-                let equip = build_equipment_summaries(save_data, game_data);
-                let lines = menu::show_equipment(&summaries[0], &equip);
-                for line in &lines {
-                    println!("{}", line);
-                }
-            }
-            println!("\n  [0] Back");
-            let _ = prompt_number("", 1);
-        }
-        MenuScreen::Djinn => {
-            let djinn_list = build_djinn_summaries(save_data, game_data);
-            let lines = menu::show_djinn(&djinn_list);
-            for line in &lines {
-                println!("{}", line);
-            }
-            println!("\n  [0] Back");
-            let _ = prompt_number("", 1);
-        }
-        MenuScreen::Items => {
-            let items = build_item_summaries(save_data);
-            let lines = menu::show_items(&items);
-            for line in &lines {
-                println!("{}", line);
-            }
-            println!("\n  [0] Back");
-            let _ = prompt_number("", 1);
-        }
-        MenuScreen::QuestLog => {
-            let quests = build_quest_summaries(state);
-            let lines = menu::show_quest_log(&quests);
-            for line in &lines {
-                println!("{}", line);
-            }
-            println!("\n  [0] Back");
-            let _ = prompt_number("", 1);
-        }
-        MenuScreen::Psynergy | MenuScreen::Status => {
-            println!("  [{:?}] Coming soon!", menu_screen);
-            println!("\n  [0] Back");
-            let _ = prompt_number("", 1);
-        }
-    }
-    game_state::apply_transition(state, ScreenTransition::ReturnToPrevious);
-}
-
-fn build_party_summaries(save_data: &save::SaveData, game_data: &GameData) -> Vec<menu::UnitSummary> {
-    save_data
-        .player_party
-        .iter()
-        .map(|su| {
-            let name = game_data
-                .units
-                .get(&su.unit_id)
-                .map(|u| u.name.clone())
-                .unwrap_or_else(|| su.unit_id.0.clone());
-            let element = game_data
-                .units
-                .get(&su.unit_id)
-                .map(|u| format!("{:?}", u.element))
-                .unwrap_or_else(|| "???".to_string());
-            let hp_max = game_data
-                .units
-                .get(&su.unit_id)
-                .map(|u| u.base_stats.hp.get())
-                .unwrap_or(100);
-            menu::UnitSummary {
-                name,
-                level: su.level,
-                hp_current: su.current_hp,
-                hp_max,
-                element,
-            }
-        })
-        .collect()
-}
-
-fn build_equipment_summaries(save_data: &save::SaveData, game_data: &GameData) -> Vec<menu::EquipmentSummary> {
-    save_data
-        .inventory
-        .iter()
-        .filter_map(|eid| {
-            game_data.equipment.get(eid).map(|edef| {
-                let equipped = save_data.player_party.iter().any(|u| {
-                    u.equipment.weapon.as_ref() == Some(eid)
-                        || u.equipment.armor.as_ref() == Some(eid)
-                        || u.equipment.accessory.as_ref() == Some(eid)
-                });
-                menu::EquipmentSummary {
-                    name: edef.name.clone(),
-                    slot: format!("{:?}", edef.slot),
-                    tier: equipment_tier_to_u8(&edef.tier),
-                    equipped,
-                }
-            })
-        })
-        .collect()
-}
-
-fn equipment_tier_to_u8(tier: &crate::shared::EquipmentTier) -> u8 {
-    use crate::shared::EquipmentTier;
-    match tier {
-        EquipmentTier::Basic => 1,
-        EquipmentTier::Bronze => 2,
-        EquipmentTier::Iron => 3,
-        EquipmentTier::Steel => 4,
-        EquipmentTier::Silver => 5,
-        _ => 6,
-    }
-}
-
-fn build_djinn_summaries(save_data: &save::SaveData, game_data: &GameData) -> Vec<menu::DjinnSummary> {
-    save_data
-        .team_djinn
-        .iter()
-        .filter_map(|sd| {
-            game_data.djinn.get(&sd.djinn_id).map(|ddef| {
-                let ms = match sd.state {
-                    crate::shared::DjinnState::Good => menu::DjinnMenuState::Set,
-                    crate::shared::DjinnState::Recovery => menu::DjinnMenuState::Recovery,
-                };
-                menu::DjinnSummary {
-                    name: ddef.name.clone(),
-                    element: format!("{:?}", ddef.element),
-                    state: ms,
-                    tier: ddef.tier.get() as u8,
-                }
-            })
-        })
-        .collect()
-}
-
-fn build_item_summaries(save_data: &save::SaveData) -> Vec<menu::ItemSummary> {
-    // Count duplicates in inventory
-    let mut counts: std::collections::HashMap<&str, u8> = std::collections::HashMap::new();
-    for eid in &save_data.inventory {
-        *counts.entry(&eid.0).or_insert(0) += 1;
-    }
-    let mut items: Vec<menu::ItemSummary> = counts
-        .into_iter()
-        .map(|(name, count)| menu::ItemSummary {
-            name: name.to_string(),
-            count,
-            description: String::new(),
-        })
-        .collect();
-    items.sort_by(|a, b| a.name.cmp(&b.name));
-    items
-}
-
-fn build_quest_summaries(state: &GameState) -> Vec<menu::QuestLogEntry> {
-    state
-        .quest_state
-        .flags
-        .iter()
-        .map(|(flag, stage)| {
-            let completed = matches!(stage, QuestStage::Complete | QuestStage::Rewarded);
-            menu::QuestLogEntry {
-                name: format!("Quest #{}", flag.0),
-                description: format!("{:?}", stage),
-                completed,
-            }
-        })
-        .collect()
-}
 
 
 #[cfg(test)]
