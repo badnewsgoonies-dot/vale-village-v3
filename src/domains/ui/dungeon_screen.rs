@@ -4,14 +4,17 @@ use bevy::prelude::*;
 
 use crate::domains::dungeon::{self, DungeonState};
 use crate::domains::save;
-use crate::shared::{Direction, DungeonDef, DungeonId, EncounterDef, EncounterId, ItemId, QuestFlagId, QuestStage, RoomDef, RoomId, RoomType, UnitId};
+use crate::shared::{
+    Direction, DungeonDef, DungeonId, EncounterDef, EncounterId, ItemId, QuestFlagId, QuestStage,
+    RoomDef, RoomId, RoomType, UnitId,
+};
 use crate::starter_data::starter_dungeons;
 
 use super::app_state::{AppState, CurrentDungeon, CurrentPuzzle, GameStateRes, SaveDataRes};
 use super::plugin::{build_battle_from_encounter, BattleRes, GameDataRes};
 use super::ui_helpers::{
-    despawn_screen, spawn_button, spawn_panel, ButtonAction, GOLD_COLOR, MenuButton, ScreenEntity,
-    TEXT_COLOR, TEXT_DIM, BG_COLOR,
+    despawn_screen, spawn_button, spawn_panel, ButtonAction, MenuButton, ScreenEntity, BG_COLOR,
+    GOLD_COLOR, TEXT_COLOR, TEXT_DIM,
 };
 
 #[derive(Resource)]
@@ -37,7 +40,10 @@ impl Plugin for DungeonScreenPlugin {
                     .chain()
                     .run_if(in_state(AppState::Dungeon)),
             )
-            .add_systems(OnExit(AppState::Dungeon), (despawn_screen, cleanup_dungeon_state));
+            .add_systems(
+                OnExit(AppState::Dungeon),
+                (despawn_screen, cleanup_dungeon_state),
+            );
     }
 }
 
@@ -77,7 +83,10 @@ fn setup_dungeon_screen(
         dungeon: dungeon_def.clone(),
         state: dungeon_state,
     });
-    commands.insert_resource(DungeonStatusMessage(format!("Entered {}.", dungeon_def.name)));
+    commands.insert_resource(DungeonStatusMessage(format!(
+        "Entered {}.",
+        dungeon_def.name
+    )));
     commands.spawn((Camera2d, ScreenEntity));
     commands
         .spawn((
@@ -160,7 +169,7 @@ fn refresh_dungeon_screen(
             Text::new(format!(
                 "Visited rooms: {}  |  Current dungeon: {}",
                 dungeon_screen.state.visited_rooms.len(),
-                current_dungeon.0.0
+                current_dungeon.0 .0
             )),
             TextFont {
                 font_size: 18.0,
@@ -291,15 +300,17 @@ fn handle_dungeon_buttons(
                 }
             }
             ButtonAction::CollectRoomItem(item_index) => {
-                let room = dungeon::get_current_room(&dungeon_screen.state, &dungeon_screen.dungeon);
+                let room =
+                    dungeon::get_current_room(&dungeon_screen.state, &dungeon_screen.dungeon);
                 let room_id = room.id;
                 let dungeon_def = dungeon_screen.dungeon.clone();
                 match dungeon::collect_item(&mut dungeon_screen.state, &dungeon_def, *item_index) {
                     Some(item_id) => {
-                        game_state
-                            .0
-                            .dungeon_collected_items
-                            .insert((current_dungeon.0, room_id, *item_index));
+                        game_state.0.dungeon_collected_items.insert((
+                            current_dungeon.0,
+                            room_id,
+                            *item_index,
+                        ));
                         game_state.0.dungeon_state = Some(dungeon_screen.state.clone());
                         status.0 = format!("Collected {}.", item_id.0);
                     }
@@ -309,11 +320,14 @@ fn handle_dungeon_buttons(
                 }
             }
             ButtonAction::FightBoss => {
-                let Some(encounter) = boss_encounter_for_dungeon(&game_data.0, current_dungeon.0) else {
+                let Some(encounter) = boss_encounter_for_dungeon(&game_data.0, current_dungeon.0)
+                else {
                     status.0 = "No boss encounter is configured for this room.".to_string();
                     continue;
                 };
-                let Some(battle) = build_battle_from_encounter(&game_data.0, &save_data.0, &encounter) else {
+                let Some(battle) =
+                    build_battle_from_encounter(&game_data.0, &save_data.0, &encounter)
+                else {
                     status.0 = "Boss encounter setup failed.".to_string();
                     continue;
                 };
@@ -326,7 +340,8 @@ fn handle_dungeon_buttons(
                 return;
             }
             ButtonAction::OpenPuzzle(puzzle_index) => {
-                let room = dungeon::get_current_room(&dungeon_screen.state, &dungeon_screen.dungeon);
+                let room =
+                    dungeon::get_current_room(&dungeon_screen.state, &dungeon_screen.dungeon);
                 let Some(puzzle) = room.puzzles.get(*puzzle_index).cloned() else {
                     status.0 = "That puzzle is not available.".to_string();
                     continue;
@@ -398,13 +413,19 @@ fn encounter_lines(room: &RoomDef) -> Vec<String> {
 }
 
 fn puzzle_summary(room: &RoomDef) -> Option<String> {
-    room.puzzles.first().map(|puzzle| match &puzzle.puzzle_type {
-        crate::shared::PuzzleType::PushBlock => "Push Block".to_string(),
-        crate::shared::PuzzleType::ElementPillar(element) => format!("Element Pillar ({element:?})"),
-        crate::shared::PuzzleType::DjinnPuzzle(djinn_id) => format!("Djinn Puzzle ({})", djinn_id.0),
-        crate::shared::PuzzleType::SwitchSequence => "Switch Sequence".to_string(),
-        crate::shared::PuzzleType::IceSlide => "Ice Slide".to_string(),
-    })
+    room.puzzles
+        .first()
+        .map(|puzzle| match &puzzle.puzzle_type {
+            crate::shared::PuzzleType::PushBlock => "Push Block".to_string(),
+            crate::shared::PuzzleType::ElementPillar(element) => {
+                format!("Element Pillar ({element:?})")
+            }
+            crate::shared::PuzzleType::DjinnPuzzle(djinn_id) => {
+                format!("Djinn Puzzle ({})", djinn_id.0)
+            }
+            crate::shared::PuzzleType::SwitchSequence => "Switch Sequence".to_string(),
+            crate::shared::PuzzleType::IceSlide => "Ice Slide".to_string(),
+        })
 }
 
 fn room_title(dungeon: &DungeonDef, room: &RoomDef) -> String {

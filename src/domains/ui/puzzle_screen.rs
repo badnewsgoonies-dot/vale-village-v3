@@ -4,13 +4,15 @@ use bevy::prelude::*;
 
 use crate::domains::puzzle::{self, PuzzleInput, PuzzleInstance, PuzzleResult};
 use crate::domains::save;
-use crate::shared::{DialogueSideEffect, Direction, DjinnId, Element, GameScreen, PuzzleDef, PuzzleType};
+use crate::shared::{
+    DialogueSideEffect, Direction, DjinnId, Element, GameScreen, PuzzleDef, PuzzleType,
+};
 
 use super::app_state::{AppState, CurrentDungeon, CurrentPuzzle, GameStateRes, SaveDataRes};
 use super::plugin::GameDataRes;
 use super::ui_helpers::{
-    despawn_screen, spawn_button, spawn_panel, ButtonAction, GOLD_COLOR, MenuButton, ScreenEntity,
-    TEXT_COLOR, TEXT_DIM, BG_COLOR,
+    despawn_screen, spawn_button, spawn_panel, ButtonAction, MenuButton, ScreenEntity, BG_COLOR,
+    GOLD_COLOR, TEXT_COLOR, TEXT_DIM,
 };
 
 #[derive(Resource)]
@@ -33,7 +35,10 @@ impl Plugin for PuzzleScreenPlugin {
                     .chain()
                     .run_if(in_state(AppState::Puzzle)),
             )
-            .add_systems(OnExit(AppState::Puzzle), (despawn_screen, cleanup_puzzle_state));
+            .add_systems(
+                OnExit(AppState::Puzzle),
+                (despawn_screen, cleanup_puzzle_state),
+            );
     }
 }
 
@@ -112,7 +117,10 @@ fn refresh_puzzle_screen(
     commands.entity(content_column).despawn_descendants();
     commands.entity(content_column).with_children(|column| {
         column.spawn((
-            Text::new(format!("{} Puzzle", puzzle_type_name(&puzzle_def.puzzle_type))),
+            Text::new(format!(
+                "{} Puzzle",
+                puzzle_type_name(&puzzle_def.puzzle_type)
+            )),
             TextFont {
                 font_size: 34.0,
                 ..default()
@@ -158,7 +166,11 @@ fn refresh_puzzle_screen(
                     Text::new(format!(
                         "Required djinn: {} ({})",
                         djinn_id.0,
-                        if has_required_djinn { "ready" } else { "missing" }
+                        if has_required_djinn {
+                            "ready"
+                        } else {
+                            "missing"
+                        }
                     )),
                     TextFont {
                         font_size: 20.0,
@@ -185,7 +197,12 @@ fn refresh_puzzle_screen(
             }
         }
 
-        spawn_button(column, "Return to Dungeon", ButtonAction::ReturnToDungeon, 24.0);
+        spawn_button(
+            column,
+            "Return to Dungeon",
+            ButtonAction::ReturnToDungeon,
+            24.0,
+        );
     });
 }
 
@@ -233,7 +250,8 @@ fn handle_puzzle_buttons(
             game_data: &game_data.0,
         };
         if !puzzle::can_attempt(&puzzle_state.instance.def, &context) {
-            puzzle_state.status = "Try again: the party does not meet the puzzle requirement.".to_string();
+            puzzle_state.status =
+                "Try again: the party does not meet the puzzle requirement.".to_string();
             continue;
         }
 
@@ -353,7 +371,10 @@ fn puzzle_description(puzzle: &PuzzleDef) -> String {
     match &puzzle.puzzle_type {
         PuzzleType::PushBlock => "Push the block in the correct three-step sequence.".to_string(),
         PuzzleType::ElementPillar(element) => {
-            format!("Channel the matching element to activate the {:?} pillar.", element)
+            format!(
+                "Channel the matching element to activate the {:?} pillar.",
+                element
+            )
         }
         PuzzleType::DjinnPuzzle(djinn_id) => {
             format!("Present {} to satisfy the djinn puzzle.", djinn_id.0)

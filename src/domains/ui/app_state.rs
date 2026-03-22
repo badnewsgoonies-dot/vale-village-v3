@@ -19,12 +19,15 @@ pub enum AppState {
     WorldMap,
     Town,
     Menu,
+    SaveLoad,
     Dialogue,
     Dungeon,
     Puzzle,
     Shop,
     InBattle,
     PostBattle,
+    GameOver,
+    Victory,
 }
 
 // ── Resource wrappers ───────────────────────────────────────────────

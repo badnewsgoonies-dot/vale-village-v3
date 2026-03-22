@@ -18,7 +18,10 @@ use crate::shared::{DjinnState, EncounterDef, GameScreen};
 use super::app_state::AppState;
 use super::dialogue_screen;
 use super::dungeon_screen;
+use super::gameover_screen;
+use super::menu_screen;
 use super::puzzle_screen;
+use super::save_load_screen;
 use super::screenshot;
 use super::shop_screen;
 use super::title_screen;
@@ -85,6 +88,9 @@ impl Plugin for ValeVillagePlugin {
         .add_plugins(title_screen::TitleScreenPlugin)
         .add_plugins(world_map_screen::WorldMapPlugin)
         .add_plugins(town_screen::TownScreenPlugin)
+        .add_plugins(menu_screen::MenuScreenPlugin)
+        .add_plugins(save_load_screen::SaveLoadPlugin)
+        .add_plugins(gameover_screen::GameOverPlugin)
         .add_plugins(dialogue_screen::DialogueScreenPlugin)
         .add_plugins(dungeon_screen::DungeonScreenPlugin)
         .add_plugins(puzzle_screen::PuzzleScreenPlugin)

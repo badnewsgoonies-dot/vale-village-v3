@@ -16,8 +16,8 @@ use crate::shared::{DjinnState, GameScreen, MenuScreen, QuestDef, ScreenTransiti
 use super::app_state::{AppState, CurrentMenu, CurrentTown, GameStateRes, SaveDataRes};
 use super::plugin::GameDataRes;
 use super::ui_helpers::{
-    despawn_screen, spawn_panel, ButtonBaseColor, ScreenEntity, BG_COLOR, BORDER_COLOR,
-    GOLD_COLOR, HIGHLIGHT, PANEL_BG, TEXT_COLOR, TEXT_DIM,
+    despawn_screen, spawn_panel, ButtonBaseColor, ScreenEntity, BG_COLOR, BORDER_COLOR, GOLD_COLOR,
+    HIGHLIGHT, PANEL_BG, TEXT_COLOR, TEXT_DIM,
 };
 
 const MENU_TABS: [MenuScreen; 7] = [
@@ -57,7 +57,10 @@ impl Plugin for MenuScreenPlugin {
                 )
                     .run_if(in_state(AppState::Menu)),
             )
-            .add_systems(OnExit(AppState::Menu), (despawn_screen, cleanup_menu_resources));
+            .add_systems(
+                OnExit(AppState::Menu),
+                (despawn_screen, cleanup_menu_resources),
+            );
     }
 }
 
@@ -71,7 +74,8 @@ fn setup_menu_screen(
         GameScreen::Menu(screen) => screen,
         _ => MenuScreen::Party,
     };
-    let initial_content = build_menu_content(initial_menu, &game_state.0, &save_data.0, &game_data.0);
+    let initial_content =
+        build_menu_content(initial_menu, &game_state.0, &save_data.0, &game_data.0);
 
     commands.insert_resource(CurrentMenu(initial_menu));
     commands.spawn((Camera2d, ScreenEntity));
@@ -244,7 +248,11 @@ fn handle_menu_buttons(
     mut game_state: ResMut<GameStateRes>,
     mut current_menu: ResMut<CurrentMenu>,
     button_q: Query<
-        (&Interaction, Option<&MenuTabButton>, Option<&MenuBackButton>),
+        (
+            &Interaction,
+            Option<&MenuTabButton>,
+            Option<&MenuBackButton>,
+        ),
         (Changed<Interaction>, With<Button>),
     >,
 ) {
@@ -299,10 +307,7 @@ fn refresh_menu_content(
 
 fn sync_tab_button_styles(
     current_menu: Res<CurrentMenu>,
-    mut button_q: Query<
-        (&MenuTabButton, &mut BackgroundColor, &mut ButtonBaseColor),
-        With<Button>,
-    >,
+    mut button_q: Query<(&MenuTabButton, &mut BackgroundColor, &mut ButtonBaseColor), With<Button>>,
 ) {
     if !current_menu.is_changed() {
         return;
@@ -378,7 +383,9 @@ fn build_party_lines(
                     .unwrap_or_else(|| saved_unit.unit_id.0.clone()),
                 level: saved_unit.level,
                 hp_current: saved_unit.current_hp,
-                hp_max: unit_def.map(|def| def.base_stats.hp.get()).unwrap_or(saved_unit.current_hp),
+                hp_max: unit_def
+                    .map(|def| def.base_stats.hp.get())
+                    .unwrap_or(saved_unit.current_hp),
                 element: unit_def
                     .map(|def| format!("{:?}", def.element))
                     .unwrap_or_else(|| "Unknown".to_string()),
@@ -492,12 +499,7 @@ fn build_item_lines(
         let (name, description) = game_data
             .equipment
             .get(equipment_id)
-            .map(|def| {
-                (
-                    def.name.clone(),
-                    format!("{:?} {:?}", def.slot, def.tier),
-                )
-            })
+            .map(|def| (def.name.clone(), format!("{:?} {:?}", def.slot, def.tier)))
             .unwrap_or_else(|| (equipment_id.0.clone(), "Unknown".to_string()));
         let entry = counts.entry(name).or_insert((0, description));
         entry.0 = entry.0.saturating_add(1);
