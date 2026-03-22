@@ -1,61 +1,41 @@
 # Vale Village v3 — Current State
 
-**Phase:** Wave 2 complete + audit fixes applied
-**Verified Commit:** 4c7d1b7
+**Phase:** Wave 3 — combat polish + save system + PixelLab pipeline
+**Verified Commit:** 00e80a0
 **Date:** 2026-03-22
 
-## Spine Status: EXTENDED + AUDITED
-CLI battle path (--cli) functional. Adventure mode (--adventure) integrates 10
-beyond-battle domains. Post-hoc audit completed: 4 high-severity findings fixed,
-3 medium-severity fixed, zero warnings.
+## Spine Status: ALL SCREENS FUNCTIONAL
+CLI battle path (--cli) functional. Adventure mode (--adventure) integrates
+all beyond-battle domains. All 11 GameScreen variants wired and operational.
+Title screen has New/Load/Quit. Save/Load fully functional with round-trip
+graduation tests.
 
 ## Stats
-- Commits: 224
-- LOC: 22,366
-- Tests: 360 (all pass)
+- Commits: 229
+- LOC: 22,582
+- Tests: 363 (all pass)
 - Domains: 23
-- Sprites: 444 (134 enemies x 3 poses + 23 djinn + 8 effects + 11 portraits)
+- Sprites: 402 enemy + 8 effects + 23 djinn + 11 portraits = 444
 - CI: GitHub Actions with rust-cache
 - Compiler warnings: 0
+- Wave 2 audit findings: 5/5 resolved
 
-## Domains
-
-| Domain | LOC | Tests | Status |
-|--------|-----|-------|--------|
-| shared | 909+ | 0 | Contract frozen, checksum verified |
-| ai | 679 | 14 | [Observed] |
-| battle_engine | 4292 | 52 | [Observed] Core combat loop |
-| cli_runner | 1624 | 6 | [Observed] |
-| combat | 745 | 24 | [Observed] |
-| damage_mods | 283 | 14 | [Observed] |
-| data_loader | 548 | 12 | [Observed] |
-| dialogue | 444 | 12 | [Observed] Wired to game_loop |
-| djinn | 838 | 29 | [Observed] |
-| dungeon | 429 | 14 | [Observed] Wired to game_loop |
-| encounter | 221 | 13 | [Observed] |
-| equipment | 435 | 15 | [Observed] |
-| menu | 416 | 12 | [Observed] Wired to game_loop |
-| progression | 424 | 17 | [Observed] |
-| puzzle | 393 | 12 | [Observed] Push-block ignores direction (P2) |
-| quest | 331 | 10 | [Observed] claim_rewards guarded |
-| save | 731 | 15 | [Observed] SaveDataExtension |
-| screens | 327 | 13 | [Observed] |
-| shop | 268 | 10 | [Observed] Uses Gold bounded type |
-| sprite_loader | 291 | 0 | [Observed] Manifest-driven |
-| status | 1048 | 31 | [Observed] |
-| town | 263 | 12 | [Observed] requires_puzzle guarded |
-| ui (hub) | 10 | 0 | battle_scene, planning, animation, hud |
-| world_map | 320 | 17 | [Observed] |
-
-## Type System
-- Bounded types: 14 wired, 0 new_unchecked, 434 validated new()
-- Unchecked audit: 228 scanned, 87 upgraded
-
-## Visual Pipeline
-- build.rs + sprite_loader + battle_scene wired end-to-end
-- sprite_gen.py: Imagen 3 + Gemini eval operational
+## This Session (March 22)
+- Combat juice: hit stop (50ms/80ms crit), variable event timing, knockback, afterimages
+- Menu domain wired into game_loop
+- Save roundtrip fix: dungeon collected items now persist (AUD-W2-001)
+- SaveLoad screen: fully functional save/load from adventure mode
+- Title screen: New Game / Load Game / Quit
+- 3 save graduation tests (shop stock, dungeon items, full extension)
+- PixelLab API integrated: pipeline script at tools/pixellab_pipeline.py
+- First 2 enemies regenerated with PixelLab (dramatically higher quality)
+- CLI handoff delivered for full 137-enemy regen (~8 hours, ~405 generations)
+- B13 inoculation research committed (N=135, 5 models)
 
 ## Debt
 P0: None
-P1: puzzle direction, menu djinn state, save extension round-trip test
-P2: sprite REDO regen, overworld visual, sprite_loader tests
+P1: PixelLab full enemy regen (CLI handoff delivered)
+P1: puzzle push-block direction
+P2: overworld visual rendering
+P2: sprite_loader tests
+P2: Psynergy + Status menu screens (stubbed)
